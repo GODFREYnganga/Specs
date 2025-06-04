@@ -1,0 +1,166 @@
+.trends-section {
+  padding: 80px 0;
+  background-color: white;
+}
+
+.trends-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.section-subtitle {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 700px;
+  margin: 0 auto 50px;
+}
+
+.trends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.trend-card {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.trend-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.trend-image-container {
+  height: 250px;
+  overflow: hidden;
+}
+
+.trend-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.trend-card:hover .trend-image {
+  transform: scale(1.05);
+}
+
+.trend-content {
+  padding: 25px;
+  background-color: white;
+}
+
+.trend-title {
+  font-size: 1.3rem;
+  margin: 0 0 10px;
+  color: #333;
+}
+
+.trend-description {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.trend-link {
+  display: inline-block;
+  color: #333;
+  font-weight: 600;
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.trend-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #333;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s;
+}
+
+.trend-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.trends-cta {
+  background-color: #f5f5f5;
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.trends-cta h3 {
+  font-size: 1.8rem;
+  margin: 0 0 15px;
+  color: #333;
+}
+
+.trends-cta p {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 700px;
+  margin: 0 auto 25px;
+}
+
+.cta-button {
+  display: inline-block;
+  background-color: #333;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #222;
+}
+
+@media (max-width: 768px) {
+  .trends-section {
+    padding: 60px 0;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .trends-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trends-cta {
+    padding: 30px 20px;
+  }
+
+  .trends-cta h3 {
+    font-size: 1.5rem;
+  }
+
+  .trends-cta p {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,237 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base Colors - Updated */
+    --dark-charcoal: #2a2a2a;
+    --deep-moss: #4a5d48;
+    --mineral-teal: #3b6f7d;
+    --misty-olive: #c8d5bb;
+    --warm-taupe: #d3c6b5;
+    --terracotta: #b46a55;
+
+    /* Special Cases */
+    --header-middle: #ffffff; /* White for middle header */
+
+    /* Original shadcn variables */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Update the header styles */
+.header {
+  background: var(--dark-charcoal);
+  color: var(--warm-taupe);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.header-left {
+  background: var(--deep-moss);
+  padding: 1rem;
+}
+
+.header-middle {
+  background: var(--header-middle);
+  padding: 1rem 2rem;
+}
+
+.header-right {
+  background: var(--mineral-teal);
+  padding: 1rem;
+}
+
+/* Update the featured products styles */
+.featured-products {
+  background: var(--misty-olive);
+  padding: 2rem;
+}
+
+.featured-products .product-card {
+  background: white;
+  border: 1px solid var(--deep-moss);
+}
+
+.featured-products .cta-button {
+  background: var(--mineral-teal);
+  color: white;
+}
+
+.featured-products .cta-button:hover {
+  background: var(--terracotta);
+}
+
+/* Category Section */
+.category-section {
+  background: var(--misty-olive); /* 70% light base */
+  padding: 2rem;
+}
+
+.category-section .category-tile {
+  background: var(--deep-moss); /* 20% secondary */
+}
+
+.category-section .category-tile:hover {
+  border: 3px solid var(--mineral-teal); /* 10% accent */
+}
+
+/* Trends Section */
+.trends-section {
+  background: var(--warm-taupe); /* 70% neutral */
+  padding: 2rem;
+}
+
+.trends-section .trend-badge {
+  background: var(--mineral-teal); /* 10% accent */
+  color: white;
+}
+
+.trends-section .section-title {
+  color: var(--dark-charcoal); /* Contrast text */
+}
+
+/* Update the image carousel styles */
+.image-carousel {
+  background: var(--dark-charcoal);
+  padding: 2rem;
+}
+
+.image-carousel .carousel-control {
+  background: var(--mineral-teal);
+}
+
+.image-carousel .carousel-control:hover {
+  background: var(--terracotta);
+}
+
+.image-carousel .caption {
+  background: rgba(255, 255, 255, 0.9); /* White overlay */
+  color: var(--dark-charcoal);
+}
+
+/* Eye Test Section */
+.eye-test-section {
+  background: var(--misty-olive); /* 70% light base */
+  padding: 2rem;
+}
+
+.eye-test-section .test-card {
+  background: var(--header-middle); /* White */
+  border-top: 4px solid var(--mineral-teal); /* 10% accent */
+}
+
+.eye-test-section .instruction-text {
+  color: var(--dark-charcoal); /* Contrast */
+}
+
+/* Update the testimonial section styles */
+.testimonial-section {
+  background: var(--warm-taupe);
+  padding: 2rem;
+}
+
+.testimonial-section .testimonial-card {
+  background: white;
+  border-left: 4px solid var(--terracotta);
+}
+
+.testimonial-section .quote-icon {
+  color: var(--mineral-teal); /* 10% accent */
+}
+
+/* Gold Membership - maintain original black and gold */
+.gold-membership {
+  background-color: #470000;
+  color: #d4af37;
+}
+
+.gold-membership-button {
+  background-color: #d4af37;
+  color: #000000;
+}
+
+.gold-membership-border {
+  border-color: #d4af37;
+}

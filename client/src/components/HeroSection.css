@@ -1,0 +1,180 @@
+.hero-section {
+  position: relative;
+  height: 100vh;
+  background-color: #898d86;
+  overflow: hidden;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1s ease;
+  opacity: 0;
+}
+
+.hero-slide.active {
+  opacity: 1;
+}
+
+.hero-image-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1s ease;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.hero-content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.hero-text-container {
+  max-width: 36rem;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.hero-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform 1s ease, opacity 1s ease;
+}
+
+@media (min-width: 768px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-title {
+    font-size: 3.75rem;
+  }
+}
+
+.hero-title.slide-in {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.hero-description {
+  font-size: 1rem;
+  color: white;
+  margin-bottom: 2rem;
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform 1s ease 0.3s, opacity 1s ease 0.3s;
+}
+
+@media (min-width: 768px) {
+  .hero-description {
+    font-size: 1.25rem;
+  }
+}
+
+.hero-description.slide-in-delayed {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.hero-button-container {
+  transform: translateY(10px);
+  opacity: 0;
+  transition: transform 1s ease 0.5s, opacity 1s ease 0.5s;
+}
+
+.hero-button-container.slide-in-delayed-more {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.hero-button {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background-color: white;
+  color: #1f2937;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.hero-button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.hero-nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.hero-prev-button {
+  left: 1rem;
+}
+
+.hero-next-button {
+  right: 1rem;
+}
+
+.hero-indicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.hero-indicator {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.hero-indicator.active {
+  background-color: white;
+}
