@@ -16,10 +16,7 @@ export default function AdminUserManagement() {
     setLoading(true)
     setError("")
     try {
-      const token = localStorage.getItem("token")
-      const res = await fetch("/api/admin-users", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch("/api/admin-users")
       const data = await res.json()
       setAdmins(data)
     } catch {
@@ -43,10 +40,9 @@ export default function AdminUserManagement() {
     setError("")
     setSuccess("")
     try {
-      const token = localStorage.getItem("token")
       const res = await fetch("/api/admin-users", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
       if (!res.ok) throw new Error("Failed to add admin user.")
@@ -65,10 +61,10 @@ export default function AdminUserManagement() {
     setError("")
     setSuccess("")
     try {
-      const token = localStorage.getItem("token")
-      const res = await fetch(`/api/admin-users/${id}`, {
+      const res = await fetch(`/api/admin-users`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
       })
       if (!res.ok) throw new Error("Failed to remove admin user.")
       setSuccess("Admin user removed.")

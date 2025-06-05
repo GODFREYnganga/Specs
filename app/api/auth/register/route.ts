@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
-import type { User } from "@/types/user"
+import { connectToDatabase } from "@/lib/mongodb"
+const User = require("../../../../models/User")
+import jwt from "jsonwebtoken"
 
 export async function POST(request: Request) {
   try {
+    await connectToDatabase()
     const body = await request.json()
     const { firstName, lastName, email, password } = body
 
@@ -11,25 +14,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // In a real app, you would:
-    // 1. Check if user already exists
-    // 2. Hash the password
-    // 3. Store in database
-    // 4. Generate JWT token
+    // Check if user already exists
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return NextResponse.json({ error: "User already exists" }, { status: 400 })
+    }
 
-    // Mock user creation
-    const newUser: Partial<User> = {
-      id: Math.random().toString(36).substring(2, 15),
+    // Do NOT hash the password here, let pre-save hook handle it
+    const user = await User.create({
       firstName,
       lastName,
       email,
-    }
+      password,
+      role: "admin", // or "user" if you want normal signup
+    })
 
-    // Mock successful response
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "your_jwt_secret",
+      { expiresIn: "7d" },
+    )
+
+    // Respond with the created user and token
     return NextResponse.json(
       {
-        user: newUser,
-        token: "mock_jwt_token",
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+        },
+        token,
       },
       { status: 201 },
     )
