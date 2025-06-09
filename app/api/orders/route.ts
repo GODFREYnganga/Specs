@@ -1,48 +1,47 @@
 import { NextResponse } from "next/server"
-import type { Order } from "@/types/user"
-
-// In a real app, this would be stored in a database
-const orders: Order[] = []
+import { connectToDatabase } from "@/lib/mongodb"
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Order = require("../../../models/Order")
 
 export async function GET(request: Request) {
-  // In a real app, you would verify the user's JWT token
-  // and only return their orders
-
+  await connectToDatabase()
+  const orders = await Order.find()
   return NextResponse.json(orders)
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { items, shippingAddress, paymentMethod } = body
+    await connectToDatabase()
+    const data = await request.json()
+    const order = await Order.create(data)
+    return NextResponse.json(order, { status: 201 })
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to add order" }, { status: 500 })
+  }
+}
 
-    // Validate input
-    if (!items || !shippingAddress || !paymentMethod) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-    }
+export async function PUT(request: Request) {
+  try {
+    await connectToDatabase()
+    const data = await request.json()
+    if (!data._id) return NextResponse.json({ error: "Missing order id" }, { status: 400 })
+    const updated = await Order.findByIdAndUpdate(data._id, data, { new: true, runValidators: true })
+    if (!updated) return NextResponse.json({ error: "Order not found" }, { status: 404 })
+    return NextResponse.json(updated)
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to update order" }, { status: 500 })
+  }
+}
 
-    // Calculate total
-    const total = items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
-
-    // Create new order
-    const newOrder: Order = {
-      id: Math.random().toString(36).substring(2, 15),
-      userId: "user123", // In a real app, this would come from the JWT token
-      items,
-      total,
-      status: "pending",
-      shippingAddress,
-      paymentMethod,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    // Save order
-    orders.push(newOrder)
-
-    return NextResponse.json(newOrder, { status: 201 })
-  } catch (error) {
-    console.error("Create order error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+export async function DELETE(request: Request) {
+  try {
+    await connectToDatabase()
+    const { _id } = await request.json()
+    if (!_id) return NextResponse.json({ error: "Missing order id" }, { status: 400 })
+    const deleted = await Order.findByIdAndDelete(_id)
+    if (!deleted) return NextResponse.json({ error: "Order not found" }, { status: 404 })
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to delete order" }, { status: 500 })
   }
 }

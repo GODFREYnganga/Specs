@@ -5,8 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
+// Add Admin type for type safety
+interface Admin {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export default function AdminUserManagement() {
-  const [admins, setAdmins] = useState([])
+  const [admins, setAdmins] = useState<Admin[]>([])
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -30,11 +38,11 @@ export default function AdminUserManagement() {
     fetchAdmins()
   }, [])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleAdd = async (e) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
@@ -56,21 +64,21 @@ export default function AdminUserManagement() {
     }
   }
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     setLoading(true)
     setError("")
     setSuccess("")
     try {
-      const res = await fetch(`/api/admin-users`, {
+      const res = await fetch("/api/admin-users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       })
-      if (!res.ok) throw new Error("Failed to remove admin user.")
-      setSuccess("Admin user removed.")
+      if (!res.ok) throw new Error("Failed to delete admin user.")
+      setSuccess("Admin user deleted.")
       fetchAdmins()
     } catch {
-      setError("Failed to remove admin user.")
+      setError("Failed to delete admin user.")
     } finally {
       setLoading(false)
     }
@@ -89,7 +97,7 @@ export default function AdminUserManagement() {
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {success && <div className="text-green-600 mb-2">{success}</div>}
       <div className="overflow-x-auto">
-        <table className="min-w-full border text-sm">
+        <table className="min-w-full border text-sm mt-8">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-800">
               <th className="p-2 text-left">Name</th>
@@ -103,9 +111,7 @@ export default function AdminUserManagement() {
                 <td className="p-2">{admin.firstName} {admin.lastName}</td>
                 <td className="p-2">{admin.email}</td>
                 <td className="p-2">
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(admin._id)}>
-                    Remove
-                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(admin._id)}>Delete</Button>
                 </td>
               </tr>
             ))}

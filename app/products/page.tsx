@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
-import { useSearchParams } from "next/navigation"
-import { Filter, ChevronDown, ChevronUp } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Filter, ChevronDown, ChevronUp, Heart } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -14,200 +14,30 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
+import { useCart } from "@/hooks/use-cart"
+import { useToast } from "@/hooks/use-toast"
+import { useWishlist } from "@/hooks/use-wishlist"
 
-// This would typically come from an API
-const allProducts = [
-  {
-    id: 1,
-    name: "Urban Classic",
-    price: 12999,
-    category: "prescription",
-    image: "/images/products/gold-round-frames.png",
-    description: "Timeless design with modern comfort",
-    frameShape: "round",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "acetate",
-    weight: "light",
-    prescriptionType: "single-vision",
-    frameWidth: "medium",
-    productType: "eyeglasses",
-    color: "gold",
-    brand: "Fashionista",
-    size: "medium",
-  },
-  {
-    id: 2,
-    name: "Sunset Aviator",
-    price: 14999,
-    category: "sunglasses",
-    image: "/images/products/blue-round-frames.png",
-    description: "UV protection with style",
-    frameShape: "aviator",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "metal",
-    weight: "light",
-    prescriptionType: "non-prescription",
-    frameWidth: "wide",
-    productType: "sunglasses",
-    color: "blue",
-    brand: "SunPro",
-    size: "large",
-  },
-  {
-    id: 3,
-    name: "Reading Pro",
-    price: 10999,
-    category: "reading",
-    image: "/images/products/black-round-frames.png",
-    description: "Comfortable frames for extended reading",
-    frameShape: "round",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "acetate",
-    weight: "light",
-    prescriptionType: "reading",
-    frameWidth: "narrow",
-    productType: "reading-glasses",
-    color: "black",
-    brand: "EyeRest",
-    size: "small",
-  },
-  {
-    id: 4,
-    name: "Sport Shield",
-    price: 15999,
-    category: "sunglasses",
-    image: "/images/products/white-cat-eye-frames.png",
-    description: "Active lifestyle protection",
-    frameShape: "cat-eye",
-    frameType: "full-rim",
-    gender: "women",
-    material: "plastic",
-    weight: "medium",
-    prescriptionType: "non-prescription",
-    frameWidth: "medium",
-    productType: "sunglasses",
-    color: "white",
-    brand: "SunPro",
-    size: "medium",
-  },
-  {
-    id: 5,
-    name: "Vintage Round",
-    price: 11999,
-    category: "prescription",
-    image: "/images/products/navy-blue-frames.png",
-    description: "Classic round frames with modern materials",
-    frameShape: "round",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "acetate",
-    weight: "medium",
-    prescriptionType: "progressive",
-    frameWidth: "medium",
-    productType: "eyeglasses",
-    color: "blue",
-    brand: "Vintage",
-    size: "medium",
-  },
-  {
-    id: 6,
-    name: "Office Edge",
-    price: 13999,
-    category: "prescription",
-    image: "/images/products/black-blue-light-frames.png",
-    description: "Professional look for the workplace",
-    frameShape: "square",
-    frameType: "semi-rimless",
-    gender: "men",
-    material: "metal",
-    weight: "light",
-    prescriptionType: "blue-light",
-    frameWidth: "wide",
-    productType: "blue-light",
-    color: "black",
-    brand: "BlueGuard",
-    size: "large",
-  },
-  {
-    id: 7,
-    name: "Beach Vibes",
-    price: 12999,
-    category: "sunglasses",
-    image: "/images/products/silver-round-frames.png",
-    description: "Polarized lenses for bright days",
-    frameShape: "round",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "metal",
-    weight: "light",
-    prescriptionType: "non-prescription",
-    frameWidth: "medium",
-    productType: "sunglasses",
-    color: "silver",
-    brand: "SunPro",
-    size: "medium",
-  },
-  {
-    id: 8,
-    name: "Night Reader",
-    price: 10999,
-    category: "reading",
-    image: "/images/products/clear-frames.png",
-    description: "Anti-glare coating for evening reading",
-    frameShape: "square",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "plastic",
-    weight: "light",
-    prescriptionType: "reading",
-    frameWidth: "narrow",
-    productType: "reading-glasses",
-    color: "clear",
-    brand: "EyeRest",
-    size: "small",
-  },
-  {
-    id: 9,
-    name: "Celestial Frames",
-    price: 14999,
-    category: "fashion",
-    image: "/images/products/rose-gold-moon-frames.png",
-    description: "Unique design for the fashion-forward",
-    frameShape: "round",
-    frameType: "full-rim",
-    gender: "women",
-    material: "metal",
-    weight: "light",
-    prescriptionType: "single-vision",
-    frameWidth: "medium",
-    productType: "eyeglasses",
-    color: "rose-gold",
-    brand: "StyleIcon",
-    size: "medium",
-  },
-  {
-    id: 10,
-    name: "Digital Defender",
-    price: 11999,
-    category: "blue-light",
-    image: "/images/products/frame-game-collage.png",
-    description: "Blue light protection for digital screens",
-    frameShape: "square",
-    frameType: "full-rim",
-    gender: "unisex",
-    material: "acetate",
-    weight: "medium",
-    prescriptionType: "blue-light",
-    frameWidth: "medium",
-    productType: "blue-light",
-    color: "multi",
-    brand: "BlueGuard",
-    size: "medium",
-  },
-]
+// Product type for type safety
+interface Product {
+  _id: string
+  name: string
+  price: number
+  category: string
+  image?: string
+  description?: string
+  frameShape?: string
+  frameType?: string
+  gender?: string
+  material?: string
+  weight?: string
+  prescriptionType?: string
+  frameWidth?: string
+  productType?: string
+  color?: string
+  brand?: string
+  size?: string
+}
 
 // Update the interface for the Category type to match our enhanced structure
 interface Category {
@@ -346,15 +176,57 @@ interface FilterSection {
 }
 
 export default function ProductsPage() {
-  const searchParams = useSearchParams()
-  const categoryParam = searchParams.get("category")
-  const genderParam = searchParams.get("gender")
-  const frameTypeParam = searchParams.get("frameType")
-  const styleParam = searchParams.get("style")
-  const brandParam = searchParams.get("brand")
-  const topPickParam = searchParams.get("topPick")
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Get category and other filter params from searchParams
+  const categoryParam = searchParams.get("category") || "";
+  const genderParam = searchParams.get("gender") || "";
+  const frameTypeParam = searchParams.get("frameType") || "";
+  const brandParam = searchParams.get("brand") || "";
+  const topPickParam = searchParams.get("topPick") || "";
 
-  const [products, setProducts] = useState(allProducts)
+  // Hero/banner content by category
+  const categoryContent: Record<string, { title: string; description: string; banner: string }> = {
+    eyeglasses: {
+      title: "Discover Stylish Eye Glasses",
+      description: "Shop our curated collection of premium eyeglasses. Lightweight, durable, and designed for comfort and style.",
+      banner: "/images/Eye Glasses/clem-onojeghuo-TI-mxzGbsmk-unsplash.jpg",
+    },
+    sunglasses: {
+      title: "Sun Glasses for Every Adventure",
+      description: "Protect your eyes in style with our range of UV-protected sunglasses. Perfect for any occasion.",
+      banner: "/images/Sun Glasses/aviator-sunglasses.jpg",
+    },
+    screenglasses: {
+      title: "Screen Glasses for Digital Life",
+      description: "Reduce eye strain and look great with our blue-light filtering screen glasses.",
+      banner: "/images/Screen Glasses/2h-media-HifdOfMgSls-unsplash.jpg",
+    },
+    kidsglasses: {
+      title: "Kids Glasses – Fun & Safe",
+      description: "Flexible, impact-resistant, and colorful glasses designed just for kids.",
+      banner: "/images/Kids Glasses/frank-mckenna-LhOjrOlcLx4-unsplash.jpg",
+    },
+    contactlenses: {
+      title: "Contact Lenses – All-Day Comfort",
+      description: "Experience clear vision and comfort with our premium contact lenses.",
+      banner: "/images/Contact Lenses/IMG-20250604-WA0006.jpg",
+    },
+  };
+
+  const currentCategory = categoryParam.toLowerCase();
+  const hero = categoryContent[currentCategory] || {
+    title: "All Products",
+    description: "Browse our full collection of eyewear and accessories.",
+    banner: "/placeholder.jpg",
+  };
+
+  const { addToCart } = useCart()
+  const { toast } = useToast()
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
+
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [filters, setFilters] = useState({
     categories: categoryParam ? [categoryParam] : [],
     priceRange: [8000, 22000],
@@ -393,131 +265,137 @@ export default function ProductsPage() {
   const maxPriceInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // Apply filters
-    let filteredProducts = [...allProducts]
+    // Fetch all products from the API once
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => setAllProducts(data))
+      .catch(() => setAllProducts([]))
+  }, [])
+
+  useEffect(() => {
+    // Apply filters to allProducts
+    let filtered = [...allProducts]
 
     // Apply URL params first
     if (categoryParam) {
-      filteredProducts = filteredProducts.filter((product) => product.category === categoryParam)
+      filtered = filtered.filter((product) => product.category === categoryParam)
     }
 
     if (genderParam) {
-      filteredProducts = filteredProducts.filter(
+      filtered = filtered.filter(
         (product) => product.gender === genderParam.toLowerCase() || product.gender === "unisex",
       )
     }
 
     if (frameTypeParam) {
-      filteredProducts = filteredProducts.filter(
+      filtered = filtered.filter(
         (product) => product.frameType === frameTypeParam.toLowerCase().replace("-", "-"),
       )
     }
 
     if (brandParam) {
-      filteredProducts = filteredProducts.filter((product) => product.brand.toLowerCase() === brandParam.toLowerCase())
+      filtered = filtered.filter((product) => product.brand?.toLowerCase() === brandParam.toLowerCase())
     }
 
     if (topPickParam) {
-      // This would need more complex logic in a real app
-      // For now, we'll just filter by category as a placeholder
-      filteredProducts = filteredProducts.filter((product) => product.category === topPickParam)
+      filtered = filtered.filter((product) => product.category === topPickParam)
     }
 
     // Filter by category
     if (filters.categories.length > 0) {
-      filteredProducts = filteredProducts.filter((product) => filters.categories.includes(product.category))
+      filtered = filtered.filter((product) => filters.categories.includes(product.category))
     }
 
     // Filter by price range
-    filteredProducts = filteredProducts.filter(
+    filtered = filtered.filter(
       (product) => product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1],
     )
 
     // Filter by frame shape
     if (filters.frameShape !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.frameShape === filters.frameShape)
+      filtered = filtered.filter((product) => product.frameShape === filters.frameShape)
     }
 
     // Filter by gender
     if (filters.gender !== "all") {
-      filteredProducts = filteredProducts.filter(
+      filtered = filtered.filter(
         (product) => product.gender === filters.gender || product.gender === "unisex",
       )
     }
 
     // Filter by frame type
     if (filters.frameType !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.frameType === filters.frameType)
+      filtered = filtered.filter((product) => product.frameType === filters.frameType)
     }
 
     // Filter by color
     if (filters.color !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.color === filters.color)
+      filtered = filtered.filter((product) => product.color === filters.color)
     }
 
     // Filter by brand
     if (filters.brand !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.brand === filters.brand)
+      filtered = filtered.filter((product) => product.brand === filters.brand)
     }
 
     // Filter by material
     if (filters.material !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.material === filters.material)
+      filtered = filtered.filter((product) => product.material === filters.material)
     }
 
     // Filter by weight
     if (filters.weight !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.weight === filters.weight)
+      filtered = filtered.filter((product) => product.weight === filters.weight)
     }
 
     // Filter by prescription type
     if (filters.prescriptionType !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.prescriptionType === filters.prescriptionType)
+      filtered = filtered.filter((product) => product.prescriptionType === filters.prescriptionType)
     }
 
     // Filter by frame width
     if (filters.frameWidth !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.frameWidth === filters.frameWidth)
+      filtered = filtered.filter((product) => product.frameWidth === filters.frameWidth)
     }
 
     // Filter by product type
     if (filters.productType !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.productType === filters.productType)
+      filtered = filtered.filter((product) => product.productType === filters.productType)
     }
 
     // Filter by size
     if (filters.size !== "all") {
-      filteredProducts = filteredProducts.filter((product) => product.size === filters.size)
+      filtered = filtered.filter((product) => product.size === filters.size)
     }
 
     // Filter by search query
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase()
-      filteredProducts = filteredProducts.filter(
-        (product) => product.name.toLowerCase().includes(query) || product.description.toLowerCase().includes(query),
+      filtered = filtered.filter(
+        (product) => product.name.toLowerCase().includes(query) || (product.description?.toLowerCase() ?? "").includes(query),
       )
     }
 
     // Sort products
     switch (filters.sortBy) {
       case "price-low":
-        filteredProducts.sort((a, b) => a.price - b.price)
+        filtered.sort((a, b) => a.price - b.price)
         break
       case "price-high":
-        filteredProducts.sort((a, b) => b.price - a.price)
+        filtered.sort((a, b) => b.price - a.price)
         break
       case "newest":
         // In a real app, you would sort by date
         // Here we'll just reverse the array as a placeholder
-        filteredProducts.reverse()
+        filtered.reverse()
         break
       default:
         // Featured - keep default order
         break
     }
 
-    setProducts(filteredProducts)
-  }, [filters, categoryParam, genderParam, frameTypeParam, brandParam, topPickParam])
+    setFilteredProducts(filtered)
+  }, [allProducts, filters, categoryParam, genderParam, frameTypeParam, brandParam, topPickParam])
 
   const handleCategoryChange = (category: string) => {
     setFilters((prev) => {
@@ -598,7 +476,20 @@ export default function ProductsPage() {
 
   // In the filter sections area:
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Hero Banner */}
+      <div className="relative w-full h-64 md:h-80 flex items-center justify-center overflow-hidden mb-8">
+        <img
+          src={hero.banner}
+          alt={hero.title}
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+        />
+        <div className="relative z-10 text-center text-white bg-black/40 p-6 rounded-xl max-w-2xl mx-auto">
+          <h1 className="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">{hero.title}</h1>
+          <p className="text-lg md:text-xl font-medium drop-shadow">{hero.description}</p>
+        </div>
+      </div>
+
       <main className="flex-1">
         <div className="container px-4 md:px-6 py-8">
           <div className="flex flex-col md:flex-row gap-8">
@@ -808,18 +699,12 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {products.length === 0 ? (
-                <div className="text-center py-12">
-                  <h2 className="text-xl font-semibold mb-2">No products found</h2>
-                  <p className="text-gray-500 mb-4">Try adjusting your filters or search query</p>
-                  <Button variant="outline" onClick={resetFilters}>
-                    Reset Filters
-                  </Button>
-                </div>
+              {filteredProducts.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">No products found.</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden">
+                  {filteredProducts.map((product: Product) => (
+                    <Card key={product._id} className="overflow-hidden">
                       <CardHeader className="p-0">
                         <img
                           src={product.image || "/placeholder.svg"}
@@ -834,10 +719,51 @@ export default function ProductsPage() {
                           <h3 className="font-semibold">{product.name}</h3>
                           <div className="text-sm font-medium">KSh {product.price}</div>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-2">{product.description}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{product.description || "No description available."}</p>
                       </CardContent>
-                      <CardFooter className="p-4 pt-0">
-                        <Button className="w-full">Add to Cart</Button>
+                      <CardFooter className="p-4 pt-0 flex gap-2">
+                        <Button
+                          className="flex-1"
+                          onClick={() => {
+                            addToCart({
+                              id: product._id,
+                              name: product.name,
+                              price: product.price,
+                              image: product.image,
+                              quantity: 1,
+                              color: product.color || "Default",
+                            })
+                            toast({
+                              title: "Added to Cart",
+                              description: `${product.name} has been added to your cart.`,
+                            })
+                          }}
+                        >
+                          Add to Cart
+                        </Button>
+                        <Button
+                          variant={isInWishlist(product._id, product.color) ? "default" : "outline"}
+                          onClick={() => {
+                            if (isInWishlist(product._id, product.color)) {
+                              removeFromWishlist(product._id, product.color)
+                              toast({ title: "Removed from Wishlist", description: `${product.name} removed from wishlist.` })
+                            } else {
+                              addToWishlist({
+                                id: String(product._id),
+                                name: product.name,
+                                price: product.price,
+                                image: product.image || "",
+                                color: product.color || "Default",
+                                category: product.category as any,
+                                description: product.description || "",
+                              })
+                              toast({ title: "Added to Wishlist", description: `${product.name} added to wishlist.` })
+                            }
+                          }}
+                          aria-label={isInWishlist(product._id, product.color) ? "Remove from Wishlist" : "Add to Wishlist"}
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
                       </CardFooter>
                     </Card>
                   ))}

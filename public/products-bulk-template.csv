@@ -1,0 +1,2 @@
+name,price,category,image,description,inStock,frameShape,frameType,gender,material,weight,prescriptionType,frameWidth,productType,color,brand,size,features,images
+Sample Product,99.99,Glasses,sample-main.jpg,Sample description,10,Round,Full Rim,Unisex,Metal,20g,Single Vision,140mm,Optical,Black,BrandX,Medium,"Lightweight,Durable",sample1.jpg;sample2.jpg;sample3.jpg

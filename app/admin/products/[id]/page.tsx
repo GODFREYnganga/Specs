@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
+import Image from "next/image"
 
 export default function AdminEditProduct() {
   const router = useRouter()
@@ -21,6 +22,7 @@ export default function AdminEditProduct() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [imagePreview, setImagePreview] = useState<string>("")
 
   useEffect(() => {
     if (!productId) return
@@ -48,6 +50,11 @@ export default function AdminEditProduct() {
     }))
   }
 
+  const handleImageInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange(e)
+    setImagePreview(e.target.value)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -69,6 +76,10 @@ export default function AdminEditProduct() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (form.image) setImagePreview(form.image)
+  }, [form.image])
 
   if (loading) return <div>Loading...</div>
 
@@ -96,7 +107,12 @@ export default function AdminEditProduct() {
         </div>
         <div>
           <Label htmlFor="image">Image URL</Label>
-          <Input id="image" name="image" value={form.image} onChange={handleChange} required />
+          <Input id="image" name="image" value={form.image} onChange={handleImageInput} required />
+          {imagePreview && (
+            <div className="mt-2">
+              <Image src={imagePreview} alt="Preview" width={200} height={200} className="rounded border" />
+            </div>
+          )}
         </div>
         <div>
           <Label htmlFor="description">Description</Label>

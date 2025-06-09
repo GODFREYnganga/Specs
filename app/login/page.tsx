@@ -5,107 +5,123 @@ import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
+  const [loginData, setLoginData] = useState({ email: '', password: '' })
+  const [registerData, setRegisterData] = useState({ firstName: '', lastName: '', email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [tab, setTab] = useState<'login' | 'register'>('login')
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Login failed')
+      // Save token to localStorage or cookie as needed
+      localStorage.setItem('token', data.token)
+      window.location.href = '/'
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registerData),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed')
+      // Save token to localStorage or cookie as needed
+      localStorage.setItem('token', data.token)
+      window.location.href = '/'
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="container flex items-center justify-center min-h-[80vh] px-4 md:px-6 py-8">
-      <Card className="w-full max-w-md">
-        <Tabs defaultValue="login">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="login">
-            <form>
-              <CardHeader>
-                <CardTitle>Welcome back</CardTitle>
-                <CardDescription>Enter your credentials to access your account</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" required />
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="w-full max-w-md">
+        <div className="p-6 bg-card rounded-lg shadow">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-2">{tab === 'login' ? 'Sign In' : 'Register'}</h2>
+            <p className="text-muted-foreground">
+              {tab === 'login' ? 'Sign in to your account' : 'Create a new account'}
+            </p>
+          </div>
+          <div className="flex gap-2 mb-6">
+            <Button variant={tab === 'login' ? 'default' : 'outline'} onClick={() => setTab('login')} className="flex-1">Sign In</Button>
+            <Button variant={tab === 'register' ? 'default' : 'outline'} onClick={() => setTab('register')} className="flex-1">Register</Button>
+          </div>
+          {tab === 'login' ? (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" autoComplete="email" value={loginData.email} onChange={e => setLoginData({ ...loginData, email: e.target.value })} required />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={loginData.password} onChange={e => setLoginData({ ...loginData, password: e.target.value })} required />
+                  <button type="button" className="absolute right-2 top-2" onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" required />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Login</Button>
-              </CardFooter>
+              </div>
+              {error && <div className="text-red-600 text-sm font-medium">{error}</div>}
+              <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</Button>
             </form>
-          </TabsContent>
-
-          <TabsContent value="register">
-            <form>
-              <CardHeader>
-                <CardTitle>Create an account</CardTitle>
-                <CardDescription>Enter your information to create an account</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First name</Label>
-                    <Input id="firstName" placeholder="John" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last name</Label>
-                    <Input id="lastName" placeholder="Doe" required />
-                  </div>
+          ) : (
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input id="firstName" value={registerData.firstName} onChange={e => setRegisterData({ ...registerData, firstName: e.target.value })} required />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" required />
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input id="lastName" value={registerData.lastName} onChange={e => setRegisterData({ ...registerData, lastName: e.target.value })} required />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" required />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                    </Button>
-                  </div>
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" autoComplete="email" value={registerData.email} onChange={e => setRegisterData({ ...registerData, email: e.target.value })} required />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input id="password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={registerData.password} onChange={e => setRegisterData({ ...registerData, password: e.target.value })} required />
+                  <button type="button" className="absolute right-2 top-2" onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Create Account</Button>
-              </CardFooter>
+              </div>
+              {error && <div className="text-red-600 text-sm font-medium">{error}</div>}
+              <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Registering...' : 'Register'}</Button>
             </form>
-          </TabsContent>
-        </Tabs>
-      </Card>
+          )}
+          <div className="flex flex-col gap-2 mt-4">
+            <Link href="/forgot-password" className="text-xs text-muted-foreground hover:underline">Forgot password?</Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

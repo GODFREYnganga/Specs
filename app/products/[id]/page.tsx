@@ -1,9 +1,14 @@
+"use client"
+
 import { CardFooter } from "@/components/ui/card"
 import { CardContent } from "@/components/ui/card"
 import { CardHeader } from "@/components/ui/card"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowLeft, Check, Heart, ShoppingCart, Star } from "lucide-react"
+import { useState } from "react"
+import { useCart } from "@/hooks/use-cart"
+import { useWishlist } from "@/hooks/use-wishlist"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -38,6 +43,11 @@ const product = {
 }
 
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const { addToCart } = useCart()
+  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
+  const [selectedColor, setSelectedColor] = useState(product.colors[0])
+  const [quantity, setQuantity] = useState(1)
+
   return (
     <div className="container px-4 md:px-6 py-8">
       <Link href="/products" className="flex items-center gap-2 text-sm mb-6 hover:underline">
@@ -106,7 +116,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
           <div>
             <h3 className="font-medium mb-2">Frame Color</h3>
-            <RadioGroup defaultValue="Black">
+            <RadioGroup value={selectedColor} onValueChange={setSelectedColor}>
               {product.colors.map((color) => (
                 <div key={color} className="flex items-center space-x-2">
                   <RadioGroupItem value={color} id={color} />
@@ -118,14 +128,72 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
           <Separator />
 
-          <div className="flex gap-4">
-            <Button size="lg" className="flex-1">
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Add to Cart
-            </Button>
-            <Button size="lg" variant="outline">
-              <Heart className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center border rounded px-2">
+              <button
+                className="px-2 py-1 text-lg"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                aria-label="Decrease quantity"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                className="w-12 text-center bg-transparent outline-none"
+              />
+              <button
+                className="px-2 py-1 text-lg"
+                onClick={() => setQuantity((q) => q + 1)}
+                aria-label="Increase quantity"
+              >
+                +
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={() =>
+                  addToCart({
+                    id: String(product.id),
+                    name: product.name,
+                    price: product.price,
+                    image: product.images[0],
+                    color: selectedColor,
+                    quantity,
+                  })
+                }
+                disabled={!product.inStock}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Cart
+              </Button>
+              <Button
+                size="lg"
+                variant={isInWishlist(String(product.id), selectedColor) ? "default" : "outline"}
+                onClick={() => {
+                  if (isInWishlist(String(product.id), selectedColor)) {
+                    removeFromWishlist(String(product.id), selectedColor)
+                  } else {
+                    addToWishlist({
+                      id: String(product.id),
+                      name: product.name,
+                      price: product.price,
+                      image: product.images[0] || "",
+                      color: selectedColor,
+                      category: product.category as any,
+                      description: product.description || "",
+                    })
+                  }
+                }}
+                aria-label={isInWishlist(String(product.id), selectedColor) ? "Remove from Wishlist" : "Add to Wishlist"}
+              >
+                <Heart className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="description">

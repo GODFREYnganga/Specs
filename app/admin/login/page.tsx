@@ -32,8 +32,7 @@ export default function AdminLogin() {
         setLoading(false)
         return
       }
-      // Store token (for demo, use localStorage)
-      localStorage.setItem("token", data.token)
+      // No need to store token in localStorage; JWT is set as HTTP-only cookie
       router.push("/admin")
     } catch (err) {
       setError("Login failed. Please try again.")

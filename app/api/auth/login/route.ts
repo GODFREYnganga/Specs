@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 const User = require("../../../../models/User")
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
+import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
   try {
@@ -38,16 +39,24 @@ export async function POST(request: Request) {
       { expiresIn: "7d" }
     )
 
-    return NextResponse.json({
+    // Set JWT as HTTP-only cookie
+    const response = NextResponse.json({
       user: {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
-      },
-      token,
+      }
     })
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    })
+    return response
   } catch (error) {
     console.error("Login error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

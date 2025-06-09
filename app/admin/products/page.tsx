@@ -26,6 +26,25 @@ export default function AdminProducts() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return
+    try {
+      setLoading(true)
+      setError("")
+      const res = await fetch("/api/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: id }),
+      })
+      if (!res.ok) throw new Error("Failed to delete product")
+      setProducts((prev) => prev.filter((p) => p._id !== id))
+    } catch (err) {
+      setError("Failed to delete product")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -58,7 +77,19 @@ export default function AdminProducts() {
                   <td className="p-2">KSh {product.price}</td>
                   <td className="p-2">{product.inStock ? "Yes" : "No"}</td>
                   <td className="p-2">
-                    <Link href={`/admin/products/${product._id}`}><Button variant="outline" size="sm">Edit</Button></Link>
+                    <Link href={`/admin/products/${product._id}`}>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="ml-2"
+                      onClick={() => handleDelete(product._id)}
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               ))}

@@ -24,6 +24,25 @@ export default function AdminOrders() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return
+    try {
+      setLoading(true)
+      setError("")
+      const res = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: id }),
+      })
+      if (!res.ok) throw new Error("Failed to delete order")
+      setOrders((prev) => prev.filter((o) => o._id !== id))
+    } catch (err) {
+      setError("Failed to delete order")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Orders</h2>
@@ -41,6 +60,7 @@ export default function AdminOrders() {
                 <th className="p-2 text-left">Total</th>
                 <th className="p-2 text-left">Status</th>
                 <th className="p-2 text-left">Created</th>
+                <th className="p-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -51,6 +71,11 @@ export default function AdminOrders() {
                   <td className="p-2">KSh {order.total}</td>
                   <td className="p-2">{order.status}</td>
                   <td className="p-2">{new Date(order.createdAt).toLocaleString()}</td>
+                  <td className="p-2">
+                    <button className="text-red-600 hover:underline" onClick={() => handleDelete(order._id)}>
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
