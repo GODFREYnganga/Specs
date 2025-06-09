@@ -2,18 +2,32 @@ import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Product = require("../../../models/Product")
+import { promises as fs } from "fs";
+import path from "path";
+import formidable from "formidable";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export async function GET(request: Request) {
-  await connectToDatabase()
-  const { searchParams } = new URL(request.url)
-  const category = searchParams.get("category")
-  let products
-  if (category) {
-    products = await Product.find({ category })
-  } else {
-    products = await Product.find()
+  await connectToDatabase();
+  const { searchParams } = new URL(request.url);
+  const searchQuery = searchParams.get("search") || "";
+  const category = searchParams.get("category");
+
+  const query: any = {};
+  if (searchQuery) {
+    query.name = { $regex: searchQuery, $options: "i" };
   }
-  return NextResponse.json(products)
+  if (category) {
+    query.category = category;
+  }
+
+  const products = await Product.find(query);
+  return NextResponse.json(products);
 }
 
 export async function POST(request: Request) {

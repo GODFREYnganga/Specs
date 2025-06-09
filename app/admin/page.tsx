@@ -298,12 +298,9 @@ export default function AdminDashboard() {
 						{SIDEBAR_ITEMS.map((item) => (
 							<button
 								key={item.key}
-								className={`w-full text-left px-4 py-2 rounded transition font-medium text-base md:text-sm ${
-									tab === item.key
-										? "bg-primary text-white"
-										: "hover:bg-muted text-muted-foreground"
-								}`}
+								className={`w-full text-left px-4 py-2 rounded transition font-medium text-base md:text-sm ${tab === item.key ? "bg-primary text-white" : "hover:bg-muted text-muted-foreground"}`}
 								onClick={() => setTab(item.key)}
+								aria-current={tab === item.key ? "page" : undefined}
 							>
 								{item.label}
 							</button>
@@ -315,115 +312,24 @@ export default function AdminDashboard() {
 					{/* Overview */}
 					{tab === "overview" && (
 						loading ? (
-							<div>Loading...</div>
+							<div className="flex items-center justify-center h-40"><span className="text-muted-foreground">Loading dashboard...</span></div>
 						) : error ? (
-							<div className="text-red-500">{error}</div>
+							<div className="text-red-500 text-center py-8">{error}</div>
 						) : (
 							<>
-								<div className="flex flex-col gap-4 mb-6">
-									<Card>
-										<CardContent className="p-4">
-											<h2 className="text-sm font-medium text-muted-foreground">
-												Total Orders
-											</h2>
-											<p className="text-2xl font-bold">
-												{orders.length}
-											</p>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<h2 className="text-sm font-medium text-muted-foreground">
-												Revenue
-											</h2>
-											<p className="text-2xl font-bold">
-												KSh{" "}
-												{orders
-													.reduce(
-														(sum, o) => sum + (o.total || 0),
-														0
-													)
-													.toLocaleString()}
-											</p>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<h2 className="text-sm font-medium text-muted-foreground">
-												New Customers
-											</h2>
-											<p className="text-2xl font-bold">
-												{users.length}
-											</p>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<h2 className="text-sm font-medium text-muted-foreground">
-												Top Product
-											</h2>
-											<p className="text-2xl font-bold">
-												{products[0]?.name || "-"}
-											</p>
-										</CardContent>
-									</Card>
+								<div className="flex flex-col gap-4 mb-6 md:flex-row md:gap-6">
+									<Card className="flex-1 min-w-[180px]"><CardContent className="p-4"><h2 className="text-sm font-medium text-muted-foreground">Total Orders</h2><p className="text-2xl font-bold">{orders.length}</p></CardContent></Card>
+									<Card className="flex-1 min-w-[180px]"><CardContent className="p-4"><h2 className="text-sm font-medium text-muted-foreground">Revenue</h2><p className="text-2xl font-bold">KSh {orders.reduce((sum, o) => sum + (o.total || 0), 0).toLocaleString()}</p></CardContent></Card>
+									<Card className="flex-1 min-w-[180px]"><CardContent className="p-4"><h2 className="text-sm font-medium text-muted-foreground">New Customers</h2><p className="text-2xl font-bold">{users.length}</p></CardContent></Card>
+									<Card className="flex-1 min-w-[180px]"><CardContent className="p-4"><h2 className="text-sm font-medium text-muted-foreground">Top Product</h2><p className="text-2xl font-bold">{products[0]?.name || "-"}</p></CardContent></Card>
 								</div>
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-									<Card>
-										<CardContent className="p-4">
-											<h3 className="text-lg font-semibold mb-4">
-												Sales Trends
-											</h3>
-											<ResponsiveContainer width="100%" height={200}>
-												<BarChart data={salesData}>
-													<XAxis dataKey="name" />
-													<YAxis />
-													<Tooltip />
-													<Bar
-														dataKey="sales"
-														fill="#4f46e5"
-														radius={[4, 4, 0, 0]}
-													/>
-												</BarChart>
-											</ResponsiveContainer>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<h3 className="text-lg font-semibold mb-4">
-												Low Stock Alerts
-											</h3>
-											<ul className="text-sm text-destructive space-y-1">
-												{products
-													.filter(
-														(p) => p.inStock && p.inStock < 5
-													)
-													.map((p) => (
-														<li key={p._id}>
-															{p.name} ({p.inStock} left)
-														</li>
-													))}
-											</ul>
-										</CardContent>
-									</Card>
+									<Card><CardContent className="p-4"><h3 className="text-lg font-semibold mb-4">Sales Trends</h3><ResponsiveContainer width="100%" height={200}><BarChart data={salesData}><XAxis dataKey="name" /><YAxis /><Tooltip /><Bar dataKey="sales" fill="#4f46e5" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></CardContent></Card>
+									<Card><CardContent className="p-4"><h3 className="text-lg font-semibold mb-4">Low Stock Alerts</h3><ul className="text-sm text-destructive space-y-1 min-h-[40px]">{products.filter((p) => p.inStock && p.inStock < 5).length === 0 ? <li className="text-muted-foreground">No low stock products</li> : products.filter((p) => p.inStock && p.inStock < 5).map((p) => (<li key={p._id}>{p.name} ({p.inStock} left)</li>))}</ul></CardContent></Card>
 								</div>
-								<div className="flex gap-4 mb-4">
-									<Button
-										className="bg-primary text-white"
-										onClick={() =>
-											(window.location.href = "/admin/products/new")
-										}
-									>
-										Add Product
-									</Button>
-									<Button
-										className="bg-primary text-white"
-										onClick={() =>
-											(window.location.href = "/admin/orders")
-										}
-									>
-										View Orders
-									</Button>
+								<div className="flex flex-wrap gap-4 mb-4">
+									<Button className="bg-primary text-white" onClick={() => (window.location.href = "/admin/products/new")}>Add Product</Button>
+									<Button className="bg-primary text-white" onClick={() => (window.location.href = "/admin/orders")}>View Orders</Button>
 								</div>
 							</>
 						)

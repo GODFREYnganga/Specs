@@ -184,19 +184,19 @@ export default function AdminAddProduct() {
         </div>
         <div>
           <Label htmlFor="image">Main Image</Label>
-          <Input id="image" name="image" value={form.image} onChange={handleImageInput} placeholder="Or upload below" />
-          <input type="file" ref={imageInputRef} accept="image/*" className="mt-2" onChange={handleImageFile} />
-          {imagePreview && (
-            <div className="mt-2">
-              <Image src={imagePreview} alt="Preview" width={200} height={200} className="rounded border" />
-            </div>
-          )}
+          <Input id="image" name="image" type="file" ref={imageInputRef} onChange={handleImageFile} accept="image/*" required />
+          {imagePreview && <Image src={imagePreview} alt="Preview" width={100} height={100} />}
         </div>
         <div>
-          <Label>Additional Images (up to 3)</Label>
-          {[0,1,2].map(i => (
-            <div key={i} className="mb-2">
-              <input type="file" ref={additionalImageInputRefs[i]} accept="image/*" onChange={e => handleAdditionalImageChange(i, e)} />
+          <Label>Additional Images</Label>
+          {additionalImageInputRefs.map((ref, index) => (
+            <div key={index} className="mt-2">
+              <Input
+                type="file"
+                ref={ref}
+                onChange={(e) => handleAdditionalImageChange(index, e)}
+                accept="image/*"
+              />
             </div>
           ))}
         </div>

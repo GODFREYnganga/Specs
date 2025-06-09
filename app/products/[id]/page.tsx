@@ -6,7 +6,8 @@ import { CardHeader } from "@/components/ui/card"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowLeft, Check, Heart, ShoppingCart, Star } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
 import { useCart } from "@/hooks/use-cart"
 import { useWishlist } from "@/hooks/use-wishlist"
 
@@ -16,37 +17,27 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
-// This would typically come from an API based on the product ID
-const product = {
-  id: 1,
-  name: "Urban Classic",
-  price: 12999,
-  category: "prescription",
-  description:
-    "The Urban Classic frames combine timeless design with modern comfort. These versatile frames are perfect for everyday wear, featuring premium acetate material and spring hinges for durability and comfort.",
-  features: [
-    "Premium acetate material",
-    "Spring hinges for comfort",
-    "Anti-scratch coating",
-    "UV protection",
-    "Includes hard case and cleaning cloth",
-  ],
-  colors: ["Black", "Tortoise", "Crystal"],
-  images: [
-    "/placeholder.svg?height=600&width=600",
-    "/placeholder.svg?height=600&width=600",
-    "/placeholder.svg?height=600&width=600",
-  ],
-  rating: 4.8,
-  reviews: 124,
-  inStock: true,
-}
-
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState<any>(null)
+  const router = useRouter()
   const { addToCart } = useCart()
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
-  const [selectedColor, setSelectedColor] = useState(product.colors[0])
+  const [selectedColor, setSelectedColor] = useState<string>("")
   const [quantity, setQuantity] = useState(1)
+
+  useEffect(() => {
+    async function fetchProduct() {
+      const res = await fetch(`/api/products/${params.id}`)
+      const data = await res.json()
+      setProduct(data)
+      setSelectedColor(data.colors[0])
+    }
+    fetchProduct()
+  }, [params.id])
+
+  if (!product) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="container px-4 md:px-6 py-8">
@@ -59,26 +50,25 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         <div className="space-y-4">
           <div className="aspect-square overflow-hidden rounded-lg">
             <img
-              src={product.images[0] || "/placeholder.svg"}
+              src={product.image}
               alt={product.name}
-              className="object-cover w-full h-full"
+              className="w-full h-full object-cover"
               width={600}
               height={600}
             />
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {product.images.map((image, index) => (
-              <div key={index} className="aspect-square overflow-hidden rounded-lg border cursor-pointer">
+          {product.images && (
+            <div className="grid grid-cols-3 gap-2">
+              {product.images.map((img: string, index: number) => (
                 <img
-                  src={image || "/placeholder.svg"}
-                  alt={`${product.name} view ${index + 1}`}
-                  className="object-cover w-full h-full"
-                  width={200}
-                  height={200}
+                  key={index}
+                  src={img}
+                  alt={`Additional ${index}`}
+                  className="w-full h-24 object-cover rounded-lg"
                 />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -117,7 +107,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <div>
             <h3 className="font-medium mb-2">Frame Color</h3>
             <RadioGroup value={selectedColor} onValueChange={setSelectedColor}>
-              {product.colors.map((color) => (
+              {product.colors.map((color: string) => (
                 <div key={color} className="flex items-center space-x-2">
                   <RadioGroupItem value={color} id={color} />
                   <Label htmlFor={color}>{color}</Label>
@@ -207,7 +197,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             </TabsContent>
             <TabsContent value="features" className="pt-4">
               <ul className="list-disc pl-5 space-y-2">
-                {product.features.map((feature, index) => (
+                {product.features.map((feature: string, index: number) => (
                   <li key={index}>{feature}</li>
                 ))}
               </ul>
