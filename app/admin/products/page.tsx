@@ -1,9 +1,10 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import useSWR from "swr"
 
 interface Product {
   _id: string
@@ -13,35 +14,26 @@ interface Product {
   inStock: boolean
 }
 
-export default function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-  useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then(setProducts)
-      .catch(() => setError("Failed to load products"))
-      .finally(() => setLoading(false))
-  }, [])
+export default function AdminProducts() {
+  const { data: products = [], error, isLoading, mutate } = useSWR(
+    "/api/products",
+    fetcher,
+    { refreshInterval: 3000 }
+  )
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return
     try {
-      setLoading(true)
-      setError("")
-      const res = await fetch("/api/products", {
+      await fetch("/api/products", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ _id: id }),
       })
-      if (!res.ok) throw new Error("Failed to delete product")
-      setProducts((prev) => prev.filter((p) => p._id !== id))
+      mutate() // Revalidate after delete
     } catch (err) {
-      setError("Failed to delete product")
-    } finally {
-      setLoading(false)
+      alert("Failed to delete product")
     }
   }
 
@@ -53,10 +45,12 @@ export default function AdminProducts() {
           <Button>Add Product</Button>
         </Link>
       </div>
-      {loading ? (
+      {isLoading ? (
         <div>Loading...</div>
       ) : error ? (
-        <div className="text-red-500">{error}</div>
+        <div className="text-red-500">
+          {error.message || "Failed to load products"}
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border text-sm">
@@ -70,7 +64,7 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {products.map((product: any) => (
                 <tr key={product._id} className="border-b">
                   <td className="p-2">{product.name}</td>
                   <td className="p-2">{product.category}</td>

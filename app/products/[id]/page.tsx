@@ -18,8 +18,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const router = useRouter() // Ensure `useRouter` is used in a client component.
+
   const [product, setProduct] = useState<any>(null)
-  const router = useRouter()
   const { addToCart } = useCart()
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
   const [selectedColor, setSelectedColor] = useState<string>("")
@@ -27,13 +28,25 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function fetchProduct() {
+      if (!params?.id) return // Ensure `params.id` is available.
+
+      if (!router) {
+        console.error("Router is not mounted.")
+        return
+      }
+
       const res = await fetch(`/api/products/${params.id}`)
+      if (!res.ok) {
+        router.push("/products") // Redirect if the product is not found.
+        return
+      }
+
       const data = await res.json()
       setProduct(data)
       setSelectedColor(data.colors[0])
     }
     fetchProduct()
-  }, [params.id])
+  }, [params?.id, router])
 
   if (!product) {
     return <div>Loading...</div>

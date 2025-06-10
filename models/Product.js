@@ -25,9 +25,16 @@ const ProductSchema = new mongoose.Schema({
   image: {
     type: String,
     required: [true, "Please provide product image"],
+    get: (imagePath) => `/images/products/${imagePath}`,
   },
-  features: [String],
-  colors: [String],
+  features: {
+    type: [String],
+    default: [],
+  },
+  colors: {
+    type: [String],
+    default: [],
+  },
   images: [String],
   rating: {
     type: Number,
@@ -43,7 +50,7 @@ const ProductSchema = new mongoose.Schema({
   },
   frameShape: {
     type: String,
-    enum: ["round", "square", "cat-eye", "aviator", "rectangle", "geometric", ""],
+    enum: ["round", "square", "cat-eye", "aviator", "rectangle", "geometric", "wayfarer", "oval", "browline", "hexagonal", ""],
   },
   frameType: {
     type: String,
@@ -51,11 +58,11 @@ const ProductSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["men", "women", "unisex", ""],
+    enum: ["unisex", "men", "women", "kids", ""],
   },
   material: {
     type: String,
-    enum: ["acetate", "metal", "plastic", "titanium", ""],
+    enum: ["acetate", "metal", "titanium", "plastic", "stainless steel", "tr90", "wood", "carbon fiber", ""],
   },
   weight: {
     type: String,
@@ -63,15 +70,15 @@ const ProductSchema = new mongoose.Schema({
   },
   prescriptionType: {
     type: String,
-    enum: ["single-vision", "progressive", "reading", "non-prescription", "blue-light", ""],
+    enum: ["single-vision", "progressive", "bifocal", "non-prescription", "readers", ""],
   },
   frameWidth: {
     type: String,
-    enum: ["narrow", "medium", "wide", ""],
+    enum: ["narrow (less than 130mm)", "medium (130mm-139mm)", "wide (140mm and above)", ""],
   },
   productType: {
     type: String,
-    enum: ["eyeglasses", "sunglasses", "reading-glasses", "blue-light", ""],
+    enum: ["eyeglasses", "sunglasses", "blue-light", "reading-glasses", "fashion", ""],
   },
   brand: {
     type: String,
@@ -79,7 +86,7 @@ const ProductSchema = new mongoose.Schema({
   },
   size: {
     type: String,
-    enum: ["small", "medium", "large", ""],
+    enum: ["small", "medium", "large", "extra large", ""],
   },
   createdAt: {
     type: Date,
@@ -90,4 +97,5 @@ const ProductSchema = new mongoose.Schema({
 // Add index for search functionality
 ProductSchema.index({ name: "text", description: "text", category: "text" })
 
-module.exports = mongoose.model("Product", ProductSchema)
+// Check if the model already exists before defining it
+module.exports = mongoose.models.Product || mongoose.model("Product", ProductSchema)

@@ -10,12 +10,23 @@ if (!MONGODB_URI) {
 let cached = (global as any).mongoose || { conn: null, promise: null };
 
 export async function connectToDatabase() {
-  if (cached.conn) return cached.conn;
+  console.log("Connecting to database..."); // Log connection attempt
+  if (cached.conn) {
+    console.log("Using cached database connection.");
+    return cached.conn;
+  }
   if (!cached.promise) {
+    console.log("Creating new database connection...");
     cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: DB_NAME,
+      dbName: DB_NAME, // Ensure the database name is set to 'Store'
       bufferCommands: false,
-    }).then((mongoose) => mongoose);
+    }).then((mongoose) => {
+      console.log("Database connection established.");
+      return mongoose;
+    }).catch((err) => {
+      console.error("Database connection failed:", err);
+      throw err;
+    });
   }
   cached.conn = await cached.promise;
   return cached.conn;

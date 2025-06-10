@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Filter, ChevronDown, ChevronUp, Heart } from "lucide-react"
 import Link from "next/link";
+import useSWR from "swr"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
@@ -176,6 +177,8 @@ interface FilterSection {
   options: { value: string; label: string }[]
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -226,7 +229,12 @@ export default function ProductsPage() {
   const { toast } = useToast()
   const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
 
-  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const { data: allProducts = [], error, isLoading } = useSWR(
+    "/api/products",
+    fetcher,
+    { refreshInterval: 3000 }
+  )
+
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [filters, setFilters] = useState({
     categories: categoryParam ? [categoryParam] : [],
@@ -264,14 +272,6 @@ export default function ProductsPage() {
 
   const priceInputRef = useRef<HTMLInputElement>(null)
   const maxPriceInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    // Fetch all products from the API once
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => setAllProducts(data))
-      .catch(() => setAllProducts([]))
-  }, [])
 
   useEffect(() => {
     // Apply filters to allProducts

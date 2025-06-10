@@ -39,33 +39,82 @@ export default function AdminAddProduct() {
   const additionalImageInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)]
   const [imagePreview, setImagePreview] = useState<string>("")
 
-  // Dropdown options for eyewear fields
+  // Dropdown options for enums with correct values
   const frameShapes = [
-    "Round", "Square", "Cat Eye", "Aviator", "Rectangle", "Geometric", "Wayfarer", "Oval", "Browline", "Hexagonal"
+    { value: "round", label: "Round" },
+    { value: "square", label: "Square" },
+    { value: "cat-eye", label: "Cat Eye" },
+    { value: "aviator", label: "Aviator" },
+    { value: "rectangle", label: "Rectangle" },
+    { value: "geometric", label: "Geometric" },
+    { value: "wayfarer", label: "Wayfarer" },
+    { value: "oval", label: "Oval" },
+    { value: "browline", label: "Browline" },
+    { value: "hexagonal", label: "Hexagonal" },
   ]
   const frameTypes = [
-    "Full Rim", "Semi-Rimless", "Rimless"
+    { value: "full-rim", label: "Full Rim" },
+    { value: "semi-rimless", label: "Semi-Rimless" },
+    { value: "rimless", label: "Rimless" },
   ]
   const genders = [
-    "Unisex", "Men", "Women", "Kids"
+    { value: "unisex", label: "Unisex" },
+    { value: "men", label: "Men" },
+    { value: "women", label: "Women" },
+    { value: "kids", label: "Kids" },
   ]
   const materials = [
-    "Acetate", "Metal", "Titanium", "Plastic", "Stainless Steel", "TR90", "Wood", "Carbon Fiber"
+    { value: "acetate", label: "Acetate" },
+    { value: "metal", label: "Metal" },
+    { value: "titanium", label: "Titanium" },
+    { value: "plastic", label: "Plastic" },
+    { value: "stainless steel", label: "Stainless Steel" },
+    { value: "tr90", label: "TR90" },
+    { value: "wood", label: "Wood" },
+    { value: "carbon fiber", label: "Carbon Fiber" },
   ]
   const prescriptionTypes = [
-    "Single Vision", "Progressive", "Bifocal", "Non-Prescription", "Readers"
+    { value: "single-vision", label: "Single Vision" },
+    { value: "progressive", label: "Progressive" },
+    { value: "bifocal", label: "Bifocal" },
+    { value: "non-prescription", label: "Non-Prescription" },
+    { value: "readers", label: "Readers" },
   ]
   const frameWidths = [
-    "Narrow (less than 130mm)", "Medium (130mm-139mm)", "Wide (140mm and above)"
+    { value: "narrow (less than 130mm)", label: "Narrow (less than 130mm)" },
+    { value: "medium (130mm-139mm)", label: "Medium (130mm-139mm)" },
+    { value: "wide (140mm and above)", label: "Wide (140mm and above)" },
   ]
   const productTypes = [
-    "Eyeglasses", "Sunglasses", "Blue Light", "Reading Glasses", "Fashion"
-  ]
-  const colors = [
-    "Black", "Tortoise", "Crystal", "Gold", "Silver", "Blue", "Brown", "Red", "Green", "Pink", "White", "Grey", "Yellow", "Orange", "Purple", "Multi"
+    { value: "eyeglasses", label: "Eyeglasses" },
+    { value: "sunglasses", label: "Sunglasses" },
+    { value: "blue-light", label: "Blue Light" },
+    { value: "reading-glasses", label: "Reading Glasses" },
+    { value: "fashion", label: "Fashion" },
   ]
   const sizes = [
-    "Small", "Medium", "Large", "Extra Large"
+    { value: "small", label: "Small" },
+    { value: "medium", label: "Medium" },
+    { value: "large", label: "Large" },
+    { value: "extra large", label: "Extra Large" },
+  ]
+  const colors = [
+    { value: "black", label: "Black" },
+    { value: "tortoise", label: "Tortoise" },
+    { value: "crystal", label: "Crystal" },
+    { value: "gold", label: "Gold" },
+    { value: "silver", label: "Silver" },
+    { value: "blue", label: "Blue" },
+    { value: "brown", label: "Brown" },
+    { value: "red", label: "Red" },
+    { value: "green", label: "Green" },
+    { value: "pink", label: "Pink" },
+    { value: "white", label: "White" },
+    { value: "grey", label: "Grey" },
+    { value: "yellow", label: "Yellow" },
+    { value: "orange", label: "Orange" },
+    { value: "purple", label: "Purple" },
+    { value: "multi", label: "Multi" },
   ]
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -73,7 +122,7 @@ export default function AdminAddProduct() {
     if (type === "checkbox" && e.target instanceof HTMLInputElement) {
       setForm((prev) => ({
         ...prev,
-        [name]: e.target.checked,
+        [name]: (e.target as HTMLInputElement).checked,
       }))
     } else {
       setForm((prev) => ({
@@ -104,66 +153,98 @@ export default function AdminAddProduct() {
     }
   }
 
+  const handleAddColor = (color: string) => {
+    setForm((prev) => ({
+      ...prev,
+      colors: [...(prev.colors || []), color],
+    }))
+  }
+
+  const handleRemoveColor = (color: string) => {
+    setForm((prev) => ({
+      ...prev,
+      colors: (prev.colors || []).filter((c) => c !== color),
+    }))
+  }
+
+  const handleAddFeature = (feature: string) => {
+    setForm((prev) => ({
+      ...prev,
+      features: [...(prev.features || []), feature],
+    }))
+  }
+
+  const handleRemoveFeature = (feature: string) => {
+    setForm((prev) => ({
+      ...prev,
+      features: (prev.features || []).filter((f) => f !== feature),
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
     try {
-      // 1. Upload main image file if provided
-      let imageUrl = form.image
-      if (imageInputRef.current && imageInputRef.current.files && imageInputRef.current.files[0]) {
-        const file = imageInputRef.current.files[0]
-        const formData = new FormData()
-        formData.append("file", file)
-        const uploadRes = await fetch("/api/products/upload", {
-          method: "POST",
-          body: formData,
-        })
-        if (!uploadRes.ok) throw new Error("Image upload failed")
-        const { url } = await uploadRes.json()
-        imageUrl = url
-      }
-      // 2. Upload additional images if provided
-      let additionalImageUrls: string[] = []
-      for (let i = 0; i < additionalImageFiles.length; i++) {
-        const file = additionalImageFiles[i]
-        if (file) {
-          const formData = new FormData()
-          formData.append("file", file)
-          const uploadRes = await fetch("/api/products/upload", {
-            method: "POST",
-            body: formData,
-          })
-          if (!uploadRes.ok) throw new Error(`Additional image ${i + 1} upload failed`)
-          const { url } = await uploadRes.json()
-          additionalImageUrls.push(url)
+      const productFormData = new FormData();
+
+      // Append all form fields from the 'form' state
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === 'features' && typeof value === 'string') {
+          value.split(",").map(f => f.trim()).forEach(feature => productFormData.append('features[]', feature));
+        } else if (key === 'colors' && typeof value === 'string') {
+          // Assuming colors are also comma-separated in the form state for now
+          // Adjust if colors are handled differently (e.g., an array in state)
+          value.split(",").map(c => c.trim()).forEach(color => productFormData.append('colors[]', color));
+        } else if (key === 'images') {
+          // Skip 'images' from the main form state if handled by additionalImageFiles
         }
+        else {
+          productFormData.append(key, String(value));
+        }
+      });
+
+      // 1. Handle main image file
+      if (imageInputRef.current && imageInputRef.current.files && imageInputRef.current.files[0]) {
+        productFormData.append("image", imageInputRef.current.files[0]);
+      } else if (additionalImageFiles[0]) {
+        // Use first additional image as main image if main image is not set
+        productFormData.append("image", additionalImageFiles[0]);
+      } else if (form.image) {
+        // If image is a URL (e.g. already uploaded or external)
+        productFormData.append("image", form.image);
       }
-      // 3. Submit product info with image URLs
+
+
+      // 2. Handle additional images if your backend supports multiple 'images' fields or an array
+      additionalImageFiles.forEach((file) => {
+        if (file) {
+          productFormData.append("additionalImages[]", file); // Adjust field name as per backend
+        }
+      });
+
+      // 3. Submit product info
       const res = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          image: imageUrl,
-          price: Number(form.price),
-          features: form.features ? form.features.split(",").map(f => f.trim()) : [],
-          images: additionalImageUrls,
-        }),
-      })
-      if (!res.ok) throw new Error("Failed to add product")
-      router.push("/admin/products")
+        body: productFormData, // Send FormData directly, browser sets Content-Type
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to add product");
+      }
+      router.push("/admin/products");
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
     <Card className="max-w-xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4">Add Product</h2>
-      <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="name">Name</Label>
           <Input id="name" name="name" value={form.name} onChange={handleChange} required />
@@ -216,42 +297,42 @@ export default function AdminAddProduct() {
           <Label htmlFor="color">Color</Label>
           <select id="color" name="color" value={form.color} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select color</option>
-            {colors.map(c => <option key={c} value={c}>{c}</option>)}
+            {colors.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="size">Frame Size</Label>
           <select id="size" name="size" value={form.size} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select size</option>
-            {sizes.map(s => <option key={s} value={s}>{s}</option>)}
+            {sizes.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="frameShape">Frame Shape</Label>
           <select id="frameShape" name="frameShape" value={form.frameShape} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select shape</option>
-            {frameShapes.map(shape => <option key={shape} value={shape}>{shape}</option>)}
+            {frameShapes.map(shape => <option key={shape.value} value={shape.value}>{shape.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="frameType">Frame Type</Label>
           <select id="frameType" name="frameType" value={form.frameType} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select type</option>
-            {frameTypes.map(type => <option key={type} value={type}>{type}</option>)}
+            {frameTypes.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="gender">Gender</Label>
           <select id="gender" name="gender" value={form.gender} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select gender</option>
-            {genders.map(g => <option key={g} value={g}>{g}</option>)}
+            {genders.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="material">Material</Label>
           <select id="material" name="material" value={form.material} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select material</option>
-            {materials.map(m => <option key={m} value={m}>{m}</option>)}
+            {materials.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
         </div>
         <div>
@@ -262,21 +343,21 @@ export default function AdminAddProduct() {
           <Label htmlFor="prescriptionType">Prescription Type</Label>
           <select id="prescriptionType" name="prescriptionType" value={form.prescriptionType} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select type</option>
-            {prescriptionTypes.map(pt => <option key={pt} value={pt}>{pt}</option>)}
+            {prescriptionTypes.map(pt => <option key={pt.value} value={pt.value}>{pt.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="frameWidth">Frame Width</Label>
           <select id="frameWidth" name="frameWidth" value={form.frameWidth} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select width</option>
-            {frameWidths.map(w => <option key={w} value={w}>{w}</option>)}
+            {frameWidths.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
           </select>
         </div>
         <div>
           <Label htmlFor="productType">Product Type</Label>
           <select id="productType" name="productType" value={form.productType} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">Select type</option>
-            {productTypes.map(pt => <option key={pt} value={pt}>{pt}</option>)}
+            {productTypes.map(pt => <option key={pt.value} value={pt.value}>{pt.label}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-2">
@@ -285,23 +366,6 @@ export default function AdminAddProduct() {
         </div>
         {error && <div className="text-red-500">{error}</div>}
         <Button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Product"}</Button>
-      </form>
-      {/* Bulk Upload Section */}
-      <hr className="my-6" />
-      <h3 className="text-xl font-bold mb-2">Bulk Product Upload</h3>
-      <div className="mb-2">
-        <Button type="button" onClick={() => window.location.href = '/api/products/csv-template'}>Download CSV Template</Button>
-      </div>
-      <form className="space-y-2" action="/api/products/bulk-upload" method="POST" encType="multipart/form-data">
-        <div>
-          <Label htmlFor="csvFile">CSV File</Label>
-          <input id="csvFile" name="csvFile" type="file" accept=".csv" required />
-        </div>
-        <div>
-          <Label htmlFor="imagesZip">Images Zip</Label>
-          <input id="imagesZip" name="imagesZip" type="file" accept=".zip" required />
-        </div>
-        <Button type="submit">Upload Bulk Products</Button>
       </form>
     </Card>
   )
