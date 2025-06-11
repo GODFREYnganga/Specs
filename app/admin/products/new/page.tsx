@@ -9,9 +9,36 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Image from "next/image"
 
+interface ProductFormState {
+  sku: string;
+  stock: string;
+  name: string;
+  price: string;
+  category: string;
+  image: string;
+  description: string;
+  inStock: boolean;
+  frameShape: string;
+  frameType: string;
+  gender: string;
+  material: string;
+  weight: string;
+  prescriptionType: string;
+  frameWidth: string;
+  productType: string;
+  color: string;
+  brand: string;
+  size: string;
+  features: string[];
+  colors: string[];
+  images: string;
+}
+
 export default function AdminAddProduct() {
   const router = useRouter()
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProductFormState>({
+    sku: "",
+    stock: "",
     name: "",
     price: "",
     category: "prescription",
@@ -29,7 +56,8 @@ export default function AdminAddProduct() {
     color: "",
     brand: "",
     size: "",
-    features: "",
+    features: [],
+    colors: [],
     images: "",
   })
   const [loading, setLoading] = useState(false)
@@ -124,6 +152,11 @@ export default function AdminAddProduct() {
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
       }))
+    } else if (name === "stock") {
+      setForm((prev) => ({
+        ...prev,
+        stock: value.replace(/[^0-9]/g, ""),
+      }))
     } else {
       setForm((prev) => ({
         ...prev,
@@ -156,28 +189,28 @@ export default function AdminAddProduct() {
   const handleAddColor = (color: string) => {
     setForm((prev) => ({
       ...prev,
-      colors: [...(prev.colors || []), color],
+      colors: [...prev.colors, color],
     }))
   }
 
   const handleRemoveColor = (color: string) => {
     setForm((prev) => ({
       ...prev,
-      colors: (prev.colors || []).filter((c) => c !== color),
+      colors: prev.colors.filter((c) => c !== color),
     }))
   }
 
   const handleAddFeature = (feature: string) => {
     setForm((prev) => ({
       ...prev,
-      features: [...(prev.features || []), feature],
+      features: [...prev.features, feature],
     }))
   }
 
   const handleRemoveFeature = (feature: string) => {
     setForm((prev) => ({
       ...prev,
-      features: (prev.features || []).filter((f) => f !== feature),
+      features: prev.features.filter((f) => f !== feature),
     }))
   }
 
@@ -190,16 +223,17 @@ export default function AdminAddProduct() {
 
       // Append all form fields from the 'form' state
       Object.entries(form).forEach(([key, value]) => {
-        if (key === 'features' && typeof value === 'string') {
-          value.split(",").map(f => f.trim()).forEach(feature => productFormData.append('features[]', feature));
-        } else if (key === 'colors' && typeof value === 'string') {
-          // Assuming colors are also comma-separated in the form state for now
-          // Adjust if colors are handled differently (e.g., an array in state)
-          value.split(",").map(c => c.trim()).forEach(color => productFormData.append('colors[]', color));
+        if (key === 'features' && Array.isArray(value)) {
+          value.forEach(feature => productFormData.append('features', feature));
+        } else if (key === 'colors' && Array.isArray(value)) {
+          value.forEach(color => productFormData.append('colors', color));
         } else if (key === 'images') {
           // Skip 'images' from the main form state if handled by additionalImageFiles
-        }
-        else {
+        } else if (key === 'stock') {
+          productFormData.append('stock', String(Number(value)));
+        } else if (key === 'sku') {
+          productFormData.append('sku', String(value));
+        } else {
           productFormData.append(key, String(value));
         }
       });
@@ -363,6 +397,14 @@ export default function AdminAddProduct() {
         <div className="flex items-center gap-2">
           <input id="inStock" name="inStock" type="checkbox" checked={form.inStock} onChange={handleChange} />
           <Label htmlFor="inStock">In Stock</Label>
+        </div>
+        <div>
+          <Label htmlFor="sku">SKU</Label>
+          <Input id="sku" name="sku" value={form.sku} onChange={handleChange} required />
+        </div>
+        <div>
+          <Label htmlFor="stock">Stock</Label>
+          <Input id="stock" name="stock" type="number" min="0" value={form.stock} onChange={handleChange} required />
         </div>
         {error && <div className="text-red-500">{error}</div>}
         <Button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Product"}</Button>

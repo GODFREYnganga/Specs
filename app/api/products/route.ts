@@ -33,60 +33,54 @@ export async function POST(request: Request) {
     await connectToDatabase();
     const formData = await request.formData();
 
-    // Handle image upload
-    let file = formData.get("image");
-    let filename = "";
-    if (file && typeof file !== "string") {
-      // If file is a File object
-      const buffer = Buffer.from(await file.arrayBuffer());
-      filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "-")}`;
+    // Collect all image files (main and additional)
+    const imageFiles = [];
+    const mainImage = formData.get("image");
+    if (mainImage && typeof mainImage !== "string") {
+      imageFiles.push(mainImage);
+    }
+    if (formData.has("additionalImages[]")) {
+      const additionalImages = formData.getAll("additionalImages[]");
+      for (const img of additionalImages) {
+        if (img && typeof img !== "string") {
+          imageFiles.push(img);
+        }
+      }
+    }
+    // Require at least one image file
+    if (imageFiles.length === 0) {
+      return NextResponse.json({ error: "Please upload at least one product image." }, { status: 400 });
+    }
+    // Save all images and collect their paths
+    const imagesArray = [];
+    for (const imgFile of imageFiles) {
+      const buffer = Buffer.from(await imgFile.arrayBuffer());
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${imgFile.name.split('.').pop()}`;
       const uploadDir = path.join(process.cwd(), "public", "images", "products");
       await fs.mkdir(uploadDir, { recursive: true });
       const filePath = path.join(uploadDir, filename);
       await fs.writeFile(filePath, buffer);
-      console.log(`Image uploaded successfully: ${filePath}`);
-      // Store the relative path in the database
-      filename = `/images/products/${filename}`;
-    } else if (typeof file === "string" && file.length > 0) {
-      // If image is a string (URL or path)
-      filename = file;
+      const relPath = `/images/products/${filename}`;
+      imagesArray.push(relPath);
     }
-    // If no image provided, but additionalImages[] exists, use the first additional image
-    if (!filename && formData.has("additionalImages[]")) {
-      const additionalImage = formData.getAll("additionalImages[]")[0];
-      if (additionalImage && typeof additionalImage !== "string") {
-        const buffer = Buffer.from(await additionalImage.arrayBuffer());
-        const addFilename = `${Date.now()}-${additionalImage.name.replace(/[^a-zA-Z0-9.]/g, "-")}`;
-        const uploadDir = path.join(process.cwd(), "public", "images", "products");
-        await fs.mkdir(uploadDir, { recursive: true });
-        const filePath = path.join(uploadDir, addFilename);
-        await fs.writeFile(filePath, buffer);
-        filename = `/images/products/${addFilename}`;
-      } else if (typeof additionalImage === "string" && additionalImage.length > 0) {
-        filename = additionalImage;
-      }
-    }
-    // If still no image, return error
-    if (!filename) {
-      return NextResponse.json({ error: "Please provide product image" }, { status: 400 });
-    }
-
     // Prepare product data
     const data: Record<string, any> = {};
     formData.forEach((value, key) => {
       if (key === "features" || key === "colors") {
         data[key] = (value as string).split(",").map((item) => item.trim());
-      } else if (key === "price") {
+      } else if (key === "price" || key === "stock") {
         data[key] = Number(value);
       } else if (key === "weight") {
-        // Only allow valid enum values for weight
         const allowedWeights = ["light", "medium", "heavy", ""];
         data[key] = allowedWeights.includes(value as string) ? value : "";
-      } else {
+      } else if (key === "sku") {
+        data[key] = String(value);
+      } else if (key !== "image" && key !== "additionalImages[]") {
         data[key] = value;
       }
     });
-    data.image = filename; // Store relative path or string
+    data.image = imagesArray[0]; // Use the first uploaded image as the main image
+    data.images = imagesArray; // Store all image paths
 
     console.log("Product data prepared:", data); // Log prepared data
 

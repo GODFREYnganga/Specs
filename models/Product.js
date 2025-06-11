@@ -92,6 +92,18 @@ const ProductSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  sku: {
+    type: String,
+    required: [true, "Please provide product SKU"],
+    unique: true,
+    trim: true,
+  },
+  stock: {
+    type: Number,
+    required: [true, "Please provide product stock quantity"],
+    default: 0,
+    min: [0, "Stock cannot be negative"],
+  },
 })
 
 // Add index for search functionality

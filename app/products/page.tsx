@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
+import React, { useState, useEffect } from "react"
 
-import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Filter, ChevronDown, ChevronUp, Heart } from "lucide-react"
 import Link from "next/link";
@@ -171,13 +170,35 @@ const filterSections: Category[] = [
   },
 ]
 
+// Add a mapping from navbar slugs to DB category values
+const NAVBAR_CATEGORY_MAP: Record<string, string> = {
+  eyeglasses: "prescription",
+  screenglasses: "blue-light",
+  kidsglasses: "kids", // If you use a different DB value, update here
+  contactlenses: "contact-lenses",
+  sunglasses: "sunglasses",
+}
+
 interface FilterSection {
   id: string
   title: string
   options: { value: string; label: string }[]
 }
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+// Define slider constants
+const SLIDER_MIN_PRICE = 8000;
+const SLIDER_MAX_PRICE = 25000;
+const SLIDER_STEP = 100;
+
+// Utility function to snap value to step, within min/max bounds
+const snapToStep = (val: number, min: number, max: number, step: number): number => {
+  // First, clamp to min/max to avoid snapping outside bounds
+  const clampedVal = Math.max(min, Math.min(val, max));
+  // Then snap to the nearest step
+  return Math.round((clampedVal - min) / step) * step + min;
+};
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -218,8 +239,10 @@ export default function ProductsPage() {
     },
   };
 
-  const currentCategory = categoryParam.toLowerCase();
-  const hero = categoryContent[currentCategory] || {
+  const currentCategorySlug = categoryParam.toLowerCase();
+  const dbCategory = NAVBAR_CATEGORY_MAP[currentCategorySlug] || categoryParam;
+
+  const hero = categoryContent[currentCategorySlug] || {
     title: "All Products",
     description: "Browse our full collection of eyewear and accessories.",
     banner: "/placeholder.jpg",
@@ -238,7 +261,7 @@ export default function ProductsPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [filters, setFilters] = useState({
     categories: categoryParam ? [categoryParam] : [],
-    priceRange: [8000, 22000],
+    priceRange: [SLIDER_MIN_PRICE, 22000], // Use constant for initial min
     frameShape: "all",
     searchQuery: "",
     sortBy: "featured",
@@ -253,6 +276,9 @@ export default function ProductsPage() {
     productType: "all",
     size: "all",
   })
+  // Defensive: always use a memoized value for Slider
+  const sliderValue = React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], [filters.priceRange[0], filters.priceRange[1]])
+
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     priceRange: true,
@@ -270,16 +296,13 @@ export default function ProductsPage() {
     productType: true,
   })
 
-  const priceInputRef = useRef<HTMLInputElement>(null)
-  const maxPriceInputRef = useRef<HTMLInputElement>(null)
-
   useEffect(() => {
     // Apply filters to allProducts
     let filtered = [...allProducts]
 
-    // Apply URL params first
-    if (categoryParam) {
-      filtered = filtered.filter((product) => product.category === categoryParam)
+    // Use dbCategory for filtering
+    if (dbCategory) {
+      filtered = filtered.filter((product) => product.category === dbCategory)
     }
 
     if (genderParam) {
@@ -396,7 +419,7 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(filtered)
-  }, [allProducts, filters, categoryParam, genderParam, frameTypeParam, brandParam, topPickParam])
+  }, [allProducts, filters, dbCategory, genderParam, frameTypeParam, brandParam, topPickParam])
 
   const handleCategoryChange = (category: string) => {
     setFilters((prev) => {
@@ -407,43 +430,86 @@ export default function ProductsPage() {
     })
   }
 
-  const handlePriceRangeChange = (value: number[]) => {
-    setFilters((prev) => ({ ...prev, priceRange: value }))
+  const updatePriceRange = React.useCallback((newMinMax: [number, number]) => {
+    setFilters((prevFilters) => {
+      let [minVal, maxVal] = newMinMax;
 
-    // Update input fields
-    if (priceInputRef.current) {
-      priceInputRef.current.value = value[0].toString()
+      // Snap values to the defined step and ensure they are within global min/max
+      minVal = snapToStep(minVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
+      maxVal = snapToStep(maxVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
+
+      // Ensure minVal <= maxVal after snapping.
+      // If snapping caused an inversion (e.g., min was snapped up, max snapped down), fix it.
+      if (minVal > maxVal) {
+        // This might happen if initial newMinMax was like [10050, 10040]
+        // After snapping, could be [10100, 10000]. So, swap and re-snap/clamp.
+        [minVal, maxVal] = [maxVal, minVal];
+        minVal = snapToStep(minVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
+        maxVal = snapToStep(maxVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
+      }
+      
+      // Final check to ensure min is not greater than max (e.g. if both snap to same value, then one was adjusted)
+      // This re-ordering should ideally be handled by ensuring inputs are logical or by the slider itself.
+      // For robustness, ensure min is capped by max after all snapping.
+      if (minVal > maxVal) { // This should be rare after prior swap, but as a hard guard
+          minVal = maxVal; 
+      }
+
+
+      if (minVal !== prevFilters.priceRange[0] || maxVal !== prevFilters.priceRange[1]) {
+        return { ...prevFilters, priceRange: [minVal, maxVal] };
+      }
+      return prevFilters;
+    });
+  }, [setFilters /* SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP are constants */]);
+
+  const handleSliderPriceChange = React.useCallback((sliderOutputValue: number[]) => {
+    if (Array.isArray(sliderOutputValue) && sliderOutputValue.length === 2) {
+      // Values from Radix slider should already be stepped.
+      updatePriceRange([sliderOutputValue[0], sliderOutputValue[1]]);
+    } else {
+      console.warn("Unexpected slider output value:", sliderOutputValue);
     }
+  }, [updatePriceRange]);
+  
+  const handlePriceInputChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) => {
+    const typedValue = event.target.value;
+    const parsedValue = parseInt(typedValue, 10);
+    
+    // Get a mutable copy of the current price range from state
+    // We need `filters.priceRange` from the latest state for this handler.
+    // Since `updatePriceRange` uses a functional update, this handler can close over `filters.priceRange`
+    // from the render it was defined in, or we can pass it to `updatePriceRange`.
+    // Simpler: construct the proposed range based on current `filters.priceRange`.
 
-    if (maxPriceInputRef.current) {
-      maxPriceInputRef.current.value = value[1].toString()
+    const newProposedRange = [...filters.priceRange] as [number, number];
+
+    if (!isNaN(parsedValue)) {
+      newProposedRange[index] = parsedValue; // Use the raw parsed value
+      updatePriceRange(newProposedRange);   // Let updatePriceRange handle all snapping and validation
+    } else if (typedValue === "") {
+      // If input is cleared, reset that specific handle to its boundary
+      newProposedRange[index] = (index === 0) ? SLIDER_MIN_PRICE : SLIDER_MAX_PRICE;
+      updatePriceRange(newProposedRange);   // Let updatePriceRange handle all snapping and validation
     }
-  }
+    // If input is invalid (not a number and not empty), React will revert to the controlled value on next render.
+  }, [filters.priceRange, updatePriceRange /* SLIDER_MIN_PRICE, SLIDER_MAX_PRICE are constants */]);
 
-  const handlePriceInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const value = Number.parseInt(e.target.value) || 0
-    setFilters((prev) => {
-      const newPriceRange = [...prev.priceRange]
-      newPriceRange[index] = value
-      return { ...prev, priceRange: newPriceRange }
-    })
-  }
+  const handleFrameShapeChange = React.useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, frameShape: value }));
+  }, [setFilters]);
 
-  const handleFrameShapeChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, frameShape: value }))
-  }
+  const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters((prev) => ({ ...prev, searchQuery: e.target.value }));
+  }, [setFilters]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))
-  }
+  const handleSortChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilters((prev) => ({ ...prev, sortBy: e.target.value }));
+  }, [setFilters]);
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
-  }
-
-  const handleFilterChange = (filterType: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }))
-  }
+  const handleFilterChange = React.useCallback((filterType: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
+  }, [setFilters]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => ({
@@ -455,7 +521,7 @@ export default function ProductsPage() {
   const resetFilters = () => {
     setFilters({
       categories: [],
-      priceRange: [8000, 22000],
+      priceRange: [SLIDER_MIN_PRICE, 22000], // Use constant
       frameShape: "all",
       searchQuery: "",
       sortBy: "featured",
@@ -520,37 +586,37 @@ export default function ProductsPage() {
                   <div className="filter-options space-y-4">
                     <div className="container6">
                       <Slider
-                        value={filters.priceRange}
-                        min={8000}
-                        max={25000}
-                        step={100}
+                        value={sliderValue} // This is React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], ...)
+                        min={SLIDER_MIN_PRICE}
+                        max={SLIDER_MAX_PRICE}
+                        step={SLIDER_STEP} // Use constant
                         className="my-6 slider-track"
-                        onValueChange={handlePriceRangeChange}
+                        onValueChange={handleSliderPriceChange}
                       />
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center left-value">
                           <span className="text-sm mr-2">KSh</span>
                           <Input
-                            ref={priceInputRef}
                             type="number"
                             className="w-20 h-8 thumb thumb--left"
-                            defaultValue={filters.priceRange[0]}
+                            value={filters.priceRange[0]} // Controlled by state
                             onChange={(e) => handlePriceInputChange(e, 0)}
-                            min={0}
-                            max={filters.priceRange[1]}
+                            min={SLIDER_MIN_PRICE}
+                            max={filters.priceRange[1]} // Max is dynamic based on other thumb
+                            step={SLIDER_STEP} // Add step to input for browser behavior
                           />
                         </div>
                         <span className="text-sm">to</span>
                         <div className="flex items-center right-value">
                           <span className="text-sm mr-2">KSh</span>
                           <Input
-                            ref={maxPriceInputRef}
                             type="number"
                             className="w-20 h-8 thumb thumb--right"
-                            defaultValue={filters.priceRange[1]}
+                            value={filters.priceRange[1]} // Controlled by state
                             onChange={(e) => handlePriceInputChange(e, 1)}
-                            min={filters.priceRange[0]}
-                            max={300}
+                            min={filters.priceRange[0]} // Min is dynamic based on other thumb
+                            max={SLIDER_MAX_PRICE}
+                            step={SLIDER_STEP} // Add step to input for browser behavior
                           />
                         </div>
                       </div>

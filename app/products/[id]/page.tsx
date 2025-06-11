@@ -28,22 +28,19 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     async function fetchProduct() {
-      if (!params?.id) return // Ensure `params.id` is available.
-
+      if (!params?.id) return;
       if (!router) {
-        console.error("Router is not mounted.")
-        return
+        console.error("Router is not mounted.");
+        return;
       }
-
       const res = await fetch(`/api/products/${params.id}`)
       if (!res.ok) {
-        router.push("/products") // Redirect if the product is not found.
+        router.push("/products")
         return
       }
-
       const data = await res.json()
       setProduct(data)
-      setSelectedColor(data.colors[0])
+      setSelectedColor(data.colors && data.colors.length > 0 ? data.colors[0] : "")
     }
     fetchProduct()
   }, [params?.id, router])
@@ -51,6 +48,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   if (!product) {
     return <div>Loading...</div>
   }
+
+  // Fallback for main image
+  const mainImage = (product.images && product.images.length > 0 && product.images[0]) || product.image || "/placeholder.svg";
+  const additionalImages = product.images && product.images.length > 1 ? product.images.slice(1) : [];
 
   return (
     <div className="container px-4 md:px-6 py-8">
@@ -63,16 +64,16 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         <div className="space-y-4">
           <div className="aspect-square overflow-hidden rounded-lg">
             <img
-              src={product.image}
+              src={mainImage}
               alt={product.name}
               className="w-full h-full object-cover"
               width={600}
               height={600}
             />
           </div>
-          {product.images && (
+          {additionalImages.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              {product.images.map((img: string, index: number) => (
+              {additionalImages.map((img: string, index: number) => (
                 <img
                   key={index}
                   src={img}
@@ -120,12 +121,16 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <div>
             <h3 className="font-medium mb-2">Frame Color</h3>
             <RadioGroup value={selectedColor} onValueChange={setSelectedColor}>
-              {product.colors.map((color: string) => (
-                <div key={color} className="flex items-center space-x-2">
-                  <RadioGroupItem value={color} id={color} />
-                  <Label htmlFor={color}>{color}</Label>
-                </div>
-              ))}
+              {product.colors && product.colors.length > 0 ? (
+                product.colors.map((color: string) => (
+                  <div key={color} className="flex items-center space-x-2">
+                    <RadioGroupItem value={color} id={color} />
+                    <Label htmlFor={color}>{color}</Label>
+                  </div>
+                ))
+              ) : (
+                <div className="text-muted-foreground">No colors available</div>
+              )}
             </RadioGroup>
           </div>
 
@@ -161,10 +166,10 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 className="flex-1"
                 onClick={() =>
                   addToCart({
-                    id: String(product.id),
+                    id: String(product._id),
                     name: product.name,
                     price: product.price,
-                    image: product.images[0],
+                    image: mainImage,
                     color: selectedColor,
                     quantity,
                   })
@@ -176,23 +181,23 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               </Button>
               <Button
                 size="lg"
-                variant={isInWishlist(String(product.id), selectedColor) ? "default" : "outline"}
+                variant={isInWishlist(String(product._id), selectedColor) ? "default" : "outline"}
                 onClick={() => {
-                  if (isInWishlist(String(product.id), selectedColor)) {
-                    removeFromWishlist(String(product.id), selectedColor)
+                  if (isInWishlist(String(product._id), selectedColor)) {
+                    removeFromWishlist(String(product._id), selectedColor)
                   } else {
                     addToWishlist({
-                      id: String(product.id),
+                      id: String(product._id),
                       name: product.name,
                       price: product.price,
-                      image: product.images[0] || "",
+                      image: mainImage,
                       color: selectedColor,
                       category: product.category as any,
                       description: product.description || "",
                     })
                   }
                 }}
-                aria-label={isInWishlist(String(product.id), selectedColor) ? "Remove from Wishlist" : "Add to Wishlist"}
+                aria-label={isInWishlist(String(product._id), selectedColor) ? "Remove from Wishlist" : "Add to Wishlist"}
               >
                 <Heart className="h-4 w-4" />
               </Button>
@@ -210,9 +215,13 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             </TabsContent>
             <TabsContent value="features" className="pt-4">
               <ul className="list-disc pl-5 space-y-2">
-                {product.features.map((feature: string, index: number) => (
-                  <li key={index}>{feature}</li>
-                ))}
+                {product.features && product.features.length > 0 ? (
+                  product.features.map((feature: string, index: number) => (
+                    <li key={index}>{feature}</li>
+                  ))
+                ) : (
+                  <li>No features listed.</li>
+                )}
               </ul>
             </TabsContent>
             <TabsContent value="shipping" className="pt-4">
