@@ -258,7 +258,6 @@ export default function ProductsPage() {
     { refreshInterval: 3000 }
   )
 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isClient, setIsClient] = useState(false)
   const [filters, setFilters] = useState({
     categories: categoryParam ? [categoryParam] : [],
@@ -302,9 +301,10 @@ export default function ProductsPage() {
     setIsClient(true)
   }, [])
 
-  useEffect(() => {
+  // Use useMemo for filtering instead of useEffect to prevent infinite loops
+  const filteredProducts = React.useMemo(() => {
     // Only run filtering on client side to avoid hydration mismatches
-    if (!isClient) return
+    if (!isClient || !allProducts.length) return []
     
     // Apply filters to allProducts
     let filtered = [...allProducts]
@@ -436,8 +436,33 @@ export default function ProductsPage() {
         break
     }
 
-    setFilteredProducts(filtered)
-  }, [isClient, allProducts, filters, dbCategories, genderParam, frameTypeParam, brandParam, topPickParam, categoryParam]) // Added isClient dependency
+    return filtered
+  }, [
+    isClient, 
+    allProducts, 
+    filters.categories,
+    filters.priceRange,
+    filters.frameShape,
+    filters.searchQuery,
+    filters.sortBy,
+    filters.gender,
+    filters.frameType,
+    filters.color,
+    filters.brand,
+    filters.material,
+    filters.weight,
+    filters.prescriptionType,
+    filters.frameWidth,
+    filters.productType,
+    filters.size,
+    dbCategories, 
+    genderParam, 
+    frameTypeParam, 
+    brandParam, 
+    topPickParam, 
+    categoryParam,
+    currentCategorySlug
+  ])
 
   const handleCategoryChange = React.useCallback((category: string) => {
     setFilters((prev) => {
@@ -453,11 +478,25 @@ export default function ProductsPage() {
   }, []);
 
   // Create stable callback functions for each category to prevent infinite loops
-  const handlePrescriptionChange = React.useCallback(() => handleCategoryChange("prescription"), [handleCategoryChange]);
-  const handleSunglassesChange = React.useCallback(() => handleCategoryChange("sunglasses"), [handleCategoryChange]);
-  const handleReadingChange = React.useCallback(() => handleCategoryChange("reading"), [handleCategoryChange]);
-  const handleBluelightChange = React.useCallback(() => handleCategoryChange("blue-light"), [handleCategoryChange]);
-  const handleFashionChange = React.useCallback(() => handleCategoryChange("fashion"), [handleCategoryChange]);
+  const handlePrescriptionChange = React.useCallback((checked: boolean) => {
+    handleCategoryChange("prescription");
+  }, [handleCategoryChange]);
+  
+  const handleSunglassesChange = React.useCallback((checked: boolean) => {
+    handleCategoryChange("sunglasses");
+  }, [handleCategoryChange]);
+  
+  const handleReadingChange = React.useCallback((checked: boolean) => {
+    handleCategoryChange("reading");
+  }, [handleCategoryChange]);
+  
+  const handleBluelightChange = React.useCallback((checked: boolean) => {
+    handleCategoryChange("blue-light");
+  }, [handleCategoryChange]);
+  
+  const handleFashionChange = React.useCallback((checked: boolean) => {
+    handleCategoryChange("fashion");
+  }, [handleCategoryChange]);
 
   // Create stable callbacks for RadioGroup filters to prevent infinite loops
   const createFilterHandler = React.useCallback((sectionId: string) => {
