@@ -1,162 +1,191 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Play, Eye, Star, Truck } from "lucide-react"
 
-const heroImages = [
+const heroContent = {
+  mainTitle: "Premium Glasses",
+  subtitle: "Starting at $49",
+  description: "Designer frames with prescription lenses, blue light protection, and free shipping",
+  mainImage: "/images/hero/diverse-people-glasses.png",
+  features: [
+    { icon: Star, text: "4.8★ Rating (25k+ reviews)" },
+    { icon: Truck, text: "Free shipping & 30-day returns" },
+    { icon: Eye, text: "Virtual try-on available" }
+  ]
+}
+
+const quickShopCategories = [
   {
-    src: "/images/hero/diverse-people-glasses.png",
-    alt: "People wearing different styles of glasses",
-    title: "Find Your Perfect Style",
-    description: "Express yourself with our vibrant collection of designer frames",
+    name: "Prescription",
+    image: "/images/products/gold-round-frames.png",
+    link: "/products?category=eye-glasses",
+    price: "from $49"
   },
   {
-    src: "/images/hero/group-glasses.png",
-    alt: "Group of people wearing glasses",
-    title: "Frames For Everyone",
-    description: "Discover our latest arrivals in premium eyewear",
+    name: "Blue Light",
+    image: "/images/products/blue-round-frames.png", 
+    link: "/products?category=blue-light-glasses",
+    price: "from $59"
   },
   {
-    src: "/images/hero/colorful-glasses-group.png",
-    alt: "People wearing colorful glasses",
-    title: "See The World Differently",
-    description: "Timeless designs meet modern comfort",
-  },
-  {
-    src: "/images/hero/beach-yellow-glasses.png",
-    alt: "Man wearing yellow glasses at the beach",
-    title: "Summer Ready Styles",
-    description: "Premium frames that make a statement",
-  },
-  {
-    src: "/images/hero/woman-gold-glasses.png",
-    alt: "Woman wearing gold glasses",
-    title: "Elegance In Every Frame",
-    description: "Discover frames that complement your unique style and personality",
-  },
-  {
-    src: "/images/people/woman-blue-sunglasses.png",
-    alt: "Woman with blue sunglasses",
-    title: "Bold Fashion Statement",
-    description: "",
-  },
-  {
-    src: "/images/people/man-headphones-glasses.png",
-    alt: "Man with headphones and glasses",
-    title: "Digital Comfort Collection",
-    description: "",
-  },
+    name: "Sunglasses",
+    image: "/images/products/brown-aviator-sunglasses.png",
+    link: "/products?category=sunglasses", 
+    price: "from $69"
+  }
 ]
 
 export function HeroSection() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % heroImages.length)
-    }, 8000)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const goToSlide = (index: number) => {
-    setCurrentIndex(index)
-  }
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length)
-  }
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % heroImages.length)
-  }
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   return (
-    <div className="relative h-screen bg-[#898D86]">
-      {heroImages.map((slide, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <div className="absolute inset-0 overflow-hidden">
-            <img
-              src={slide.src || "/placeholder.svg"}
-              alt={slide.alt}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000"
-              style={{
-                transform: index === currentIndex ? "scale(1)" : "scale(1.1)",
-              }}
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          </div>
-          <div className="relative h-full flex items-center">
-            <div className="container mx-auto px-4 md:px-8">
-              <div className="max-w-xl mx-auto text-center">
-                <h1
-                  className={`text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight transform transition-all duration-1000 ${
-                    index === currentIndex ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-                  }`}
-                >
-                  {slide.title}
-                </h1>
-                <p
-                  className={`text-lg md:text-xl text-white mb-8 transform transition-all duration-1000 delay-300 ${
-                    index === currentIndex ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-                  }`}
-                >
-                  {slide.description}
-                </p>
-                <div
-                  className={`flex justify-center transform transition-all duration-1000 delay-500 ${
-                    index === currentIndex ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-                  }`}
-                >
-                  <Link href="/products">
-                    <Button size="lg" className="px-8 py-6 bg-white text-gray-900 hover:bg-opacity-90">
-                      Shop Now
-                    </Button>
+    <section className="relative min-h-[90vh] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-10 w-64 h-64 bg-blue-600 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-600 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[90vh] py-12">
+          
+          {/* Left Content */}
+          <div className="space-y-8">
+            {/* Trending Badge */}
+            <div className="flex items-center gap-4">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 px-3 py-1">
+                🔥 Trending Now
+              </Badge>
+              <span className="text-sm text-gray-600">Summer Collection 2025</span>
+            </div>
+
+            {/* Main Headlines */}
+            <div className="space-y-4">
+              <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                {heroContent.mainTitle}
+                <span className="block text-blue-600">{heroContent.subtitle}</span>
+              </h1>
+              <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
+                {heroContent.description}
+              </p>
+            </div>
+
+            {/* Features */}
+            <div className="space-y-3">
+              {heroContent.features.map((feature, index) => {
+                const IconComponent = feature.icon
+                return (
+                  <div key={index} className="flex items-center gap-3 text-gray-700">
+                    <IconComponent className="h-5 w-5 text-blue-600" />
+                    <span>{feature.text}</span>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/products">
+                <Button size="lg" className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg font-semibold">
+                  Shop All Frames
+                </Button>
+              </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="px-8 py-4 text-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                onClick={() => setIsVideoPlaying(true)}
+              >
+                <Eye className="mr-2 h-5 w-5" />
+                Virtual Try-On
+              </Button>
+            </div>
+
+            {/* Quick Shop Categories */}
+            <div className="pt-8">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Quick Shop:</h3>
+              <div className="grid grid-cols-3 gap-4">
+                {quickShopCategories.map((category, index) => (
+                  <Link key={index} href={category.link}>
+                    <div className="group cursor-pointer bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
+                      <div className="aspect-square bg-gray-50 rounded-lg mb-3 overflow-hidden">
+                        <img 
+                          src={category.image} 
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <h4 className="font-medium text-sm text-gray-900">{category.name}</h4>
+                      <p className="text-blue-600 text-sm font-semibold">{category.price}</p>
+                    </div>
                   </Link>
-                </div>
+                ))}
               </div>
             </div>
           </div>
+
+          {/* Right Content - Hero Image */}
+          <div className="relative">
+            <div className="relative z-10">
+              <img 
+                src={heroContent.mainImage}
+                alt="People wearing stylish glasses"
+                className="w-full h-auto max-w-2xl mx-auto rounded-2xl shadow-2xl"
+              />
+              
+              {/* Floating Elements */}
+              <div className="absolute top-8 right-8 bg-white rounded-lg p-4 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                  <span className="font-semibold">4.8</span>
+                  <span className="text-gray-600 text-sm">25k+ reviews</span>
+                </div>
+              </div>
+
+              <div className="absolute bottom-8 left-8 bg-white rounded-lg p-4 shadow-lg">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">500K+</div>
+                  <div className="text-sm text-gray-600">Happy Customers</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Video Modal Trigger */}
+            {!isVideoPlaying && (
+              <button 
+                onClick={() => setIsVideoPlaying(true)}
+                className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-2xl hover:bg-opacity-30 transition-all group"
+              >
+                <div className="bg-white rounded-full p-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <Play className="h-8 w-8 text-blue-600 ml-1" />
+                </div>
+              </button>
+            )}
+          </div>
         </div>
-      ))}
-
-      {/* Navigation Buttons */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-30 hover:bg-opacity-50 transition"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-30 hover:bg-opacity-50 transition"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </button>
-
-      {/* Slide Indicators */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {heroImages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === currentIndex ? "bg-white" : "bg-white bg-opacity-50"
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
       </div>
-    </div>
+
+      {/* Trust Bar */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-600">
+            <span className="flex items-center gap-2">
+              <Truck className="h-4 w-4" />
+              Free Shipping Worldwide
+            </span>
+            <span>•</span>
+            <span>30-Day Money Back Guarantee</span>
+            <span>•</span>
+            <span>FDA Approved Lenses</span>
+            <span>•</span>
+            <span>Lifetime Frame Warranty</span>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }

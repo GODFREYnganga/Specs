@@ -3,7 +3,9 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ScrollToSection } from "@/components/scroll-to-section"
+import { FloatingConversionBar } from "@/components/floating-conversion-bar"
 import { WishlistProvider } from "@/hooks/use-wishlist"
+import { Toaster } from "@/components/ui/toaster"
 
 import "@/app/globals.css"
 
@@ -22,8 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <WishlistProvider>
             <Header />
             <ScrollToSection />
+            <FloatingConversionBar />
             <div className="pt-[160px]">{children}</div>
             <Footer />
+            <Toaster />
           </WishlistProvider>
         </ThemeProvider>
       </body>

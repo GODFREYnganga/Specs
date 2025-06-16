@@ -24,9 +24,9 @@ export default function AdminUserManagement() {
     setLoading(true)
     setError("")
     try {
-      const res = await fetch("/api/admin-users")
+      const res = await fetch("/api/users")
       const data = await res.json()
-      setAdmins(data)
+      setAdmins(data.filter((user: Admin & { role?: string }) => user.role === "admin"))
     } catch {
       setError("Failed to load admin users.")
     } finally {

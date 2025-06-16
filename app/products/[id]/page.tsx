@@ -7,9 +7,10 @@ import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowLeft, Check, Heart, ShoppingCart, Star } from "lucide-react"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import { useCart } from "@/hooks/use-cart"
 import { useWishlist } from "@/hooks/use-wishlist"
+import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -18,7 +19,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 
 export default function ProductPage({ params }: { params: { id: string } }) {
-  const router = useRouter() // Ensure `useRouter` is used in a client component.
+  const router = useRouter()
+  const { toast } = useToast()
 
   const [product, setProduct] = useState<any>(null)
   const { addToCart } = useCart()
@@ -29,18 +31,20 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function fetchProduct() {
       if (!params?.id) return;
-      if (!router) {
-        console.error("Router is not mounted.");
-        return;
-      }
-      const res = await fetch(`/api/products/${params.id}`)
-      if (!res.ok) {
+      
+      try {
+        const res = await fetch(`/api/products/${params.id}`)
+        if (!res.ok) {
+          router.push("/products")
+          return
+        }
+        const data = await res.json()
+        setProduct(data)
+        setSelectedColor(data.colors && data.colors.length > 0 ? data.colors[0] : "")
+      } catch (error) {
+        console.error("Error fetching product:", error)
         router.push("/products")
-        return
       }
-      const data = await res.json()
-      setProduct(data)
-      setSelectedColor(data.colors && data.colors.length > 0 ? data.colors[0] : "")
     }
     fetchProduct()
   }, [params?.id, router])

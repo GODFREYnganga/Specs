@@ -2,61 +2,72 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowLeft, ArrowRight } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
+import { ProductAddToCart } from "@/components/product-add-to-cart"
 
 /**
- * Product interface defining the structure of product data
+ * Product interface aligned with database schema
  */
 interface Product {
-  id: number
+  _id: string
+  id?: number
   name: string
   price: number
   category: string
   image: string
+  colors?: string[]
+  inStock?: boolean
+  description?: string
 }
 
 /**
- * Sample product data for the featured products carousel
- * In a production environment, this would likely come from an API
+ * Fallback product data in case API fails
  */
-const products: Product[] = [
+const fallbackProducts: Product[] = [
   {
+    _id: "fallback-1",
     id: 1,
     name: "Gold Round Frames",
     price: 12999,
-    category: "Eyeglasses",
+    category: "prescription",
     image: "/images/products/gold-round-frames.png",
+    colors: ["Gold", "Silver", "Rose Gold"],
+    inStock: true,
+    description: "Timeless design with modern comfort features",
   },
   {
+    _id: "fallback-2", 
     id: 2,
-    name: "Blue Round Frames",
+    name: "Blue Light Protection",
     price: 14999,
-    category: "Eyeglasses",
+    category: "blue-light",
     image: "/images/products/blue-round-frames.png",
+    colors: ["Blue", "Black", "Clear"],
+    inStock: true,
+    description: "Digital screen protection with style",
   },
   {
+    _id: "fallback-3",
     id: 3,
-    name: "Black Round Frames",
+    name: "Classic Black Frames",
     price: 11999,
-    category: "Eyeglasses",
+    category: "prescription",
     image: "/images/products/black-round-frames.png",
+    colors: ["Black", "Tortoise", "Clear"],
+    inStock: true,
+    description: "Versatile frames for everyday wear",
   },
   {
+    _id: "fallback-4",
     id: 4,
-    name: "White Cat Eye Frames",
+    name: "Cat Eye Sunglasses",
     price: 15999,
-    category: "Eyeglasses",
+    category: "sunglasses",
     image: "/images/products/white-cat-eye-frames.png",
-  },
-  {
-    id: 5,
-    name: "Navy Blue Frames",
-    price: 13999,
-    category: "Eyeglasses",
-    image: "/images/products/navy-blue-frames.png",
+    colors: ["White", "Black", "Tortoise"],
+    inStock: true,
+    description: "Elegant cat eye design with UV protection",
   },
 ]
 
@@ -64,7 +75,7 @@ const products: Product[] = [
  * FeaturedProducts Component
  *
  * Displays a carousel of featured products with navigation controls.
- * Includes automatic rotation and fade-in animations for product cards.
+ * Fetches real products from the database and includes automatic rotation and fade-in animations.
  */
 export function FeaturedProducts() {
   // State to track the current starting index of visible products
@@ -72,15 +83,68 @@ export function FeaturedProducts() {
 
   // State to store the currently visible products (subset of all products)
   const [visibleProducts, setVisibleProducts] = useState<Product[]>([])
+  
+  // State to store all fetched products
+  const [products, setProducts] = useState<Product[]>([])
+  
+  // Loading and error states
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Reference to the container element for potential DOM manipulations
   const containerRef = useRef<HTMLDivElement>(null)
 
   /**
-   * Effect to update visible products when the current index changes
+   * Effect to fetch products from the database
+   */
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/products')
+        if (!response.ok) {
+          throw new Error('Failed to fetch products')
+        }
+        const data = await response.json()
+        
+        // Use first 8 products for featured section, or fallback products if none found
+        const featuredProducts = data.length > 0 ? data.slice(0, 8) : fallbackProducts
+        
+        // Transform the data to match our interface
+        const transformedProducts = featuredProducts.map((product: any) => ({
+          _id: product._id,
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          image: product.image || "/placeholder.svg",
+          colors: product.colors || ["Default"],
+          inStock: product.inStock !== false, // Default to true if not specified
+          description: product.description || "Premium eyewear for modern lifestyle",
+        }))
+        
+        setProducts(transformedProducts)
+        setError(null)
+      } catch (err) {
+        console.error('Error fetching featured products:', err)
+        setError('Failed to load products')
+        // Use fallback products on error
+        setProducts(fallbackProducts)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
+
+  /**
+   * Effect to update visible products when the current index or products change
    * Also sets up automatic rotation of products
    */
   useEffect(() => {
+    if (products.length === 0) return
+    
     // Calculate which products should be visible based on current index
     const startIdx = currentIndex % products.length
     const endIdx = startIdx + 4
@@ -92,12 +156,14 @@ export function FeaturedProducts() {
         : [...products.slice(startIdx), ...products.slice(0, endIdx - products.length)],
     )
 
-    // Set up automatic rotation every 5 seconds
-    const interval = setInterval(nextSlide, 5000)
+    // Set up automatic rotation every 5 seconds only if we have products
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % products.length)
+    }, 5000)
 
     // Clean up interval on component unmount or when dependencies change
     return () => clearInterval(interval)
-  }, [currentIndex])
+  }, [currentIndex, products])
 
   /**
    * Effect to set up intersection observer for fade-in animations
@@ -145,72 +211,70 @@ export function FeaturedProducts() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left column with descriptive text */}
-          <div className="lg:w-1/4">
-            <div className="space-y-4">
-              <p className="text-gray-800 text-lg font-medium">Crafted with precision</p>
-              <p className="text-gray-800 text-lg">Premium materials for lasting comfort</p>
-              <p className="text-gray-800 text-lg">Trend-forward designs</p>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-600">Loading featured products...</p>
             </div>
           </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center space-y-4">
+              <p className="text-red-600">Failed to load products</p>
+              <p className="text-gray-500">Showing fallback products instead</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left column with descriptive text */}
+            <div className="lg:w-1/4">
+              <div className="space-y-4">
+                <p className="text-gray-800 text-lg font-medium">Crafted with precision</p>
+                <p className="text-gray-800 text-lg">Premium materials for lasting comfort</p>
+                <p className="text-gray-800 text-lg">Trend-forward designs</p>
+              </div>
+            </div>
 
-          {/* Right column with product carousel */}
-          <div className="lg:w-3/4">
-            <div className="flex items-center gap-4">
-              {/* Previous slide button */}
-              <button
-                onClick={prevSlide}
-                className="p-3 rounded-full border border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white transition shrink-0"
-                aria-label="Previous product"
-              >
-                <ArrowLeft size={20} />
-              </button>
+            {/* Right column with product carousel */}
+            <div className="lg:w-3/4">
+              <div className="flex items-center gap-4">
+                {/* Previous slide button */}
+                <button
+                  onClick={prevSlide}
+                  className="p-3 rounded-full border border-teal-600 text-teal-600 hover:bg-teal-600 hover:text-white transition shrink-0"
+                  aria-label="Previous product"
+                  disabled={products.length === 0}
+                >
+                  <ArrowLeft size={20} />
+                </button>
 
-              {/* Product cards grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
-                {visibleProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="product-card group relative bg-white rounded-lg overflow-hidden shadow-sm transition-all hover:shadow-md opacity-0"
-                  >
-                    {/* Product image with hover effect */}
-                    <div className="relative h-80 overflow-hidden">
-                      <Image
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                {/* Product cards grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
+                  {visibleProducts.map((product) => (
+                    <div key={product._id} className="opacity-0 animate-fadeIn">
+                      <ProductAddToCart 
+                        product={product} 
+                        showQuickView={true}
+                        className="h-full"
                       />
                     </div>
-                    {/* Product details and shop button */}
-                    <div className="p-4 text-center relative">
-                      {/* Shop button that appears on hover */}
-                      <div className="absolute bottom-full left-0 right-0 flex justify-center opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:-translate-y-4">
-                        <Link href={`/products/${product.id}`}>
-                          <Button className="bg-blue-950 text-white hover:bg-orange-600 border border-teal-700 shadow-lg">
-                            Shop Now
-                          </Button>
-                        </Link>
-                      </div>
-                      <h3 className="font-medium text-gray-900 mt-2">{product.name}</h3>
-                      <p className="text-gray-700">KSh {product.price}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Next slide button */}
-              <button
-                onClick={nextSlide}
-                className="p-3 rounded-full border border-teal-600 text-teal-600 hover:bg-orange-600 hover:text-white transition shrink-0"
-                aria-label="Next product"
-              >
-                <ArrowRight size={20} />
-              </button>
+                {/* Next slide button */}
+                <button
+                  onClick={nextSlide}
+                  className="p-3 rounded-full border border-teal-600 text-teal-600 hover:bg-orange-600 hover:text-white transition shrink-0"
+                  aria-label="Next product"
+                  disabled={products.length === 0}
+                >
+                  <ArrowRight size={20} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* View all products button */}
         <div className="mt-10 text-center">

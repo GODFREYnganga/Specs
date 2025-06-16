@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Filter, ChevronDown, ChevronUp, Heart } from "lucide-react"
-import Link from "next/link";
+import { Filter, ChevronDown, ChevronUp, Heart, Eye } from "lucide-react"
+import Link from "next/link"
 import useSWR from "swr"
 
 import { Button } from "@/components/ui/button"
@@ -14,10 +14,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import { Slider } from "@/components/ui/slider"
+// import { Slider } from "@/components/ui/slider" // Temporarily removed due to infinite loop issues
 import { useCart } from "@/hooks/use-cart"
 import { useToast } from "@/hooks/use-toast"
 import { useWishlist } from "@/hooks/use-wishlist"
+import { ProductImage } from "@/components/ui/product-image"
+import { ProductAddToCart } from "@/components/product-add-to-cart"
 
 // Product type for type safety
 interface Product {
@@ -170,13 +172,19 @@ const filterSections: Category[] = [
   },
 ]
 
-// Add a mapping from navbar slugs to DB category values
-const NAVBAR_CATEGORY_MAP: Record<string, string> = {
-  eyeglasses: "prescription",
-  screenglasses: "blue-light",
-  kidsglasses: "kids", // If you use a different DB value, update here
-  contactlenses: "contact-lenses",
-  sunglasses: "sunglasses",
+// Updated mapping from navbar slugs to DB category values
+// Maps our 5 navigation categories to arrays of database categories
+const NAVBAR_CATEGORY_MAP: Record<string, string[]> = {
+  "eye-glasses": ["prescription", "reading", "fashion"], // Eye Glasses includes prescription, reading, fashion
+  "blue-light-glasses": ["blue-light"], // Blue Light Glasses 
+  "sunglasses": ["sunglasses"], // Sunglasses
+  "kids-glasses": ["prescription", "reading", "fashion", "blue-light"], // Kids can use all frame types
+  "services": ["contact-lenses"], // Services category (would need separate handling)
+}
+
+// Helper function to get database categories from navigation category
+const getDbCategoriesFromNav = (navCategory: string): string[] => {
+  return NAVBAR_CATEGORY_MAP[navCategory] || [navCategory]
 }
 
 interface FilterSection {
@@ -188,17 +196,9 @@ interface FilterSection {
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Define slider constants
-const SLIDER_MIN_PRICE = 8000;
-const SLIDER_MAX_PRICE = 25000;
+const SLIDER_MIN_PRICE = 0;
+const SLIDER_MAX_PRICE = 100000;
 const SLIDER_STEP = 100;
-
-// Utility function to snap value to step, within min/max bounds
-const snapToStep = (val: number, min: number, max: number, step: number): number => {
-  // First, clamp to min/max to avoid snapping outside bounds
-  const clampedVal = Math.max(min, Math.min(val, max));
-  // Then snap to the nearest step
-  return Math.round((clampedVal - min) / step) * step + min;
-};
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -240,10 +240,10 @@ export default function ProductsPage() {
   };
 
   const currentCategorySlug = categoryParam.toLowerCase();
-  const dbCategory = NAVBAR_CATEGORY_MAP[currentCategorySlug] || categoryParam;
+  const dbCategories = React.useMemo(() => getDbCategoriesFromNav(currentCategorySlug), [currentCategorySlug]);
 
   const hero = categoryContent[currentCategorySlug] || {
-    title: "All Products",
+    title: "All Products", 
     description: "Browse our full collection of eyewear and accessories.",
     banner: "/placeholder.jpg",
   };
@@ -259,9 +259,10 @@ export default function ProductsPage() {
   )
 
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [isClient, setIsClient] = useState(false)
   const [filters, setFilters] = useState({
     categories: categoryParam ? [categoryParam] : [],
-    priceRange: [SLIDER_MIN_PRICE, 22000], // Use constant for initial min
+    priceRange: [0, 100000], // Start from 0
     frameShape: "all",
     searchQuery: "",
     sortBy: "featured",
@@ -277,7 +278,7 @@ export default function ProductsPage() {
     size: "all",
   })
   // Defensive: always use a memoized value for Slider
-  const sliderValue = React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], [filters.priceRange[0], filters.priceRange[1]])
+  // const sliderValue = React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], [filters.priceRange[0], filters.priceRange[1]])
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -296,13 +297,30 @@ export default function ProductsPage() {
     productType: true,
   })
 
+  // Client-side hydration flag
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    // Only run filtering on client side to avoid hydration mismatches
+    if (!isClient) return
+    
     // Apply filters to allProducts
     let filtered = [...allProducts]
 
-    // Use dbCategory for filtering
-    if (dbCategory) {
-      filtered = filtered.filter((product) => product.category === dbCategory)
+    // Filter by navigation category - use array of database categories
+    if (categoryParam && dbCategories.length > 0) {
+      filtered = filtered.filter((product) => dbCategories.includes(product.category))
+      
+      // Special handling for kids-glasses - also filter by age/gender
+      if (currentCategorySlug === "kids-glasses") {
+        filtered = filtered.filter((product) => 
+          product.gender === "kids" || 
+          product.frameWidth === "small" ||
+          product.productType === "kids"
+        )
+      }
     }
 
     if (genderParam) {
@@ -325,7 +343,7 @@ export default function ProductsPage() {
       filtered = filtered.filter((product) => product.category === topPickParam)
     }
 
-    // Filter by category
+    // Filter by specific category selection (sidebar filters)
     if (filters.categories.length > 0) {
       filtered = filtered.filter((product) => filters.categories.includes(product.category))
     }
@@ -419,109 +437,125 @@ export default function ProductsPage() {
     }
 
     setFilteredProducts(filtered)
-  }, [allProducts, filters, dbCategory, genderParam, frameTypeParam, brandParam, topPickParam])
+  }, [isClient, allProducts, filters, dbCategories, genderParam, frameTypeParam, brandParam, topPickParam, categoryParam]) // Added isClient dependency
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = React.useCallback((category: string) => {
     setFilters((prev) => {
       const categories = prev.categories.includes(category)
         ? prev.categories.filter((c) => c !== category)
         : [...prev.categories, category]
       return { ...prev, categories }
     })
-  }
+  }, []);
+
+  const handleFilterChange = React.useCallback((filterType: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
+  }, []);
+
+  // Create stable callback functions for each category to prevent infinite loops
+  const handlePrescriptionChange = React.useCallback(() => handleCategoryChange("prescription"), [handleCategoryChange]);
+  const handleSunglassesChange = React.useCallback(() => handleCategoryChange("sunglasses"), [handleCategoryChange]);
+  const handleReadingChange = React.useCallback(() => handleCategoryChange("reading"), [handleCategoryChange]);
+  const handleBluelightChange = React.useCallback(() => handleCategoryChange("blue-light"), [handleCategoryChange]);
+  const handleFashionChange = React.useCallback(() => handleCategoryChange("fashion"), [handleCategoryChange]);
+
+  // Create stable callbacks for RadioGroup filters to prevent infinite loops
+  const createFilterHandler = React.useCallback((sectionId: string) => {
+    return (value: string) => handleFilterChange(sectionId, value);
+  }, [handleFilterChange]);
+
+  // Memoize filter handlers for each section
+  const filterHandlers = React.useMemo(() => {
+    return filterSections.reduce((acc, section) => {
+      acc[section.id] = createFilterHandler(section.id);
+      return acc;
+    }, {} as Record<string, (value: string) => void>);
+  }, [createFilterHandler]);
 
   const updatePriceRange = React.useCallback((newMinMax: [number, number]) => {
     setFilters((prevFilters) => {
-      let [minVal, maxVal] = newMinMax;
-
-      // Snap values to the defined step and ensure they are within global min/max
-      minVal = snapToStep(minVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
-      maxVal = snapToStep(maxVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
-
-      // Ensure minVal <= maxVal after snapping.
-      // If snapping caused an inversion (e.g., min was snapped up, max snapped down), fix it.
-      if (minVal > maxVal) {
-        // This might happen if initial newMinMax was like [10050, 10040]
-        // After snapping, could be [10100, 10000]. So, swap and re-snap/clamp.
-        [minVal, maxVal] = [maxVal, minVal];
-        minVal = snapToStep(minVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
-        maxVal = snapToStep(maxVal, SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP);
-      }
+      const [minVal, maxVal] = newMinMax;
       
-      // Final check to ensure min is not greater than max (e.g. if both snap to same value, then one was adjusted)
-      // This re-ordering should ideally be handled by ensuring inputs are logical or by the slider itself.
-      // For robustness, ensure min is capped by max after all snapping.
-      if (minVal > maxVal) { // This should be rare after prior swap, but as a hard guard
-          minVal = maxVal; 
-      }
+      // Simple validation without complex snapping
+      const validMin = Math.max(SLIDER_MIN_PRICE, Math.min(minVal, SLIDER_MAX_PRICE));
+      const validMax = Math.max(SLIDER_MIN_PRICE, Math.min(maxVal, SLIDER_MAX_PRICE));
+      
+      // Ensure min <= max
+      const finalMin = Math.min(validMin, validMax);
+      const finalMax = Math.max(validMin, validMax);
 
-
-      if (minVal !== prevFilters.priceRange[0] || maxVal !== prevFilters.priceRange[1]) {
-        return { ...prevFilters, priceRange: [minVal, maxVal] };
+      // Only update if values actually changed
+      if (finalMin !== prevFilters.priceRange[0] || finalMax !== prevFilters.priceRange[1]) {
+        return { ...prevFilters, priceRange: [finalMin, finalMax] };
       }
       return prevFilters;
     });
-  }, [setFilters /* SLIDER_MIN_PRICE, SLIDER_MAX_PRICE, SLIDER_STEP are constants */]);
+  }, []);
 
-  const handleSliderPriceChange = React.useCallback((sliderOutputValue: number[]) => {
-    if (Array.isArray(sliderOutputValue) && sliderOutputValue.length === 2) {
-      // Values from Radix slider should already be stepped.
-      updatePriceRange([sliderOutputValue[0], sliderOutputValue[1]]);
-    } else {
-      console.warn("Unexpected slider output value:", sliderOutputValue);
-    }
-  }, [updatePriceRange]);
-  
+  const handleMinPriceChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMin = parseInt(e.target.value);
+    setFilters((prev) => {
+      const newMax = Math.max(newMin, prev.priceRange[1]);
+      return { ...prev, priceRange: [newMin, newMax] };
+    });
+  }, []);
+
+  const handleMaxPriceChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMax = parseInt(e.target.value);
+    setFilters((prev) => {
+      const newMin = Math.min(prev.priceRange[0], newMax);
+      return { ...prev, priceRange: [newMin, newMax] };
+    });
+  }, []);
+
   const handlePriceInputChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) => {
     const typedValue = event.target.value;
     const parsedValue = parseInt(typedValue, 10);
     
-    // Get a mutable copy of the current price range from state
-    // We need `filters.priceRange` from the latest state for this handler.
-    // Since `updatePriceRange` uses a functional update, this handler can close over `filters.priceRange`
-    // from the render it was defined in, or we can pass it to `updatePriceRange`.
-    // Simpler: construct the proposed range based on current `filters.priceRange`.
-
-    const newProposedRange = [...filters.priceRange] as [number, number];
-
-    if (!isNaN(parsedValue)) {
-      newProposedRange[index] = parsedValue; // Use the raw parsed value
-      updatePriceRange(newProposedRange);   // Let updatePriceRange handle all snapping and validation
-    } else if (typedValue === "") {
-      // If input is cleared, reset that specific handle to its boundary
-      newProposedRange[index] = (index === 0) ? SLIDER_MIN_PRICE : SLIDER_MAX_PRICE;
-      updatePriceRange(newProposedRange);   // Let updatePriceRange handle all snapping and validation
-    }
-    // If input is invalid (not a number and not empty), React will revert to the controlled value on next render.
-  }, [filters.priceRange, updatePriceRange /* SLIDER_MIN_PRICE, SLIDER_MAX_PRICE are constants */]);
+    setFilters((prevFilters) => {
+      const newRange = [...prevFilters.priceRange] as [number, number];
+      
+      if (!isNaN(parsedValue)) {
+        newRange[index] = parsedValue;
+      } else if (typedValue === "") {
+        newRange[index] = (index === 0) ? SLIDER_MIN_PRICE : SLIDER_MAX_PRICE;
+      }
+      
+      // Ensure min <= max
+      const [min, max] = newRange;
+      const validMin = Math.max(SLIDER_MIN_PRICE, Math.min(min, SLIDER_MAX_PRICE));
+      const validMax = Math.max(SLIDER_MIN_PRICE, Math.min(max, SLIDER_MAX_PRICE));
+      
+      return { 
+        ...prevFilters, 
+        priceRange: [Math.min(validMin, validMax), Math.max(validMin, validMax)] 
+      };
+    });
+  }, []);
 
   const handleFrameShapeChange = React.useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, frameShape: value }));
-  }, [setFilters]);
+  }, []);
 
   const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters((prev) => ({ ...prev, searchQuery: e.target.value }));
-  }, [setFilters]);
+  }, []);
 
   const handleSortChange = React.useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setFilters((prev) => ({ ...prev, sortBy: e.target.value }));
-  }, [setFilters]);
+  }, []);
 
-  const handleFilterChange = React.useCallback((filterType: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }));
-  }, [setFilters]);
-
-  const toggleSection = (sectionId: string) => {
+  const toggleSection = React.useCallback((sectionId: string) => {
     setExpandedSections((prev) => ({
       ...prev,
       [sectionId]: !prev[sectionId],
     }))
-  }
+  }, []);
 
-  const resetFilters = () => {
+  const resetFilters = React.useCallback(() => {
     setFilters({
       categories: [],
-      priceRange: [SLIDER_MIN_PRICE, 22000], // Use constant
+      priceRange: [0, 100000], // Start from 0
       frameShape: "all",
       searchQuery: "",
       sortBy: "featured",
@@ -536,7 +570,7 @@ export default function ProductsPage() {
       productType: "all",
       size: "all",
     })
-  }
+  }, []);
 
   // Update the filter section rendering to match the requested layout
   // Replace the existing filter sections rendering with this enhanced version
@@ -585,15 +619,40 @@ export default function ProductsPage() {
                 {expandedSections.priceRange && (
                   <div className="filter-options space-y-4">
                     <div className="container6">
-                      <Slider
-                        value={sliderValue} // This is React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], ...)
-                        min={SLIDER_MIN_PRICE}
-                        max={SLIDER_MAX_PRICE}
-                        step={SLIDER_STEP} // Use constant
-                        className="my-6 slider-track"
-                        onValueChange={handleSliderPriceChange}
-                      />
-                      <div className="flex items-center justify-between gap-4">
+                      {/* Simple dual range input approach */}
+                      <div className="space-y-4">
+                        <div className="text-center text-sm text-muted-foreground">
+                          Price Range: KSh {filters.priceRange[0].toLocaleString()} - KSh {filters.priceRange[1].toLocaleString()}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Minimum Price</label>
+                          <input
+                            type="range"
+                            min={SLIDER_MIN_PRICE}
+                            max={SLIDER_MAX_PRICE}
+                            step={SLIDER_STEP}
+                            value={filters.priceRange[0]}
+                            onChange={handleMinPriceChange}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Maximum Price</label>
+                          <input
+                            type="range"
+                            min={SLIDER_MIN_PRICE}
+                            max={SLIDER_MAX_PRICE}
+                            step={SLIDER_STEP}
+                            value={filters.priceRange[1]}
+                            onChange={handleMaxPriceChange}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between gap-4 mt-4">
                         <div className="flex items-center left-value">
                           <span className="text-sm mr-2">KSh</span>
                           <Input
@@ -647,7 +706,7 @@ export default function ProductsPage() {
                       <Checkbox
                         id="prescription"
                         checked={filters.categories.includes("prescription")}
-                        onCheckedChange={() => handleCategoryChange("prescription")}
+                        onCheckedChange={handlePrescriptionChange}
                       />
                       <Label htmlFor="prescription">Prescription Glasses</Label>
                     </div>
@@ -655,7 +714,7 @@ export default function ProductsPage() {
                       <Checkbox
                         id="sunglasses"
                         checked={filters.categories.includes("sunglasses")}
-                        onCheckedChange={() => handleCategoryChange("sunglasses")}
+                        onCheckedChange={handleSunglassesChange}
                       />
                       <Label htmlFor="sunglasses">Sunglasses</Label>
                     </div>
@@ -663,7 +722,7 @@ export default function ProductsPage() {
                       <Checkbox
                         id="reading"
                         checked={filters.categories.includes("reading")}
-                        onCheckedChange={() => handleCategoryChange("reading")}
+                        onCheckedChange={handleReadingChange}
                       />
                       <Label htmlFor="reading">Reading Glasses</Label>
                     </div>
@@ -671,7 +730,7 @@ export default function ProductsPage() {
                       <Checkbox
                         id="blue-light"
                         checked={filters.categories.includes("blue-light")}
-                        onCheckedChange={() => handleCategoryChange("blue-light")}
+                        onCheckedChange={handleBluelightChange}
                       />
                       <Label htmlFor="blue-light">Blue Light Glasses</Label>
                     </div>
@@ -679,7 +738,7 @@ export default function ProductsPage() {
                       <Checkbox
                         id="fashion"
                         checked={filters.categories.includes("fashion")}
-                        onCheckedChange={() => handleCategoryChange("fashion")}
+                        onCheckedChange={handleFashionChange}
                       />
                       <Label htmlFor="fashion">Fashion Frames</Label>
                     </div>
@@ -708,7 +767,7 @@ export default function ProductsPage() {
                     <div className="filter-options space-y-2">
                       <RadioGroup
                         value={filters[section.id as keyof typeof filters] as string}
-                        onValueChange={(value) => handleFilterChange(section.id, value)}
+                        onValueChange={filterHandlers[section.id]}
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="all" id={`${section.id}-all`} />
@@ -766,73 +825,45 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {filteredProducts.length === 0 ? (
-                <div className="text-center text-muted-foreground py-12">No products found.</div>
+              {(filteredProducts.length === 0 || !isClient) ? (
+                <div className="text-center text-muted-foreground py-12">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                      <Filter className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-600">
+                        {!isClient ? "Loading..." : "No products found"}
+                      </h3>
+                      <p className="text-gray-500">
+                        {!isClient ? "Please wait while we load the products" : "Try adjusting your filters or search terms"}
+                      </p>
+                    </div>
+                    {isClient && (
+                      <Button variant="outline" onClick={resetFilters}>
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredProducts.map((product: Product) => (
-                    <Card key={product._id} className="overflow-hidden">
-                      <CardHeader className="p-0">
-                        <img
-                          src={product.image || "/placeholder.svg"}
-                          alt={product.name}
-                          width={300}
-                          height={300}
-                          className="object-cover w-full aspect-square"
-                        />
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">{product.name}</h3>
-                          <div className="text-sm font-medium">KSh {product.price}</div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">{product.description || "No description available."}</p>
-                      </CardContent>
-                      <CardFooter className="p-4 pt-0 flex gap-2">
-                        <Button
-                          className="flex-1"
-                          onClick={() => {
-                            addToCart({
-                              id: product._id,
-                              name: product.name,
-                              price: product.price,
-                              image: product.image,
-                              quantity: 1,
-                              color: product.color || "Default",
-                            })
-                            toast({
-                              title: "Added to Cart",
-                              description: `${product.name} has been added to your cart.`,
-                            })
-                          }}
-                        >
-                          Add to Cart
-                        </Button>
-                        <Button
-                          variant={isInWishlist(product._id, product.color) ? "default" : "outline"}
-                          onClick={() => {
-                            if (isInWishlist(product._id, product.color)) {
-                              removeFromWishlist(product._id, product.color)
-                              toast({ title: "Removed from Wishlist", description: `${product.name} removed from wishlist.` })
-                            } else {
-                              addToWishlist({
-                                id: String(product._id),
-                                name: product.name,
-                                price: product.price,
-                                image: product.image || "",
-                                color: product.color || "Default",
-                                category: product.category as any,
-                                description: product.description || "",
-                              })
-                              toast({ title: "Added to Wishlist", description: `${product.name} added to wishlist.` })
-                            }
-                          }}
-                          aria-label={isInWishlist(product._id, product.color) ? "Remove from Wishlist" : "Add to Wishlist"}
-                        >
-                          <Heart className="h-4 w-4" />
-                        </Button>
-                      </CardFooter>
-                    </Card>
+                    <ProductAddToCart 
+                      key={product._id}
+                      product={{
+                        _id: product._id,
+                        name: product.name,
+                        price: product.price,
+                        category: product.category,
+                        image: product.image,
+                        colors: product.color ? [product.color] : ["Default"],
+                        inStock: true, // Default to true since the old interface doesn't have this field
+                        description: product.description,
+                      }}
+                      showQuickView={true}
+                      className="h-full"
+                    />
                   ))}
                 </div>
               )}

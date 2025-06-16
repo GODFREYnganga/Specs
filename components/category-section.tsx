@@ -38,22 +38,23 @@ interface Category {
 }
 
 /**
- * Sample category data with comprehensive subcategories
- * This structure allows for detailed filtering options in the UI
+ * Improved category data aligned with database schema
+ * Consolidates from 8 categories to 5 main categories for better user experience
+ * Maps to actual database categories: prescription, sunglasses, reading, blue-light, fashion
  */
 const categories: Category[] = [
   {
     id: 1,
-    name: "Eyeglasses",
-    description: "Prescription & fashion frames",
+    name: "Eye Glasses",
+    description: "Prescription, reading & fashion frames",
     image: "/images/products/silver-round-frames.png",
     slug: "eyeglasses",
     subcategories: {
       gender: ["Men", "Women", "Kids"],
-      topPicks: ["New Arrivals", "Best Sellers", "Progressive Eyeglasses"],
+      topPicks: ["New Arrivals", "Best Sellers", "Progressive Glasses", "Reading Glasses", "Fashion Frames"],
       frameTypes: [
         "Rectangle Frames",
-        "Square Frames",
+        "Square Frames", 
         "Round Frames",
         "Cat Eye Frames",
         "Wayfarer Frames",
@@ -64,6 +65,9 @@ const categories: Category[] = [
       ],
       collections: {
         styles: [
+          "Prescription Collection",
+          "Reading Collection", 
+          "Fashion Collection",
           "Matte Classics",
           "Urban Steel",
           "Acetate Classics",
@@ -79,45 +83,29 @@ const categories: Category[] = [
   },
   {
     id: 2,
-    name: "Screen Glasses",
-    description: "Protection for digital screens",
+    name: "Blue Light Glasses", 
+    description: "Digital screen protection",
     image: "/images/products/black-blue-light-frames.png",
-    slug: "screen-glasses",
+    slug: "blue-light-glasses",
     subcategories: {
       gender: ["Men", "Women", "Kids"],
-      topPicks: ["Gaming", "Office", "Reading"],
+      topPicks: ["Gaming Glasses", "Office Protection", "Computer Reading", "Night Mode"],
       frameTypes: ["Rectangle Frames", "Round Frames", "Square Frames", "Oversized Frames"],
       collections: {
-        styles: ["Digital Pro", "Screen Shield", "Night Comfort"],
-        brands: ["BlueGuard", "ScreenSafe", "EyeRest"],
+        styles: ["Digital Pro", "Screen Shield", "Night Comfort", "Gamer Elite", "Office Professional"],
+        brands: ["BlueGuard", "ScreenSafe", "EyeRest", "DigitalDefense"],
       },
     },
   },
   {
     id: 3,
-    name: "Kids Glasses",
-    description: "Durable and fun frames for children",
-    image: "/images/products/clear-frames.png",
-    slug: "kids-glasses",
-    subcategories: {
-      ageGroups: ["Toddler (2-4)", "Young (5-8)", "Pre-Teen (9-12)", "Teen (13+)"],
-      topPicks: ["Flexible", "Colorful", "Sports-Ready"],
-      frameTypes: ["Round Frames", "Rectangle Frames", "Oval Frames", "Character Frames"],
-      collections: {
-        styles: ["Playful Patterns", "Sport Active", "Study Buddy"],
-        brands: ["Magneto Kids", "Junior Vision", "KidSafe"],
-      },
-    },
-  },
-  {
-    id: 4,
     name: "Sunglasses",
     description: "UV protection with style",
     image: "/images/products/black-round-frames.png",
     slug: "sunglasses",
     subcategories: {
       gender: ["Men", "Women", "Kids"],
-      topPicks: ["Polarized", "Mirrored", "Oversized"],
+      topPicks: ["Polarized", "Mirrored", "Oversized", "Designer", "Sport"],
       frameTypes: [
         "Rectangle Frames",
         "Square Frames",
@@ -130,70 +118,39 @@ const categories: Category[] = [
         "Rimless Frames",
       ],
       collections: {
-        styles: ["Beach Collection", "Urban Explorer", "Driving Series", "Luxury Line"],
-        brands: ["SunPro", "RayStyle", "Coastal"],
+        styles: ["Beach Collection", "Urban Explorer", "Driving Series", "Luxury Line", "Sport Active"],
+        brands: ["SunPro", "RayStyle", "Coastal", "Magneto"],
+      },
+    },
+  },
+  {
+    id: 4,
+    name: "Kids Glasses",
+    description: "Durable and fun frames for children",
+    image: "/images/products/clear-frames.png",
+    slug: "kids-glasses",
+    subcategories: {
+      ageGroups: ["Toddler (2-4)", "Young (5-8)", "Pre-Teen (9-12)", "Teen (13+)"],
+      topPicks: ["Flexible Frames", "Colorful Designs", "Sports-Ready", "Character Frames"],
+      frameTypes: ["Round Frames", "Rectangle Frames", "Oval Frames", "Character Frames"],
+      collections: {
+        styles: ["Playful Patterns", "Sport Active", "Study Buddy", "Character Collection"],
+        brands: ["Magneto Kids", "Junior Vision", "KidSafe"],
       },
     },
   },
   {
     id: 5,
-    name: "Contact Lenses",
-    description: "Comfortable vision without frames",
+    name: "Services & More",
+    description: "Eye care services & premium benefits",
     image: "/images/products/frame-game-collage.png",
-    slug: "contact-lenses",
+    slug: "services",
     subcategories: {
-      types: ["Daily", "Weekly", "Monthly", "Yearly"],
-      topPicks: ["Colored", "Toric", "Multifocal"],
-      brands: ["Aqualens", "Bausch Lamb", "Softlens", "Acuvue", "Iconnect", "Alcon"],
-      features: ["Hydrating", "Extended Wear", "UV Protection"],
-    },
-  },
-  {
-    id: 6,
-    name: "Collections",
-    description: "Curated frame collections",
-    image: "/images/products/rose-gold-moon-frames.png",
-    slug: "collections",
-    subcategories: {
-      styles: [
-        "Matte Classics",
-        "Urban Steel",
-        "Acetate Classics",
-        "Youth Trends",
-        "Bold Patterns",
-        "Modern Minimal",
-        "Everyday Comfort",
-        "Executive Edit",
-      ],
-      brands: ["Fashionista Classic", "Magneto Kids Classic", "Magneto Kids Premium"],
-      seasonal: ["Summer Vibes", "Winter Elegance", "Spring Fresh", "Fall Favorites"],
-      occasions: ["Office Wear", "Party Ready", "Outdoor Adventure", "Formal Events"],
-    },
-  },
-  {
-    id: 7,
-    name: "Home Eye-Test",
-    description: "Professional testing at home",
-    image: "/images/people/eye-test-home.png",
-    slug: "home-eye-test",
-    subcategories: {
-      services: ["Basic Vision Test", "Comprehensive Exam", "Kids Eye Check", "Contact Lens Fitting"],
-      packages: ["Standard", "Premium", "Family", "Senior"],
-      equipment: ["Vision Charts", "Refraction Tools", "Digital Assessment"],
-      professionals: ["Optometrists", "Vision Specialists", "Pediatric Experts"],
-    },
-  },
-  {
-    id: 8,
-    name: "Gold Membership",
-    description: "Premium benefits and savings",
-    image: "/images/products/gold-round-frames.png",
-    slug: "gold-membership",
-    subcategories: {
+      services: ["Contact Lenses", "Home Eye Test", "Gold Membership", "Eye Exam", "Frame Adjustment"],
+      types: ["Daily Contacts", "Weekly Contacts", "Monthly Contacts", "Colored Contacts"],
       benefits: ["15% Off All Purchases", "Free Shipping", "Priority Service", "Annual Eye Exam"],
-      tiers: ["Standard Gold", "Platinum", "Diamond"],
-      exclusives: ["Limited Edition Frames", "Early Access", "Member Events"],
-      services: ["Personal Stylist", "Frame Adjustments", "Extended Warranty"],
+      brands: ["Aqualens", "Bausch Lamb", "Softlens", "Acuvue"],
+      features: ["Professional Eye Care", "Home Testing", "Premium Benefits", "Member Rewards"],
     },
   },
 ]

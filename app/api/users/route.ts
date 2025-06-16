@@ -6,6 +6,7 @@ const User = require("../../../models/User")
 export async function GET() {
   await connectToDatabase()
   const users = await User.find()
+  console.log('Users returned from DB:', users)
   return NextResponse.json(users)
 }
 

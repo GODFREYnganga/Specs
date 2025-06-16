@@ -25,7 +25,6 @@ const ProductSchema = new mongoose.Schema({
   image: {
     type: String,
     required: [true, "Please provide product image"],
-    get: (imagePath) => `/images/products/${imagePath}`,
   },
   features: {
     type: [String],
