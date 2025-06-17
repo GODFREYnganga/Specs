@@ -99,7 +99,7 @@ export function SimpleBestsellers() {
   }
 
   return (
-    <section className="py-20 bg-white">
+    <section className="pt-10 bg-white">
       <div className="container mx-auto px-4">
         
         {/* Header */}

@@ -43,7 +43,7 @@ export function HeroSection() {
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
 
   return (
-    <section className="relative min-h-[90vh] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+    <section className="pt-20 relative min-h-[90vh] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-600 rounded-full blur-3xl"></div>

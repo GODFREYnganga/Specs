@@ -98,7 +98,7 @@ export function PerfectFitSection() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="h-px bg-white w-16 md:w-32"></div>
-            <h2 className="text-3xl font-bold text-white px-4">Find The Perfect Fit</h2>
+            <h2 className="text-3xl font-bold text-black px-4">Find The Perfect Fit</h2>
             <div className="h-px bg-white w-16 md:w-32"></div>
           </div>
         </div>
