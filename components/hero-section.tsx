@@ -27,14 +27,14 @@ const quickShopCategories = [
   },
   {
     name: "Blue Light",
-    image: "/images/products/blue-round-frames.png", 
+    image: "/images/products/blue-round-frames.png",
     link: "/products?category=blue-light-glasses",
     price: "from $59"
   },
   {
     name: "Sunglasses",
     image: "/images/products/brown-aviator-sunglasses.png",
-    link: "/products?category=sunglasses", 
+    link: "/products?category=sunglasses",
     price: "from $69"
   }
 ]
@@ -52,7 +52,7 @@ export function HeroSection() {
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[90vh] py-12">
-          
+
           {/* Left Content */}
           <div className="space-y-8">
             {/* Trending Badge */}
@@ -94,9 +94,9 @@ export function HeroSection() {
                   Shop All Frames
                 </Button>
               </Link>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="px-8 py-4 text-lg font-semibold border-2 border-blue-600 text-blue-600 hover:bg-blue-50"
                 onClick={() => setIsVideoPlaying(true)}
               >
@@ -113,8 +113,8 @@ export function HeroSection() {
                   <Link key={index} href={category.link}>
                     <div className="group cursor-pointer bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all">
                       <div className="aspect-square bg-gray-50 rounded-lg mb-3 overflow-hidden">
-                        <img 
-                          src={category.image} 
+                        <img
+                          src={category.image}
                           alt={category.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
@@ -131,12 +131,12 @@ export function HeroSection() {
           {/* Right Content - Hero Image */}
           <div className="relative">
             <div className="relative z-10">
-              <img 
+              <img
                 src={heroContent.mainImage}
                 alt="People wearing stylish glasses"
                 className="w-full h-auto max-w-2xl mx-auto rounded-2xl shadow-2xl"
               />
-              
+
               {/* Floating Elements */}
               <div className="absolute top-8 right-8 bg-white rounded-lg p-4 shadow-lg">
                 <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export function HeroSection() {
 
             {/* Video Modal Trigger */}
             {!isVideoPlaying && (
-              <button 
+              <button
                 onClick={() => setIsVideoPlaying(true)}
                 className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-2xl hover:bg-opacity-30 transition-all group"
               >

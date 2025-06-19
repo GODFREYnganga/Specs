@@ -54,7 +54,7 @@ const categories: Category[] = [
       topPicks: ["New Arrivals", "Best Sellers", "Progressive Glasses", "Reading Glasses", "Fashion Frames"],
       frameTypes: [
         "Rectangle Frames",
-        "Square Frames", 
+        "Square Frames",
         "Round Frames",
         "Cat Eye Frames",
         "Wayfarer Frames",
@@ -66,7 +66,7 @@ const categories: Category[] = [
       collections: {
         styles: [
           "Prescription Collection",
-          "Reading Collection", 
+          "Reading Collection",
           "Fashion Collection",
           "Matte Classics",
           "Urban Steel",
@@ -83,7 +83,7 @@ const categories: Category[] = [
   },
   {
     id: 2,
-    name: "Blue Light Glasses", 
+    name: "Blue Light Glasses",
     description: "Digital screen protection",
     image: "/images/products/black-blue-light-frames.png",
     slug: "blue-light-glasses",
@@ -204,13 +204,13 @@ export function CategorySection() {
   const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + categories.length) % categories.length)
 
   return (
-    <section className="category-section bg-white">
+    <section className="category-section">
       <div className="container mx-auto px-4 md:px-8">
         {/* Section header with decorative lines */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="h-px bg-teal-600 w-16 md:w-32"></div>
-            <h2 className="text-3xl font-bold text-gray-800 px-4">Shop by Category</h2>
+            <h2 className="text-3xl font-bold text-red px-4">Shop by Category</h2>
             <div className="h-px bg-teal-600 w-16 md:w-32"></div>
           </div>
         </div>

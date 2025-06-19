@@ -37,23 +37,38 @@ const trustIndicators = [
 
 export function TrustIndicators() {
   return (
-    <section className="py-12 bg-gray-50 border-t">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-          {trustIndicators.map((indicator, index) => {
-            const IconComponent = indicator.icon
-            return (
-              <div key={index} className="text-center">
-                <div className="flex justify-center mb-3">
-                  <IconComponent className="h-8 w-8 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-sm mb-1">{indicator.title}</h3>
-                <p className="text-xs text-gray-600">{indicator.description}</p>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </section>
+    <section className="relative py-12 border-t overflow-hidden">
+
+
+  {/* Content */}
+  <div className="relative container mx-auto px-4 z-10">
+      {/* Background video */}
+  <video
+    className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
+    autoPlay
+    loop
+    muted
+    playsInline
+  >
+    <source src="/videos/Landingpage-background-video.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+      {trustIndicators.map((indicator, index) => {
+        const IconComponent = indicator.icon;
+        return (
+          <div key={index} className="text-center">
+            <div className="flex justify-center mb-3">
+              <IconComponent className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="font-semibold text-sm mb-1">{indicator.title}</h3>
+            <p className="text-xs text-gray-600">{indicator.description}</p>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
   )
 }

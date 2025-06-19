@@ -6,6 +6,7 @@ import { Heart, Eye, ShoppingCart, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
+
 interface Product {
   _id: string
   name: string
@@ -99,11 +100,17 @@ export function SimpleBestsellers() {
   }
 
   return (
-    <section className="pt-10 bg-white">
+    <section className="bg-sky-200">
+      <div className="relative">
+        <img 
+          src={"/images/hero/Backgroundmordern.jpg"} 
+          alt="Background Pattern" 
+          className="absolute top-0 h-full w-full object-cover"
+        />
       <div className="container mx-auto px-4">
         
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center relative mb-16">
           <Badge variant="secondary" className="mb-4 bg-yellow-100 text-yellow-800">
             ⭐ Customer Favorites
           </Badge>
@@ -116,7 +123,7 @@ export function SimpleBestsellers() {
         </div>
 
         {/* Products Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="relative grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {products.map((product) => (
             <div key={product._id} className="group">
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
@@ -190,7 +197,7 @@ export function SimpleBestsellers() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center">
+        <div className="relative text-center">
           <Link href="/products">
             <Button 
               size="lg" 
@@ -202,6 +209,7 @@ export function SimpleBestsellers() {
           </Link>
         </div>
 
+      </div>
       </div>
     </section>
   )

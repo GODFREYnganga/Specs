@@ -43,11 +43,32 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-10 bg-gray-50">
+    <section className="py-10 by-blue-200">
+      {/* Background video */}
+      <video
+        className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
+        autoPlay
+        loop
+        muted
+        playsInline
+      >
+        <source src="/videos/Landingpage-background-video.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
       <div className="container mx-auto px-4">
-        
+
         {/* Header */}
         <div className="text-center mb-16">
+          <video
+            className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source src="/videos/Royalty-Free Footage-iStock.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
           <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
             Why Choose Spectacles?
           </h2>
@@ -57,7 +78,10 @@ export function FeaturesSection() {
         </div>
 
         {/* Features Grid */}
+
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
           {features.map((feature, index) => {
             const IconComponent = feature.icon
             return (
@@ -72,8 +96,8 @@ export function FeaturesSection() {
           })}
         </div>
 
-        {/* Bottom Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        {/* Bottom Stats 
+        <div className="by-blue-450 mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-3xl font-bold text-blue-600 mb-2">500K+</div>
             <div className="text-gray-600">Happy Customers</div>
@@ -91,7 +115,7 @@ export function FeaturesSection() {
             <div className="text-gray-600">Satisfaction Rate</div>
           </div>
         </div>
-
+*/}
       </div>
     </section>
   )
