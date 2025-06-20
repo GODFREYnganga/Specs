@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-const User = require("../../../../../models/User")
-import jwt from "jsonwebtoken"
-
+import User from "../../../../models/User"
 export async function POST(request: Request) {
   try {
     await connectToDatabase()
