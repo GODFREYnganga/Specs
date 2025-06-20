@@ -1,34 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { toast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
-
-interface NotificationSettings {
-  emailNotifications: {
-    orderConfirmation: boolean
-    orderStatusUpdate: boolean
-    lowStockAlert: boolean
-    customerMessages: boolean
-    marketingEmails: boolean
-  }
-  smsNotifications: {
-    orderConfirmation: boolean
-    orderStatusUpdate: boolean
-    lowStockAlert: boolean
-  }
-  webhookUrl?: string
-  slackWebhook?: string
-}
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { Loader2, Mail, MessageSquare, Webhook } from "lucide-react";
 
 export default function NotificationsSettingsForm() {
-  const [settings, setSettings] = useState<NotificationSettings>({
+  const [form, setForm] = useState({
     emailNotifications: {
       orderConfirmation: true,
       orderStatusUpdate: true,
@@ -43,318 +25,448 @@ export default function NotificationsSettingsForm() {
     },
     webhookUrl: "",
     slackWebhook: ""
-  })
-  
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
+  });
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    loadSettings()
-  }, [])
+    fetchSettings();
+  }, []);
 
-  async function loadSettings() {
+  const fetchSettings = async () => {
     try {
-      const response = await fetch("/api/settings")
-      if (response.ok) {
-        const data = await response.json()
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const data = await res.json();
         if (data.notifications) {
-          setSettings(data.notifications)
+          setForm(data.notifications);
         }
       }
     } catch (error) {
-      console.error("Failed to load settings:", error)
-      toast.error("Failed to load notification settings")
+      console.error("Failed to fetch settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load notification settings",
+        variant: "destructive",
+      });
     } finally {
-      setInitialLoading(false)
+      setInitialLoading(false);
     }
-  }
+  };
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
     try {
-      const response = await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notifications: settings })
-      })
+      const formData = new FormData();
+      
+      // Add notification settings with proper nested structure
+      Object.entries(form).forEach(([key, value]) => {
+        if (typeof value === "object" && value !== null) {
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            formData.append(`notifications.${key}.${subKey}`, subValue.toString());
+          });
+        } else {
+          formData.append(`notifications.${key}`, value.toString());
+        }
+      });
 
-      if (response.ok) {
-        toast.success("Notification settings updated successfully")
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Notification settings saved successfully",
+        });
+        fetchSettings(); // Refresh data
       } else {
-        throw new Error("Failed to update settings")
+        throw new Error("Failed to save settings");
       }
     } catch (error) {
-      console.error("Settings update error:", error)
-      toast.error("Failed to update notification settings")
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (initialLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-    )
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Email Notifications</CardTitle>
-          <CardDescription>
-            Configure which email notifications to send to administrators and customers
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Order Confirmation</Label>
-              <p className="text-sm text-muted-foreground">
-                Send email when orders are placed
-              </p>
+    <Card>
+      <CardHeader>
+        <CardTitle>Notification Settings</CardTitle>
+        <CardDescription>
+          Configure email, SMS, and webhook notifications
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Notifications */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-5 w-5" />
+              <Label className="text-base font-medium">Email Notifications</Label>
             </div>
-            <Switch
-              checked={settings.emailNotifications.orderConfirmation}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  emailNotifications: {
-                    ...prev.emailNotifications,
-                    orderConfirmation: checked
+            
+            <div className="grid gap-4 pl-7">
+              <div className="flex items-center justify-between">
+                <Label>Order Confirmation</Label>
+                <Switch
+                  checked={form.emailNotifications.orderConfirmation}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, orderConfirmation: checked }
+                    }))
                   }
-                }))
-              }
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Order Status Updates</Label>
-              <p className="text-sm text-muted-foreground">
-                Send email when order status changes
-              </p>
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Order Status Updates</Label>
+                <Switch
+                  checked={form.emailNotifications.orderStatusUpdate}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, orderStatusUpdate: checked }
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Low Stock Alerts</Label>
+                <Switch
+                  checked={form.emailNotifications.lowStockAlert}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, lowStockAlert: checked }
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <Switch
-              checked={settings.emailNotifications.orderStatusUpdate}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  emailNotifications: {
-                    ...prev.emailNotifications,
-                    orderStatusUpdate: checked
-                  }
-                }))
-              }
-            />
           </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Low Stock Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                Send email when products are running low
-              </p>
-            </div>
-            <Switch
-              checked={settings.emailNotifications.lowStockAlert}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  emailNotifications: {
-                    ...prev.emailNotifications,
-                    lowStockAlert: checked
-                  }
-                }))
-              }
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Customer Messages</Label>
-              <p className="text-sm text-muted-foreground">
-                Send email for customer support messages
-              </p>
-            </div>
-            <Switch
-              checked={settings.emailNotifications.customerMessages}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  emailNotifications: {
-                    ...prev.emailNotifications,
-                    customerMessages: checked
-                  }
-                }))
-              }
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Marketing Emails</Label>
-              <p className="text-sm text-muted-foreground">
-                Send promotional and marketing emails
-              </p>
-            </div>
-            <Switch
-              checked={settings.emailNotifications.marketingEmails}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  emailNotifications: {
-                    ...prev.emailNotifications,
-                    marketingEmails: checked
-                  }
-                }))
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>SMS Notifications</CardTitle>
-          <CardDescription>
-            Configure SMS notifications for critical events
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Order Confirmation</Label>
-              <p className="text-sm text-muted-foreground">
-                Send SMS when orders are placed
-              </p>
+          {/* SMS Notifications */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5" />
+              <Label className="text-base font-medium">SMS Notifications</Label>
             </div>
-            <Switch
-              checked={settings.smsNotifications.orderConfirmation}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  smsNotifications: {
-                    ...prev.smsNotifications,
-                    orderConfirmation: checked
+            
+            <div className="grid gap-4 pl-7">
+              <div className="flex items-center justify-between">
+                <Label>Order Confirmation</Label>
+                <Switch
+                  checked={form.smsNotifications.orderConfirmation}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      smsNotifications: { ...f.smsNotifications, orderConfirmation: checked }
+                    }))
                   }
-                }))
-              }
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Order Status Updates</Label>
-              <p className="text-sm text-muted-foreground">
-                Send SMS when order status changes
-              </p>
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Low Stock Alerts</Label>
+                <Switch
+                  checked={form.smsNotifications.lowStockAlert}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      smsNotifications: { ...f.smsNotifications, lowStockAlert: checked }
+                    }))
+                  }
+                />
+              </div>
             </div>
-            <Switch
-              checked={settings.smsNotifications.orderStatusUpdate}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  smsNotifications: {
-                    ...prev.smsNotifications,
-                    orderStatusUpdate: checked
-                  }
-                }))
-              }
-            />
           </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Low Stock Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                Send SMS when products are running low
-              </p>
-            </div>
-            <Switch
-              checked={settings.smsNotifications.lowStockAlert}
-              onCheckedChange={(checked) =>
-                setSettings(prev => ({
-                  ...prev,
-                  smsNotifications: {
-                    ...prev.smsNotifications,
-                    lowStockAlert: checked
-                  }
-                }))
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Integration Settings</CardTitle>
-          <CardDescription>
-            Configure webhooks and third-party integrations
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="webhookUrl">Webhook URL</Label>
-            <Input
-              id="webhookUrl"
-              type="url"
-              placeholder="https://your-app.com/webhook"
-              value={settings.webhookUrl || ""}
-              onChange={(e) =>
-                setSettings(prev => ({
-                  ...prev,
-                  webhookUrl: e.target.value
-                }))
-              }
-            />
-            <p className="text-sm text-muted-foreground">
-              URL to receive order and product webhooks
-            </p>
+          {/* Webhooks */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Webhook className="h-5 w-5" />
+              <Label className="text-base font-medium">Webhook Integration</Label>
+            </div>
+            
+            <div className="grid gap-4 pl-7">
+              <div className="space-y-2">
+                <Label htmlFor="webhookUrl">Webhook URL</Label>
+                <Input
+                  id="webhookUrl"
+                  type="url"
+                  value={form.webhookUrl}
+                  onChange={e => setForm(f => ({ ...f, webhookUrl: e.target.value }))}
+                  placeholder="https://your-app.com/webhook"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slackWebhook">Slack Webhook URL</Label>
+                <Input
+                  id="slackWebhook"
+                  type="url"
+                  value={form.slackWebhook}
+                  onChange={e => setForm(f => ({ ...f, slackWebhook: e.target.value }))}
+                  placeholder="https://hooks.slack.com/services/..."
+                />
+              </div>
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="slackWebhook">Slack Webhook URL</Label>
-            <Input
-              id="slackWebhook"
-              type="url"
-              placeholder="https://hooks.slack.com/services/..."
-              value={settings.slackWebhook || ""}
-              onChange={(e) =>
-                setSettings(prev => ({
-                  ...prev,
-                  slackWebhook: e.target.value
-                }))
-              }
-            />
-            <p className="text-sm text-muted-foreground">
-              Send important notifications to Slack
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
-      <Button type="submit" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Save Notification Settings
-      </Button>
-    </form>
-  )
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Notification Settings
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { Loader2, Mail, MessageSquare, Webhook } from "lucide-react";
+
+export default function NotificationsSettingsForm() {
+  const [form, setForm] = useState({
+    emailNotifications: {
+      orderConfirmation: true,
+      orderStatusUpdate: true,
+      lowStockAlert: true,
+      customerMessages: true,
+      marketingEmails: false
+    },
+    smsNotifications: {
+      orderConfirmation: false,
+      orderStatusUpdate: false,
+      lowStockAlert: true
+    },
+    webhookUrl: "",
+    slackWebhook: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notifications) {
+          setForm(data.notifications);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load notification settings",
+        variant: "destructive",
+      });
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      const formData = new FormData();
+      
+      // Add notification settings with proper nested structure
+      Object.entries(form).forEach(([key, value]) => {
+        if (typeof value === "object" && value !== null) {
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            formData.append(`notifications.${key}.${subKey}`, subValue.toString());
+          });
+        } else {
+          formData.append(`notifications.${key}`, value.toString());
+        }
+      });
+
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Success",
+          description: "Notification settings saved successfully",
+        });
+        fetchSettings(); // Refresh data
+      } else {
+        throw new Error("Failed to save settings");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Notification Settings</CardTitle>
+        <CardDescription>
+          Configure email, SMS, and webhook notifications
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Notifications */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-5 w-5" />
+              <Label className="text-base font-medium">Email Notifications</Label>
+            </div>
+            
+            <div className="grid gap-4 pl-7">
+              <div className="flex items-center justify-between">
+                <Label>Order Confirmation</Label>
+                <Switch
+                  checked={form.emailNotifications.orderConfirmation}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, orderConfirmation: checked }
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Order Status Updates</Label>
+                <Switch
+                  checked={form.emailNotifications.orderStatusUpdate}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, orderStatusUpdate: checked }
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Low Stock Alerts</Label>
+                <Switch
+                  checked={form.emailNotifications.lowStockAlert}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      emailNotifications: { ...f.emailNotifications, lowStockAlert: checked }
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SMS Notifications */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5" />
+              <Label className="text-base font-medium">SMS Notifications</Label>
+            </div>
+            
+            <div className="grid gap-4 pl-7">
+              <div className="flex items-center justify-between">
+                <Label>Order Confirmation</Label>
+                <Switch
+                  checked={form.smsNotifications.orderConfirmation}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      smsNotifications: { ...f.smsNotifications, orderConfirmation: checked }
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Low Stock Alerts</Label>
+                <Switch
+                  checked={form.smsNotifications.lowStockAlert}
+                  onCheckedChange={(checked) =>
+                    setForm(f => ({
+                      ...f,
+                      smsNotifications: { ...f.smsNotifications, lowStockAlert: checked }
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Webhooks */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Webhook className="h-5 w-5" />
+              <Label className="text-base font-medium">Webhook Integration</Label>
+            </div>
+            
+            <div className="grid gap-4 pl-7">
+              <div className="space-y-2">
+                <Label htmlFor="webhookUrl">Webhook URL</Label>
+                <Input
+                  id="webhookUrl"
+                  type="url"
+                  value={form.webhookUrl}
+                  onChange={e => setForm(f => ({ ...f, webhookUrl: e.target.value }))}
+                  placeholder="https://your-app.com/webhook"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slackWebhook">Slack Webhook URL</Label>
+                <Input
+                  id="slackWebhook"
+                  type="url"
+                  value={form.slackWebhook}
+                  onChange={e => setForm(f => ({ ...f, slackWebhook: e.target.value }))}
+                  placeholder="https://hooks.slack.com/services/..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Notification Settings
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
 }

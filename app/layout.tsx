@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ScrollToSection } from "@/components/scroll-to-section"
 import { FloatingConversionBar } from "@/components/floating-conversion-bar"
+import { AuthProvider } from "@/hooks/use-auth"
 import { WishlistProvider } from "@/hooks/use-wishlist"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -21,14 +22,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <WishlistProvider>
-            <Header />
-            <ScrollToSection />
-            <FloatingConversionBar />
-            <div className="pt-[160px]">{children}</div>
-            <Footer />
-            <Toaster />
-          </WishlistProvider>
+          <AuthProvider>
+            <WishlistProvider>
+              <Header />
+              <ScrollToSection />
+              <FloatingConversionBar />
+              <div className="pt-[160px]">{children}</div>
+              <Footer />
+              <Toaster />
+            </WishlistProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

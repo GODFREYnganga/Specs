@@ -42,28 +42,10 @@ export async function PUT(request: NextRequest) {
     // Handle other form fields
     for (const [key, value] of formData.entries()) {
       if (key === "storeLogo") continue // Already handled above
-      
+
       if (key.includes(".")) {
-        // Handle nested objects like paymentMethods.stripe
-        const [parent, child] = key.split(".")
-        if (!updateData[parent]) updateData[parent] = {}
-        updateData[parent][child] = value === "true" ? true : value === "false" ? false : value
-      } else if (key.startsWith("theme.")) {
-        // Handle theme colors
-        const colorKey = key.replace("theme.", "")
-        if (!updateData.theme) updateData.theme = {}
-        updateData.theme[colorKey] = value
-      } else if (key.startsWith("emailNotifications.") || key.startsWith("smsNotifications.")) {
-        // Handle notification settings
-        const [parent, child] = key.split(".")
-        if (!updateData[parent]) updateData[parent] = {}
-        updateData[parent][child] = value === "true"
-      } else if (key.startsWith("storeHours.")) {
-        // Handle store hours
-        const [parent, day, field] = key.split(".")
-        if (!updateData[parent]) updateData[parent] = {}
-        if (!updateData[parent][day]) updateData[parent][day] = {}
-        updateData[parent][day][field] = field === "closed" ? value === "true" : value
+        // Always use MongoDB dot notation for nested fields
+        updateData[key] = value === "true" ? true : value === "false" ? false : value
       } else {
         // Handle simple fields
         if (key === "taxRate" || key === "defaultShippingCost" || key === "freeShippingThreshold") {

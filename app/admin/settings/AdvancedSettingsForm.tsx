@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
+import { toast } from "@/hooks/use-toast"
 import { Loader2, AlertTriangle, Download, Upload } from "lucide-react"
 
 interface AdvancedSettings {
@@ -121,12 +121,15 @@ export default function AdvancedSettingsForm() {
       }
     } catch (error) {
       console.error("Failed to load settings:", error)
-      toast.error("Failed to load advanced settings")
+      toast({
+        title: "Error",
+        description: "Failed to load advanced settings",
+        variant: "destructive",
+      })
     } finally {
       setInitialLoading(false)
     }
   }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -139,18 +142,24 @@ export default function AdvancedSettingsForm() {
       })
 
       if (response.ok) {
-        toast.success("Advanced settings updated successfully")
+        toast({
+          title: "Success",
+          description: "Advanced settings updated successfully",
+        })
       } else {
         throw new Error("Failed to update settings")
       }
     } catch (error) {
       console.error("Settings update error:", error)
-      toast.error("Failed to update advanced settings")
+      toast({
+        title: "Error",
+        description: "Failed to update advanced settings",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
-
   async function createBackup() {
     setBackupLoading(true)
     try {
@@ -168,13 +177,20 @@ export default function AdvancedSettingsForm() {
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
-        toast.success("Backup created successfully")
+        toast({
+          title: "Success",
+          description: "Backup created successfully",
+        })
       } else {
         throw new Error("Failed to create backup")
       }
     } catch (error) {
       console.error("Backup error:", error)
-      toast.error("Failed to create backup")
+      toast({
+        title: "Error",
+        description: "Failed to create backup",
+        variant: "destructive",
+      })
     } finally {
       setBackupLoading(false)
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { toast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 export type CartItem = {
   id: string | number
@@ -23,29 +24,29 @@ export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [cartData, setCartData] = useState<CartData | null>(null)
   const [loading, setLoading] = useState(false)
+  const { user, isAuthenticated } = useAuth()
   
-  // For demo purposes, using "guest" - in real app, get from auth
-  const userId = "guest"
-
+  // Use actual user ID or "guest" for non-authenticated users
+  const userId = isAuthenticated && user ? user.id : "guest"
   // Load cart from API or localStorage on mount
   useEffect(() => {
-    loadCart()
-  }, [])
-
+    if (!loading) { // Only load if not already loading
+      loadCart()
+    }
+  }, [userId]) // Reload when user changes
   // Save cart to localStorage for guest users
   useEffect(() => {
     if (userId === "guest" && typeof window !== "undefined") {
-      localStorage.setItem("cart", JSON.stringify(cart))
+      localStorage.setItem(`cart_${userId}`, JSON.stringify(cart))
     }
-  }, [cart])
+  }, [cart, userId])
 
   async function loadCart() {
     try {
       setLoading(true)
-      
-      if (userId === "guest") {
+        if (userId === "guest") {
         // Load from localStorage for guest users
-        const stored = typeof window !== "undefined" ? localStorage.getItem("cart") : null
+        const stored = typeof window !== "undefined" ? localStorage.getItem(`cart_${userId}`) : null
         if (stored) {
           const guestCart = JSON.parse(stored)
           setCart(guestCart)
@@ -53,14 +54,21 @@ export function useCart() {
           calculateGuestCartTotals(guestCart)
         }
       } else {
-        // Load from API for logged-in users
-        const response = await fetch(`/api/cart?userId=${userId}`)
+        // Load from API for logged-in users with authorization header
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
+        const response = await fetch(`/api/cart?userId=${userId}`, { headers })
         if (response.ok) {
           const data = await response.json()
           setCart(data.items || [])
           setCartData(data)
         }
-      }    } catch (error) {
+      }} catch (error) {
       console.error("Failed to load cart:", error)
       toast({
         title: "Error",
@@ -110,12 +118,18 @@ export function useCart() {
         toast({
           title: "Added to cart",
           description: `${item.name} has been added to your cart`,
-        })
-      } else {
+        })      } else {
         // API call for logged-in users
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
         const response = await fetch("/api/cart", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             productId: item.productId || item.id,
             name: item.name,
@@ -160,11 +174,17 @@ export function useCart() {
           )
           calculateGuestCartTotals(newCart)
           return newCart
-        })
-      } else {
+        })      } else {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
         const response = await fetch("/api/cart", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             productId: id,
             color,
@@ -204,10 +224,17 @@ export function useCart() {
         toast({
           title: "Removed from cart",
           description: "Item has been removed from your cart",
-        })
-      } else {
+        })      } else {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = {}
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
         const response = await fetch(`/api/cart?productId=${id}&color=${color}&userId=${userId}`, {
-          method: "DELETE"
+          method: "DELETE",
+          headers
         })
           if (response.ok) {
           const data = await response.json()
@@ -231,12 +258,11 @@ export function useCart() {
       setLoading(false)
     }
   }
-
   function clearCart() {
     setCart([])
     setCartData(null)
     if (typeof window !== "undefined") {
-      localStorage.removeItem("cart")
+      localStorage.removeItem(`cart_${userId}`)
     }
   }
   return { 

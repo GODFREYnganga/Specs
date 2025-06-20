@@ -18,8 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/hooks/use-cart"
 import { useToast } from "@/hooks/use-toast"
 import { useWishlist } from "@/hooks/use-wishlist"
-import { ProductImage } from "@/components/ui/product-image"
-import { ProductAddToCart } from "@/components/product-add-to-cart"
+import { ModernProductCard } from "@/components/modern-product-card"
 
 // Product type for type safety
 interface Product {
@@ -886,21 +885,27 @@ export default function ProductsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredProducts.map((product: Product) => (
-                    <ProductAddToCart 
+                    <ModernProductCard 
                       key={product._id}
                       product={{
                         _id: product._id,
                         name: product.name,
                         price: product.price,
-                        category: product.category,
+                        category: product.category as "prescription" | "sunglasses" | "reading",
                         image: product.image,
-                        colors: product.color ? [product.color] : ["Default"],
-                        inStock: true, // Default to true since the old interface doesn't have this field
+                        images: product.image ? [product.image] : [],
+                        colors: product.color ? [product.color] : [],
+                        inStock: true,
                         description: product.description,
+                        rating: 4 + Math.random(), // Random rating for demo
+                        reviews: Math.floor(Math.random() * 100) + 1,
+                        isNew: Math.random() > 0.8, // 20% chance of being new
+                        discount: Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 10 : 0 // 30% chance of discount
                       }}
-                      showQuickView={true}
+                      variant="default"
+                      showQuickActions={true}
                       className="h-full"
                     />
                   ))}

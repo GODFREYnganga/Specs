@@ -4,7 +4,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Search, Heart, ShoppingCart, User } from "lucide-react"
+import { Search, Heart, ShoppingCart, User, LogOut } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
+import { useCart } from "@/hooks/use-cart"
+import { useWishlist } from "@/hooks/use-wishlist"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 /**
  * Header Component
@@ -24,34 +29,31 @@ export function Header() {
 
   // Get the current pathname for conditional styling
   const pathname = usePathname()
+  // Get auth state
+  const { user, isAuthenticated, logout } = useAuth()
+  
+  // Get cart and wishlist counts
+  const { cart } = useCart()
+  const { wishlist } = useWishlist()
 
-  /**
-   * Effect to handle scroll events for header visibility and styling
-   */
+  // State to store settings fetched from the API
+  const [settings, setSettings] = useState<any>(null)
+  // Helper to fetch settings
+  const fetchSettings = () => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => setSettings(data))
+      .catch(() => setSettings(null))
+  }
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-
-      // Determine if scrolled past threshold (for background color change)
-      setIsScrolled(currentScrollY > 50)
-
-      // Hide header on scroll down, show on scroll up
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false)
-      } else {
-        setIsVisible(true)
-      }
-
-      // Update last scroll position
-      setLastScrollY(currentScrollY)
+    fetchSettings()
+    // Listen for logo update events (localStorage)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'storeLogoUpdated') fetchSettings()
     }
-
-    // Add scroll event listener
-    window.addEventListener("scroll", handleScroll)
-
-    // Clean up event listener on component unmount
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [lastScrollY])
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   // Check if we're on the home page for conditional styling
   const isHomePage = pathname === "/"
@@ -516,7 +518,7 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <Image
-                src="/images/hero/lens2cart-logo.png"
+                src={settings?.general?.storeLogo || "/images/hero/lens2cart-logo.png"}
                 alt="Lens2Cart Logo"
                 width={300}
                 height={100}
@@ -537,26 +539,60 @@ export function Header() {
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 </div>
               </div>
-            </div>
-
-            {/* User actions */}
+            </div>            {/* User actions */}
             <div className="w-full flex justify-end">
               <div className="flex items-center space-x-6">
-                <Link href="/login" className="flex items-center cursor-pointer group">
-                  <User className="w-5 h-5 text-white group-hover:text-gray-900" />
-                  <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
-                </Link>
-                <Link href="/wishlist" className="flex items-center cursor-pointer group">
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="flex items-center cursor-pointer group">
+                      <User className="w-5 h-5 text-white group-hover:text-gray-900" />
+                      <span className="ml-2 text-sm text-white group-hover:text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={logout}
+                      variant="ghost"
+                      size="sm"
+                      className="flex items-center text-white hover:text-gray-900 hover:bg-white/10"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Link href="/login" className="flex items-center cursor-pointer group">
+                    <User className="w-5 h-5 text-white group-hover:text-gray-900" />
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
+                  </Link>
+                )}                <Link href="/wishlist" className="flex items-center cursor-pointer group relative">
                   <Heart className="w-5 h-5	text-white group-hover:text-gray-900" />
                   <span className="ml-2 text-sm text-white group-hover:text-gray-900">Wishlist</span>
+                  {wishlist && wishlist.length > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {wishlist.length}
+                    </Badge>
+                  )}
                 </Link>
-                <Link href="/cart" className="flex items-center cursor-pointer group">
+                <Link href="/cart" className="flex items-center cursor-pointer group relative">
                   <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
                   <span className="ml-2 text-sm text-white group-hover:text-gray-900">Cart</span>
-                </Link>
-                <Link href="/admin/login" className="flex items-center cursor-pointer group">
-                  <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold">Admin</span>
-                </Link>
+                  {cart && cart.length > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {cart.length}
+                    </Badge>
+                  )}
+                </Link>                {user?.role === "admin" && (
+                  <Link href="/admin" className="flex items-center cursor-pointer group">
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold">Admin</span>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

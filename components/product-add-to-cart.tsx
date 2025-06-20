@@ -7,6 +7,8 @@ import { useCart } from "@/hooks/use-cart"
 import { toast } from "@/hooks/use-toast"
 import { ShoppingCart, Heart, Eye } from "lucide-react"
 import { ProductImage } from "@/components/ui/product-image"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface Product {
   _id: string
@@ -14,6 +16,7 @@ interface Product {
   name: string
   price: number
   image?: string
+  images?: string[] // <-- add this line
   colors?: string[]
   category: string
   inStock?: boolean
@@ -31,6 +34,12 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "Default")
   const [quantity, setQuantity] = useState(1)
   const [isHovered, setIsHovered] = useState(false)
+  const router = useRouter()
+
+  // Support multiple images
+  const images: string[] = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : product.image ? [product.image] : ["/placeholder.svg"]
 
   const handleAddToCart = async () => {
     if (!product.inStock) {
@@ -41,7 +50,6 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
       })
       return
     }
-
     try {
       await addToCart({
         id: product._id || product.id || Math.random().toString(),
@@ -50,8 +58,9 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
         price: product.price,
         color: selectedColor,
         quantity: quantity,
-        image: product.image || "/placeholder.svg",
+        image: images[0],
       })
+      router.push("/cart")
     } catch (error) {
       console.error("Add to cart error:", error)
       toast({
@@ -68,14 +77,22 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden">
+      {/* Product Image(s) */}
+      <Link href={`/products/${product._id}`} className="block relative aspect-square overflow-hidden">
         <ProductImage
-          src={product.image}
+          src={images[0]}
           alt={product.name}
           className="w-full h-full"
         />
-        
+        {/* Show thumbnails if multiple images */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-2 flex gap-1">
+            {images.slice(0, 4).map((img: string, idx: number) => (
+              <img key={idx} src={img} alt="thumb" className="w-6 h-6 rounded border bg-white object-cover" />
+            ))}
+          </div>
+        )}
+
         {/* Stock Badge */}
         {!product.inStock && (
           <Badge variant="destructive" className="absolute top-2 left-2">
@@ -87,44 +104,48 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
         <Badge variant="secondary" className="absolute top-2 right-2 capitalize">
           {product.category}
         </Badge>
+      </Link>
 
-        {/* Hover Actions */}
-        {isHovered && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center gap-2 transition-all duration-300">
+      {/* Hover Actions */}
+      {isHovered && (
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center gap-2 transition-all duration-300">
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={handleAddToCart}
+            disabled={loading || !product.inStock}
+          >
+            <ShoppingCart className="h-4 w-4" />
+          </Button>
+          
+          {showQuickView && (
             <Button
               variant="secondary"
               size="icon"
               className="h-10 w-10 rounded-full"
-              onClick={handleAddToCart}
-              disabled={loading || !product.inStock}
+              asChild
             >
-              <ShoppingCart className="h-4 w-4" />
+              <Link href={`/products/${product._id}`}><Eye className="h-4 w-4" /></Link>
             </Button>
-            
-            {showQuickView && (
-              <Button
-                variant="secondary"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            )}
-            
-            <Button
-              variant="secondary"
-              size="icon"
-              className="h-10 w-10 rounded-full"
-            >
-              <Heart className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </div>
+          )}
+          
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            asChild
+          >
+            <Link href={`/products/${product._id}`}><Heart className="h-4 w-4" /></Link>
+          </Button>
+        </div>
+      )}
 
       {/* Product Info */}
       <div className="p-4">
-        <h3 className="font-medium text-lg mb-2 line-clamp-2">{product.name}</h3>
+        <Link href={`/products/${product._id}`} className="block">
+          <h3 className="font-medium text-lg mb-2 line-clamp-2">{product.name}</h3>
+        </Link>
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
           {product.description || "High-quality eyewear for modern lifestyles"}
         </p>

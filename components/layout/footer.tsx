@@ -1,8 +1,27 @@
+"use client"
 import Link from "next/link"
 import Image from "next/image"
+import { useState, useEffect } from "react"
 import { Facebook, Instagram, Twitter } from "lucide-react"
 
 export function Footer() {
+  const [settings, setSettings] = useState<any>(null)
+  // Helper to fetch settings
+  const fetchSettings = () => {
+    fetch('/api/settings')
+      .then((res: Response) => res.json())
+      .then((data: any) => setSettings(data))
+      .catch(() => setSettings(null))
+  }
+  useEffect(() => {
+    fetchSettings()
+    // Listen for logo update events (localStorage)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'storeLogoUpdated') fetchSettings()
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
   return (
     <footer className="bg-[#002147] text-white">
       <div className="container mx-auto px-4 md:px-8 py-12">
@@ -10,7 +29,7 @@ export function Footer() {
           <div>
             <div className="mb-4">
               <Image
-                src="/images/logo/lens2cart-logo.png"
+                src={settings?.general?.storeLogo || "/images/logo/lens2cart-logo.png"}
                 alt="Lens2Cart Logo"
                 width={200}
                 height={67}

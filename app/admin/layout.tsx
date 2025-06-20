@@ -51,14 +51,11 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 		// Only render children (which will be the login page) if not admin
 		return <div className="min-h-screen bg-background text-foreground flex items-center justify-center">{children}</div>;
 	}
-
-	// Only render the main dashboard content (no extra sidebar/layout duplication)
+	// Only render the main dashboard content with optimized layout
 	return (
 		<div className="min-h-screen bg-background text-foreground">
-			<div className="max-w-5xl mx-auto py-8">
-				<Card className="p-4 md:p-8 shadow-md bg-white dark:bg-gray-900">
-					{children}
-				</Card>
+			<div className="w-full h-full">
+				{children}
 			</div>
 		</div>
 	)

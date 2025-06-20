@@ -47,21 +47,14 @@ const SIDEBAR_ITEMS = [
 	{ key: "settings", label: "Settings" },
 ]
 
-export default function AdminDashboard() {
-	const router = useRouter()
+export default function AdminDashboard() {	const router = useRouter()
 	const [tab, setTab] = useState("overview")
 	const [products, setProducts] = useState<Product[]>([])
 	const [orders, setOrders] = useState<Order[]>([])
 	const [users, setUsers] = useState<User[]>([])
 	const [admins, setAdmins] = useState<User[]>([])
-	const [payments, setPayments] = useState<any[]>([])
-	const [shipping, setShipping] = useState<any[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
-	const [newPayment, setNewPayment] = useState({ amount: "", status: "" })
-	const [editingPayment, setEditingPayment] = useState<any | null>(null)
-	const [newShipping, setNewShipping] = useState({ carrier: "", status: "" })
-	const [editingShipping, setEditingShipping] = useState<any | null>(null)
 	const [autoRefresh, setAutoRefresh] = useState(true)
 	const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 	const { toast } = useToast()
@@ -73,22 +66,16 @@ export default function AdminDashboard() {
 				products,
 				orders,
 				allUsers,
-				payments,
-				shipping,
 			] = await Promise.all([
 				fetch("/api/products").then((res) => res.json()),
 				fetch("/api/orders").then((res) => res.json()),
 				fetch("/api/users").then((res) => res.json()),
-				fetch("/api/payments").then((res) => res.json()),
-				fetch("/api/shipping").then((res) => res.json()),
 			])
 
 			setProducts(products)
 			setOrders(orders)
 			setUsers(allUsers)
 			setAdmins(allUsers.filter((user: User) => user.role === "admin"))
-			setPayments(payments)
-			setShipping(shipping)
 			setLastUpdated(new Date())
 			setError("")
 		} catch (error) {
@@ -116,7 +103,6 @@ export default function AdminDashboard() {
 			if (interval) clearInterval(interval)
 		}
 	}, [autoRefresh, tab, loadDashboardData])
-
 	// Example sales data for chart (replace with real aggregation if needed)
 	const salesData = [
 		{ name: "Jan", sales: 4000 },
@@ -125,280 +111,159 @@ export default function AdminDashboard() {
 		{ name: "Apr", sales: 2780 },
 		{ name: "May", sales: 3890 },
 	]
-
-	// --- Payment CRUD handlers ---
-	async function fetchPayments() {
-		const res = await fetch("/api/payments")
-		const data = await res.json()
-		setPayments(data)
-	}
-	async function handleAddPayment() {
-		try {
-			await fetch("/api/payments", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(newPayment),
-			})
-			setNewPayment({ amount: "", status: "" })
-			toast({ title: "Payment added", description: "Payment entry was added successfully." })
-			await fetchPayments()
-		} catch {
-			toast({ title: "Error", description: "Failed to add payment entry.", variant: "destructive" })
-		}
-	}
-	async function handleEditPayment() {
-		try {
-			await fetch(`/api/payments?id=${editingPayment._id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(editingPayment),
-			})
-			setEditingPayment(null)
-			toast({ title: "Payment updated", description: "Payment entry was updated successfully." })
-			await fetchPayments()
-		} catch {
-			toast({ title: "Error", description: "Failed to update payment entry.", variant: "destructive" })
-		}
-	}
-	async function handleDeletePayment(id: string) {
-		try {
-			await fetch(`/api/payments?id=${id}`, { method: "DELETE" })
-			toast({ title: "Payment deleted", description: "Payment entry was deleted successfully." })
-			await fetchPayments()
-		} catch {
-			toast({ title: "Error", description: "Failed to delete payment entry.", variant: "destructive" })
-		}
-	}
-	// --- Shipping CRUD handlers ---
-	async function fetchShipping() {
-		const res = await fetch("/api/shipping")
-		const data = await res.json()
-		setShipping(data)
-	}
-	async function handleAddShipping() {
-		try {
-			await fetch("/api/shipping", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(newShipping),
-			})
-			setNewShipping({ carrier: "", status: "" })
-			toast({ title: "Shipping added", description: "Shipping entry was added successfully." })
-			await fetchShipping()
-		} catch {
-			toast({ title: "Error", description: "Failed to add shipping entry.", variant: "destructive" })
-		}
-	}
-	async function handleEditShipping() {
-		try {
-			await fetch(`/api/shipping?id=${editingShipping._id}`, {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(editingShipping),
-			})
-			setEditingShipping(null)
-			toast({ title: "Shipping updated", description: "Shipping entry was updated successfully." })
-			await fetchShipping()
-		} catch {
-			toast({ title: "Error", description: "Failed to update shipping entry.", variant: "destructive" })
-		}
-	}
-	async function handleDeleteShipping(id: string) {
-		try {
-			await fetch(`/api/shipping?id=${id}`, { method: "DELETE" })
-			toast({ title: "Shipping deleted", description: "Shipping entry was deleted successfully." })
-			await fetchShipping()
-		} catch {
-			toast({ title: "Error", description: "Failed to delete shipping entry.", variant: "destructive" })
-		}	}
-
-	return (		<div className="flex min-h-screen bg-gray-50">
-			{/* Enhanced Sidebar Navigation */}
-			<aside className="w-72 h-screen min-h-0 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-2xl">
-				<div className="sticky top-0 z-10 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700">
-					<div className="px-6 pt-6 pb-4">
-						<h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+	return (<div className="flex h-screen bg-gray-50 overflow-hidden">
+			{/* Optimized Sidebar Navigation */}
+			<aside className="w-64 h-full bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-2xl">
+				<div className="flex-shrink-0 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700">
+					<div className="px-4 py-4">
+						<h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
 							Admin Dashboard
 						</h1>
 						<p className="text-xs text-gray-400 mt-1">Spectacles E-commerce</p>
 					</div>
-				</div>
-				
-				<nav className="flex-1 min-h-0 overflow-y-auto px-4 pb-6">
-					<div className="flex flex-col gap-2 pt-6">
+				</div>				
+				<nav className="flex-1 overflow-y-auto px-3 py-4">
+					<div className="flex flex-col gap-1">
 						{/* Main Navigation Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Main
 							</h3>
 							<div className="space-y-1">
 								<button 
 									onClick={() => setTab("overview")}
-									className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+									className={`w-full flex items-center px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
 										tab === "overview" 
-											? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transform scale-105" 
-											: "text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105"
+											? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg" 
+											: "text-gray-300 hover:bg-gray-800 hover:text-white"
 									}`}
 								>
-									<BarChart className="w-5 h-5 mr-3" />
-									<span className="font-medium">Overview</span>
+									<BarChart className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Overview</span>
 									{tab === "overview" && <div className="ml-auto w-2 h-2 bg-blue-300 rounded-full animate-pulse"></div>}
 								</button>
 							</div>
 						</div>
 
 						{/* Management Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Management
 							</h3>
 							<div className="space-y-1">
 								<button 
 									onClick={() => router.push('/admin/products')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<Package className="w-5 h-5 mr-3" />
-									<span className="font-medium">Products</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-									</div>
+									<Package className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Products</span>
 								</button>
 								
 								<button 
 									onClick={() => router.push('/admin/inventory')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<BarChart3 className="w-5 h-5 mr-3" />
-									<span className="font-medium">Inventory</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-									</div>
+									<BarChart3 className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Inventory</span>
 								</button>
 								
 								<button 
 									onClick={() => router.push('/admin/orders')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<ShoppingCart className="w-5 h-5 mr-3" />
-									<span className="font-medium">Orders</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-									</div>
+									<ShoppingCart className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Orders</span>
 								</button>
 							</div>
 						</div>
 
 						{/* Users & Admin Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Users & Access
 							</h3>
 							<div className="space-y-1">
 								<button 
 									onClick={() => router.push('/admin/users')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<Users className="w-5 h-5 mr-3" />
-									<span className="font-medium">Users</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-									</div>
+									<Users className="w-4 h-4 mr-3" />									<span className="font-medium text-sm">Users</span>
 								</button>
 								
 								<button 
 									onClick={() => setTab("admins")}
-									className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+									className={`w-full flex items-center px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
 										tab === "admins" 
-											? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg transform scale-105" 
-											: "text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105"
+											? "bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg" 
+											: "text-gray-300 hover:bg-gray-800 hover:text-white"
 									}`}
 								>
-									<UserCog className="w-5 h-5 mr-3" />
-									<span className="font-medium">Admins</span>
+									<UserCog className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Admins</span>
 									{tab === "admins" && <div className="ml-auto w-2 h-2 bg-purple-300 rounded-full animate-pulse"></div>}
 								</button>
 							</div>
 						</div>
 
 						{/* Finance Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Finance & Operations
 							</h3>
-							<div className="space-y-1">
-								<button 
-									onClick={() => setTab("payments")}
-									className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
-										tab === "payments" 
-											? "bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg transform scale-105" 
-											: "text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105"
-									}`}
+							<div className="space-y-1">								<button 
+									onClick={() => router.push('/admin/payments')}
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<CreditCard className="w-5 h-5 mr-3" />
-									<span className="font-medium">Payments</span>
-									{tab === "payments" && <div className="ml-auto w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>}
+									<CreditCard className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Payments</span>
 								</button>
 								
 								<button 
-									onClick={() => setTab("shipping")}
-									className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
-										tab === "shipping" 
-											? "bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-lg transform scale-105" 
-											: "text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105"
-									}`}
+									onClick={() => router.push('/admin/shipping')}
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<Truck className="w-5 h-5 mr-3" />
-									<span className="font-medium">Shipping</span>
-									{tab === "shipping" && <div className="ml-auto w-2 h-2 bg-orange-300 rounded-full animate-pulse"></div>}
+									<Truck className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Shipping</span>
 								</button>
 							</div>
 						</div>
 
 						{/* Analytics & Marketing Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Analytics & Growth
 							</h3>
 							<div className="space-y-1">
 								<button 
 									onClick={() => router.push('/admin/marketing')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<Megaphone className="w-5 h-5 mr-3" />
-									<span className="font-medium">Marketing</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-pink-400 rounded-full"></div>
-									</div>
+									<Megaphone className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Marketing</span>
 								</button>
 								
 								<button 
 									onClick={() => router.push('/admin/analytics')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<LineChart className="w-5 h-5 mr-3" />
-									<span className="font-medium">Analytics</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></div>
-									</div>
+									<LineChart className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Analytics</span>
 								</button>
 							</div>
 						</div>
 
 						{/* Settings Section */}
-						<div className="mb-4">
-							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+						<div className="mb-3">
+							<h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
 								Configuration
 							</h3>
 							<div className="space-y-1">
 								<button 
 									onClick={() => router.push('/admin/settings')}
-									className="w-full flex items-center px-4 py-3 rounded-xl text-left text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-105 transition-all duration-200 group"
+									className="w-full flex items-center px-3 py-2.5 rounded-lg text-left text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 group"
 								>
-									<Settings className="w-5 h-5 mr-3" />
-									<span className="font-medium">Settings</span>
-									<div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-										<div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-									</div>
+									<Settings className="w-4 h-4 mr-3" />
+									<span className="font-medium text-sm">Settings</span>
 								</button>
 							</div>
 						</div>
@@ -406,22 +271,21 @@ export default function AdminDashboard() {
 				</nav>
 				
 				{/* Footer */}
-				<div className="p-4 border-t border-gray-700">
+				<div className="flex-shrink-0 p-3 border-t border-gray-700">
 					<div className="text-xs text-gray-400 text-center">
 						<p>Admin Panel v2.0</p>
 						<p className="mt-1">© 2025 Spectacles</p>
 					</div>
 				</div>
 			</aside>			{/* Main Content */}
-			<main className="flex-1 p-8 bg-gray-50 min-h-screen overflow-x-auto">
-				<div className="max-w-7xl mx-auto">
-					{/* Overview */}
+			<main className="flex-1 bg-gray-50 h-full overflow-auto">
+				<div className="h-full p-4">					{/* Overview */}
 					{tab === "overview" && (
-						<div className="space-y-6">
+						<div className="space-y-4">
 							{/* Header with Real-time Controls */}
 							<div className="flex items-center justify-between">
 								<div>
-									<h1 className="text-3xl font-bold">Dashboard Overview</h1>
+									<h1 className="text-2xl font-bold">Dashboard Overview</h1>
 									<p className="text-gray-600 mt-1">Real-time business metrics and insights</p>
 								</div>
 								
@@ -449,7 +313,7 @@ export default function AdminDashboard() {
 
 							{/* Real-time Status Indicator */}
 							<Card>
-								<CardContent className="p-4">
+								<CardContent className="p-3">
 									<div className="flex items-center justify-between">
 										<div className="flex items-center gap-4">
 											<div className="flex items-center gap-2">
@@ -471,13 +335,12 @@ export default function AdminDashboard() {
 									</div>
 								</CardContent>
 							</Card>							{/* Enhanced Statistics Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-								<Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setTab("payments")}>
-									<CardContent className="p-6">
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">								<Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setTab("payments")}>
+									<CardContent className="p-4">
 										<div className="flex items-center justify-between">
 											<div>
 												<p className="text-sm font-medium text-gray-600">Total Sales</p>
-												<p className="text-3xl font-bold text-green-600">
+												<p className="text-2xl font-bold text-green-600">
 													KSh {orders.reduce((sum, order) => sum + (order.total || 0), 0).toLocaleString()}
 												</p>
 												<p className="text-xs text-green-600 flex items-center mt-1">
@@ -485,14 +348,14 @@ export default function AdminDashboard() {
 													+12.5% from last month
 												</p>
 											</div>
-											<div className="p-3 bg-green-100 rounded-full">
-												<CreditCard className="h-6 w-6 text-green-600" />
+											<div className="p-2 bg-green-100 rounded-full">
+												<CreditCard className="h-5 w-5 text-green-600" />
 											</div>
 										</div>
 										<Button 
 											variant="ghost" 
 											size="sm" 
-											className="w-full mt-4 text-green-600 hover:bg-green-50"
+											className="w-full mt-3 text-green-600 hover:bg-green-50"
 											onClick={(e) => {
 												e.stopPropagation()
 												setTab("payments")
@@ -764,86 +627,6 @@ export default function AdminDashboard() {
 										</TableBody>
 									</Table>
 								)}
-							</CardContent>
-						</Card>
-					)}
-
-					{/* Payments */}
-					{tab === "payments" && (
-						<Card>
-							<CardHeader><CardTitle>Payments</CardTitle></CardHeader>
-							<CardContent>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>Payment ID</TableCell>
-											<TableCell>Order</TableCell>
-											<TableCell>User</TableCell>
-											<TableCell>Amount</TableCell>
-											<TableCell>Method</TableCell>
-											<TableCell>Status</TableCell>
-											<TableCell>Date</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{payments.map((payment) => (
-											<TableRow key={payment._id}>
-												<TableCell>PMT-{payment._id.slice(-6)}</TableCell>
-												<TableCell>#{payment.orderId || 'N/A'}</TableCell>
-												<TableCell>{payment.user || 'Unknown'}</TableCell>
-												<TableCell>KSh {payment.amount}</TableCell>
-												<TableCell>{payment.method || 'Mpesa'}</TableCell>
-												<TableCell>{payment.status}</TableCell>
-												<TableCell>{new Date(payment.createdAt || Date.now()).toLocaleDateString()}</TableCell>
-											</TableRow>
-										))}
-										{payments.length === 0 && (
-											<TableRow>
-												<TableCell colSpan={7} className="text-center text-gray-500">No payments found</TableCell>
-											</TableRow>
-										)}
-									</TableBody>
-								</Table>
-							</CardContent>
-						</Card>
-					)}
-
-					{/* Shipping */}
-					{tab === "shipping" && (
-						<Card>
-							<CardHeader><CardTitle>Shipping</CardTitle></CardHeader>
-							<CardContent>
-								<Table>
-									<TableHead>
-										<TableRow>
-											<TableCell>Order ID</TableCell>
-											<TableCell>User</TableCell>
-											<TableCell>Address</TableCell>
-											<TableCell>Method</TableCell>
-											<TableCell>Status</TableCell>
-											<TableCell>Tracking</TableCell>
-											<TableCell>Actions</TableCell>
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{shipping.map((shipment) => (
-											<TableRow key={shipment._id}>
-												<TableCell>#{shipment.orderId || shipment._id.slice(-6)}</TableCell>
-												<TableCell>{shipment.user || 'Unknown'}</TableCell>
-												<TableCell>{shipment.address || '123 Main St'}</TableCell>
-												<TableCell>{shipment.method || 'Standard'}</TableCell>
-												<TableCell>{shipment.status || 'Pending'}</TableCell>
-												<TableCell>{shipment.tracking || 'TRK' + shipment._id.slice(-5)}</TableCell>
-												<TableCell><Button size="sm">Update</Button></TableCell>
-											</TableRow>
-										))}
-										{shipping.length === 0 && (
-											<TableRow>
-												<TableCell colSpan={7} className="text-center text-gray-500">No shipping records found</TableCell>
-											</TableRow>
-										)}
-									</TableBody>
-								</Table>
 							</CardContent>
 						</Card>					)}
 				</div>

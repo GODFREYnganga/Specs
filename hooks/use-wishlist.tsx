@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { Product } from "@/types/product"
 import { toast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 // Remove id from extension, redefine it as string
 interface WishlistItem extends Omit<Product, "id"> {
@@ -25,39 +26,44 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(false)
+  const { user, isAuthenticated } = useAuth()
   
-  // For demo purposes, using "guest" - in real app, get from auth
-  const userId = "guest"
-
+  // Use actual user ID or "guest" for non-authenticated users
+  const userId = isAuthenticated && user ? user.id : "guest"
   useEffect(() => {
     loadWishlist()
-  }, [])
-
+  }, [userId]) // Reload when user changes
   // Save to localStorage for guest users
   useEffect(() => {
     if (userId === "guest" && typeof window !== "undefined") {
-      localStorage.setItem("wishlist", JSON.stringify(wishlist))
+      localStorage.setItem(`wishlist_${userId}`, JSON.stringify(wishlist))
     }
-  }, [wishlist])
+  }, [wishlist, userId])
 
   async function loadWishlist() {
     try {
       setLoading(true)
-      
-      if (userId === "guest") {
+        if (userId === "guest") {
         // Load from localStorage for guest users
-        const stored = typeof window !== "undefined" ? localStorage.getItem("wishlist") : null
+        const stored = typeof window !== "undefined" ? localStorage.getItem(`wishlist_${userId}`) : null
         if (stored) {
           setWishlist(JSON.parse(stored))
         }
       } else {
         // Load from API for logged-in users
-        const response = await fetch(`/api/wishlist?userId=${userId}`)
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = {}
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
+        const response = await fetch(`/api/wishlist?userId=${userId}`, { headers })
         if (response.ok) {
           const data = await response.json()
           setWishlist(data.items || [])
         }
-      }    } catch (error) {
+      }} catch (error) {
       console.error("Failed to load wishlist:", error)
       toast({
         title: "Error",
@@ -87,12 +93,18 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         toast({
           title: "Added to wishlist",
           description: `${item.name} has been added to your wishlist`,
-        })
-      } else {
+        })      } else {
         // API call for logged-in users
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = { "Content-Type": "application/json" }
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
         const response = await fetch("/api/wishlist", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             productId: item.productId || item.id,
             name: item.name,
@@ -133,10 +145,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         toast({
           title: "Removed from wishlist",
           description: "Item has been removed from your wishlist",
-        })
-      } else {
+        })      } else {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+        const headers: HeadersInit = {}
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`
+        }
+        
         const response = await fetch(`/api/wishlist?productId=${id}&color=${color}&userId=${userId}`, {
-          method: "DELETE"
+          method: "DELETE",
+          headers
         })
           if (response.ok) {
           const data = await response.json()

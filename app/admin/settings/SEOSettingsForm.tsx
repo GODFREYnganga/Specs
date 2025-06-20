@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
+import { toast } from "@/hooks/use-toast"
 import { Loader2, ExternalLink } from "lucide-react"
 
 interface SEOSettings {
@@ -102,7 +102,11 @@ export default function SEOSettingsForm() {
       }
     } catch (error) {
       console.error("Failed to load settings:", error)
-      toast.error("Failed to load SEO settings")
+      toast({
+        title: "Error",
+        description: "Failed to load SEO settings",
+        variant: "destructive",
+      })
     } finally {
       setInitialLoading(false)
     }
@@ -120,13 +124,20 @@ export default function SEOSettingsForm() {
       })
 
       if (response.ok) {
-        toast.success("SEO settings updated successfully")
+        toast({
+          title: "Success",
+          description: "SEO settings updated successfully",
+        })
       } else {
         throw new Error("Failed to update settings")
       }
     } catch (error) {
       console.error("Settings update error:", error)
-      toast.error("Failed to update SEO settings")
+      toast({
+        title: "Error",
+        description: "Failed to update SEO settings",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

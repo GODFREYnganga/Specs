@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import Cart from "@/models/Cart"
 import Product from "@/models/Product"
 import Settings from "@/models/Settings"
+import jwt from "jsonwebtoken"
 
 interface CartItem {
   productId: string
@@ -13,13 +14,30 @@ interface CartItem {
   image: string
 }
 
+// Helper function to get user ID from request
+function getUserIdFromRequest(request: NextRequest): string {
+  // Check for JWT token in Authorization header
+  const authHeader = request.headers.get("authorization")
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1]
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret") as any
+      return decoded.id
+    } catch (error) {
+      console.error("JWT verification failed:", error)
+    }
+  }
+  
+  // Fallback to query parameter for guest users
+  return request.nextUrl.searchParams.get("userId") || "guest"
+}
+
 // Get user's cart
 export async function GET(request: NextRequest) {
   try {
     await connectToDatabase()
     
-    // In a real app, get user ID from JWT token
-    const userId = request.nextUrl.searchParams.get("userId") || "guest"
+    const userId = getUserIdFromRequest(request)
     
     let cart
     if (userId === "guest") {
@@ -44,7 +62,10 @@ export async function POST(request: NextRequest) {
   try {
     await connectToDatabase()
     
-    const { productId, name, price, quantity, color, image, userId } = await request.json()
+    const { productId, name, price, quantity, color, image, userId: bodyUserId } = await request.json()
+    
+    // Get user ID from JWT token, fallback to body
+    const userId = getUserIdFromRequest(request) || bodyUserId
     
     if (!productId || !name || !price || !quantity || !color || !image) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -107,7 +128,10 @@ export async function PUT(request: NextRequest) {
   try {
     await connectToDatabase()
     
-    const { productId, color, quantity, userId } = await request.json()
+    const { productId, color, quantity, userId: bodyUserId } = await request.json()
+    
+    // Get user ID from JWT token, fallback to body
+    const userId = getUserIdFromRequest(request) || bodyUserId
 
     if (!productId || !color || quantity === undefined || !userId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -163,7 +187,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get("productId")
     const color = searchParams.get("color")
-    const userId = searchParams.get("userId")
+    const queryUserId = searchParams.get("userId")
+    
+    // Get user ID from JWT token, fallback to query parameter
+    const userId = getUserIdFromRequest(request) || queryUserId
 
     if (!productId || !color || !userId) {
       return NextResponse.json({ error: "Product ID, color, and user ID are required" }, { status: 400 })

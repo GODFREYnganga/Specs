@@ -3,10 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -15,22 +17,17 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'login' | 'register'>('login')
+  
+  const { login, register } = useAuth()
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
-      // Save token to localStorage or cookie as needed
-      localStorage.setItem('token', data.token)
-      window.location.href = '/'
+      await login(loginData.email, loginData.password)
+      router.push('/')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -43,16 +40,8 @@ export default function AuthPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registerData),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed')
-      // Save token to localStorage or cookie as needed
-      localStorage.setItem('token', data.token)
-      window.location.href = '/'
+      await register(registerData)
+      router.push('/')
     } catch (err: any) {
       setError(err.message)
     } finally {

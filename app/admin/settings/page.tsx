@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import GeneralSettingsForm from "./GeneralSettingsForm";
 import TaxShippingSettingsForm from "./TaxShippingSettingsForm";
 import PaymentsSettingsForm from "./PaymentsSettingsForm";
-import NotificationsSettingsForm from "./NotificationsSettingsForm";
+import NotificationsSettingsForm from "./NotificationsSettingsForm_NEW";
 import AppearanceSettingsForm from "./AppearanceSettingsForm";
 import SEOSettingsForm from "./SEOSettingsForm";
 import AdvancedSettingsForm from "./AdvancedSettingsForm";
@@ -23,30 +23,32 @@ const TABS = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
+  
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Store Settings</h1>
-          <p className="text-gray-600 mt-1">Configure your store preferences and options</p>
+    <div className="h-screen bg-gray-50 overflow-hidden">
+      <div className="h-full p-4 space-y-4 overflow-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Store Settings</h1>
+            <p className="text-gray-600 mt-1">Configure your store preferences and options</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/admin'}
+            className="flex items-center gap-2"
+          >
+            ← Back to Dashboard
+          </Button>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = '/admin'}
-          className="flex items-center gap-2"
-        >
-          ← Back to Dashboard
-        </Button>
-      </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-        <TabsList>
-          {TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-7">
+            {TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         
         <TabsContent value="general">
           <GeneralSettingsForm />
@@ -68,8 +70,8 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="advanced">
           <AdvancedSettingsForm />
-        </TabsContent>
-      </Tabs>
+        </TabsContent>        </Tabs>
+      </div>
     </div>
   );
 }
