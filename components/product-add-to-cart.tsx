@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useCart } from "@/hooks/use-cart"
+import { useCart } from "@/hooks/use-modern-cart"
 import { toast } from "@/hooks/use-toast"
 import { ShoppingCart, Heart, Eye } from "lucide-react"
 import { ProductImage } from "@/components/ui/product-image"
@@ -30,7 +30,7 @@ interface ProductAddToCartProps {
 }
 
 export function ProductAddToCart({ product, showQuickView = false, className = "" }: ProductAddToCartProps) {
-  const { addToCart, loading } = useCart()
+  const { addItem, loading } = useCart()
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "Default")
   const [quantity, setQuantity] = useState(1)
   const [isHovered, setIsHovered] = useState(false)
@@ -40,7 +40,6 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
   const images: string[] = Array.isArray(product.images) && product.images.length > 0
     ? product.images
     : product.image ? [product.image] : ["/placeholder.svg"]
-
   const handleAddToCart = async () => {
     if (!product.inStock) {
       toast({
@@ -51,15 +50,25 @@ export function ProductAddToCart({ product, showQuickView = false, className = "
       return
     }
     try {
-      await addToCart({
-        id: product._id || product.id || Math.random().toString(),
+      console.log("🛒 Product card - Adding to cart:", {
+        id: product._id || product.id,
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        color: selectedColor,
+        quantity: quantity      })
+        await addItem({
         productId: product._id,
         name: product.name,
         price: product.price,
         color: selectedColor,
         quantity: quantity,
         image: images[0],
+        category: product.category || "eyewear",
+        inStock: product.inStock ?? true
       })
+      
+      console.log("✅ Product card - Successfully added to cart, redirecting...")
       router.push("/cart")
     } catch (error) {
       console.error("Add to cart error:", error)

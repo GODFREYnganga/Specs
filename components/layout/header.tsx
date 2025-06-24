@@ -6,8 +6,8 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Search, Heart, ShoppingCart, User, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
-import { useCart } from "@/hooks/use-cart"
-import { useWishlist } from "@/hooks/use-wishlist"
+import { useCart } from "@/hooks/use-modern-cart"
+import { useWishlist } from "@/hooks/use-modern-wishlist"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -26,15 +26,23 @@ export function Header() {
 
   // State to track the last scroll position for direction detection
   const [lastScrollY, setLastScrollY] = useState(0)
-
   // Get the current pathname for conditional styling
   const pathname = usePathname()
+  
   // Get auth state
   const { user, isAuthenticated, logout } = useAuth()
   
   // Get cart and wishlist counts
-  const { cart } = useCart()
-  const { wishlist } = useWishlist()
+  const { items } = useCart()
+  const { items: wishlistItems } = useWishlist()
+
+  // Calculate total cart quantity (not just number of unique items)
+  const cartCount = items && items.length > 0 ? items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) : 0
+  const wishlistCount = wishlistItems && wishlistItems.length > 0 ? wishlistItems.length : 0
+
+  // Debug logging
+  console.log("🎯 Header - Cart:", items)
+  console.log("🔢 Header - Cart count:", cartCount)
 
   // State to store settings fetched from the API
   const [settings, setSettings] = useState<any>(null)
@@ -565,27 +573,27 @@ export function Header() {
                     <User className="w-5 h-5 text-white group-hover:text-gray-900" />
                     <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
                   </Link>
-                )}                <Link href="/wishlist" className="flex items-center cursor-pointer group relative">
-                  <Heart className="w-5 h-5	text-white group-hover:text-gray-900" />
+                )}                <Link href="/wishlist/modern" className="flex items-center cursor-pointer group relative">
+                  <Heart className="w-5 h-5 text-white group-hover:text-gray-900" />
                   <span className="ml-2 text-sm text-white group-hover:text-gray-900">Wishlist</span>
-                  {wishlist && wishlist.length > 0 && (
+                  {wishlistCount > 0 && (
                     <Badge 
                       variant="destructive" 
                       className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                     >
-                      {wishlist.length}
+                      {wishlistCount}
                     </Badge>
                   )}
                 </Link>
-                <Link href="/cart" className="flex items-center cursor-pointer group relative">
+                <Link href="/cart/modern" className="flex items-center cursor-pointer group relative">
                   <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
                   <span className="ml-2 text-sm text-white group-hover:text-gray-900">Cart</span>
-                  {cart && cart.length > 0 && (
+                  {cartCount > 0 && (
                     <Badge 
                       variant="destructive" 
                       className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
                     >
-                      {cart.length}
+                      {cartCount}
                     </Badge>
                   )}
                 </Link>                {user?.role === "admin" && (

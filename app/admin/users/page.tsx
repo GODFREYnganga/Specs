@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 import { Loader2, Search, UserPlus, Trash2, Edit, Filter, Users, Crown } from "lucide-react"
+import Link from "next/link"
 
 interface User {
   _id: string
@@ -204,7 +205,9 @@ export default function AdminUsers() {
   const adminCount = users.filter(u => u.role === "admin").length
 
   return (
-    <div className="p-6">      <div className="flex items-center justify-between mb-6">
+    <div className="p-4">
+      <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">
             {roleFilter === 'admin' ? 'Admin Management' : 

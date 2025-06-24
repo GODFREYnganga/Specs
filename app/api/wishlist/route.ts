@@ -20,6 +20,7 @@ function getUserIdFromRequest(request: NextRequest): string {
     try {
       const token = authHeader.split(" ")[1]
       const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret") as any
+      console.log("🔑 Wishlist JWT decoded:", decoded.id)
       return decoded.id
     } catch (error) {
       console.error("JWT verification failed:", error)
@@ -27,7 +28,9 @@ function getUserIdFromRequest(request: NextRequest): string {
   }
   
   // Fallback to query parameter for guest users
-  return request.nextUrl.searchParams.get("userId") || "guest"
+  const queryUserId = request.nextUrl.searchParams.get("userId")
+  console.log("🔍 Wishlist Query userId:", queryUserId)
+  return queryUserId || "guest"
 }
 
 // Get user's wishlist
@@ -36,16 +39,18 @@ export async function GET(request: NextRequest) {
     await connectToDatabase()
     
     const userId = getUserIdFromRequest(request)
+    console.log("🔍 Wishlist GET - User ID:", userId)
     
     let wishlist
     if (userId === "guest") {
-      // Return empty wishlist for guest users
+      // Return empty wishlist for guest users (frontend handles localStorage)
       wishlist = { items: [] }
     } else {
       wishlist = await Wishlist.findOne({ user: userId }).populate('items.productId')
       if (!wishlist) {
         wishlist = { items: [] }
       }
+      console.log("❤️ Found wishlist for user:", wishlist.items?.length || 0, "items")
     }
     
     return NextResponse.json(wishlist)
@@ -64,12 +69,16 @@ export async function POST(request: NextRequest) {
     
     // Get user ID from JWT token, fallback to body
     const userId = getUserIdFromRequest(request) || bodyUserId
+    console.log("❤️ Wishlist POST - User ID:", userId)
+    console.log("📦 Wishlist POST - Item:", { productId, name, price, color })
     
     if (!productId || !name || !price || !color || !image) {
+      console.log("❌ Missing required fields:", { productId, name, price, color, image })
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     if (userId === "guest") {
+      console.log("👤 Guest user - returning success")
       // For guest users, return the item data (handled by frontend state)
       return NextResponse.json({
         success: true,
@@ -80,23 +89,28 @@ export async function POST(request: NextRequest) {
     // Verify product exists
     const product = await Product.findById(productId)
     if (!product) {
+      console.log("❌ Product not found:", productId)
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
 
     // Find or create wishlist
     let wishlist = await Wishlist.findOne({ user: userId })
     if (!wishlist) {
+      console.log("🆕 Creating new wishlist for user:", userId)
       wishlist = new Wishlist({ user: userId, items: [] })
-    }    // Check if item already exists in wishlist
+    }
+
+    // Check if item already exists in wishlist
     const existingItemIndex = wishlist.items.findIndex(
       (item: WishlistItem) => item.productId.toString() === productId && item.color === color
     )
 
     if (existingItemIndex >= 0) {
-      return NextResponse.json({ error: "Item already in wishlist" }, { status: 400 })
-    }
+      console.log("⚠️ Item already in wishlist")
+      return NextResponse.json({ error: "Item already in wishlist" }, { status: 400 })    }
 
     // Add new item
+    console.log("➕ Adding new item to wishlist")
     wishlist.items.push({
       productId,
       name,
@@ -106,6 +120,7 @@ export async function POST(request: NextRequest) {
     })
 
     await wishlist.save()
+    console.log("💾 Wishlist saved with", wishlist.items.length, "items")
     
     // Populate wishlist items and return
     await wishlist.populate('items.productId')

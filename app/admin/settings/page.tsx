@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import GeneralSettingsForm from "./GeneralSettingsForm";
 import TaxShippingSettingsForm from "./TaxShippingSettingsForm";
@@ -26,19 +27,13 @@ export default function SettingsPage() {
   
   return (
     <div className="h-screen bg-gray-50 overflow-hidden">
-      <div className="h-full p-4 space-y-4 overflow-auto">
+      <div className="h-full p-4 space-y-4 overflow-auto">        <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
+        
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Store Settings</h1>
             <p className="text-gray-600 mt-1">Configure your store preferences and options</p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/admin'}
-            className="flex items-center gap-2"
-          >
-            ← Back to Dashboard
-          </Button>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

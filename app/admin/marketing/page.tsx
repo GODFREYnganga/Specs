@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableHead, TableRow, TableCell, TableBody } from "@/components/ui/table"
@@ -371,9 +372,7 @@ export default function MarketingPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Statistics Cards */}
+      </div>      {/* Statistics Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">

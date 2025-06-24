@@ -55,7 +55,9 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<div className="w-full h-full">
-				{children}
+				<main className="mt-16 px-4"> {/* Add margin-top to push content below nav */}
+					{children}
+				</main>
 			</div>
 		</div>
 	)

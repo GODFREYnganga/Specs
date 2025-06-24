@@ -1,5 +1,6 @@
 "use client";
-
+// @ts-ignore
+import Papa from "papaparse"
 
 import React, { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
@@ -62,6 +63,9 @@ export default function AdminAddProduct() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkError, setBulkError] = useState("")
+  const [bulkSuccess, setBulkSuccess] = useState("")
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [additionalImageFiles, setAdditionalImageFiles] = useState<(File | null)[]>([null, null, null])
   const additionalImageInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)]
@@ -275,9 +279,53 @@ export default function AdminAddProduct() {
     }
   }
 
+  // Bulk upload handler
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBulkError(""); setBulkSuccess("");
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBulkLoading(true)
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results: any) => {
+        try {
+          // Send to backend API for bulk creation
+          const res = await fetch("/api/products/bulk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ products: results.data })
+          })
+          if (!res.ok) {
+            const err = await res.json()
+            throw new Error(err.error || "Bulk upload failed")
+          }
+          setBulkSuccess("Bulk upload successful!")
+        } catch (err: any) {
+          setBulkError(err.message)
+        } finally {
+          setBulkLoading(false)
+        }
+      },
+      error: (err: any) => {
+        setBulkError("CSV parsing failed: " + err.message)
+        setBulkLoading(false)
+      }
+    })
+  }
+
   return (
     <Card className="max-w-xl mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4">Add Product</h2>
+      {/* Bulk Upload Section */}
+      <div className="mb-6 p-4 border rounded bg-gray-50">
+        <h3 className="font-semibold mb-2">Bulk Upload (CSV)</h3>
+        <input type="file" accept=".csv" onChange={handleBulkUpload} disabled={bulkLoading} />
+        {bulkLoading && <div className="text-blue-600 mt-2">Uploading...</div>}
+        {bulkError && <div className="text-red-600 mt-2">{bulkError}</div>}
+        {bulkSuccess && <div className="text-green-600 mt-2">{bulkSuccess}</div>}
+        <div className="text-xs text-gray-500 mt-2">Download a <a href="/products-bulk-template.csv" className="underline">CSV template</a> for bulk upload.</div>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="name">Name</Label>

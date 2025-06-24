@@ -7,10 +7,11 @@ import { Heart, ShoppingCart, Eye, Star, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { useCart } from "@/hooks/use-cart"
-import { useWishlist } from "@/hooks/use-wishlist"
+import { useCart } from "@/hooks/use-modern-cart"
+import { useWishlist } from "@/hooks/use-modern-wishlist"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 interface Product {
   _id: string
@@ -46,9 +47,10 @@ export function ModernProductCard({
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "")
   
-  const { addToCart, loading: cartLoading } = useCart()
-  const { addToWishlist, removeFromWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
+  const { addItem, loading: cartLoading } = useCart()
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
   const { toast } = useToast()
+  const router = useRouter()
   
   const inWishlist = isInWishlist(product._id)
   
@@ -77,22 +79,38 @@ export function ModernProductCard({
       })
       return
     }
-    
-    try {
-      await addToCart({
-        id: product._id,
+      try {
+      console.log('🛍️ Adding to cart from product card:', {
         productId: product._id,
         name: product.name,
         price: discountedPrice,
+        originalPrice: originalPrice,
         color: selectedColor,
         quantity: 1,
-        image: currentImage
+        image: currentImage,
+        category: product.category || "eyewear",
+        inStock: product.inStock ?? true,
+        discount: product.discount || 0
+      })
+      
+      await addItem({
+        productId: product._id,
+        name: product.name,
+        price: discountedPrice,
+        originalPrice: originalPrice,
+        color: selectedColor,
+        quantity: 1,
+        image: currentImage,
+        category: product.category || "eyewear",
+        inStock: product.inStock ?? true,
+        discount: product.discount || 0
       })
       
       toast({
         title: "Added to cart!",
         description: `${product.name} has been added to your cart.`,
       })
+      router.push("/cart")
     } catch (error) {
       toast({
         title: "Error",
@@ -112,21 +130,40 @@ export function ModernProductCard({
         toast({
           title: "Removed from wishlist",
           description: `${product.name} has been removed from your wishlist.`,
-        })
-      } else {
-        await addToWishlist({
-          id: product._id,
+        })      } else {
+        console.log('💝 Adding to wishlist from product card:', {
           productId: product._id,
           name: product.name,
           price: discountedPrice,
+          originalPrice: product.discount ? originalPrice : undefined,
+          color: selectedColor || (product.colors?.[0] || "Default"),
           image: currentImage,
-          description: product.description || "",
-          category: product.category
+          category: product.category || "other",
+          inStock: product.inStock ?? true,
+          discount: product.discount,
+        })
+        
+        await addToWishlist({
+          productId: product._id,
+          name: product.name,
+          price: discountedPrice,
+          color: selectedColor || (product.colors?.[0] || "Default"),
+          image: currentImage,
+          category: product.category || "other",
+          inStock: product.inStock ?? true,
+          size: undefined,
+          originalPrice: product.discount ? originalPrice : undefined,
+          discount: product.discount,
+          variant: undefined,
+          priority: 'medium' as const,
+          notes: undefined
         })
         toast({
           title: "Added to wishlist!",
           description: `${product.name} has been added to your wishlist.`,
         })
+        // Uncomment the next line if you want to redirect to wishlist after add
+        // router.push("/wishlist")
       }
     } catch (error) {
       toast({

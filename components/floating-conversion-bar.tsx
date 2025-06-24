@@ -5,14 +5,14 @@ import Link from "next/link"
 import { ShoppingCart, Heart, Zap, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useCart } from "@/hooks/use-cart"
-import { useWishlist } from "@/hooks/use-wishlist"
+import { useCart } from "@/hooks/use-modern-cart"
+import { useWishlist } from "@/hooks/use-modern-wishlist"
 
 export function FloatingConversionBar() {
   const [isVisible, setIsVisible] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
-  const { cart } = useCart()
-  const { wishlist } = useWishlist()
+  const { items } = useCart()
+  const { items: wishlistItems } = useWishlist()
 
   // Handle hydration
   useEffect(() => {
@@ -31,10 +31,9 @@ export function FloatingConversionBar() {
 
   // Don't render until mounted to prevent hydration issues
   if (!isMounted || !isVisible) return null
-
   // Safe length checks
-  const cartLength = cart?.length || 0
-  const wishlistLength = wishlist?.length || 0
+  const cartLength = items?.length || 0
+  const wishlistLength = wishlistItems?.length || 0
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">

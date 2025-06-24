@@ -5,8 +5,8 @@ import Link from "next/link"
 import { ArrowLeft, Check, Heart, ShoppingCart, Star, Plus, Minus, Truck, Shield, RefreshCw, Eye, Share2, ZoomIn, MessageCircle, ThumbsUp, Flag } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useCart } from "@/hooks/use-cart"
-import { useWishlist } from "@/hooks/use-wishlist"
+import { useCart } from "@/hooks/use-modern-cart"
+import { useWishlist } from "@/hooks/use-modern-wishlist"
 import { useToast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
@@ -150,9 +150,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         productId: product._id,
         name: product.name,
         price: product.price,
-        color: selectedColor,
+        color: selectedColor || (product.colors && product.colors[0]) || "Default",
         image: mainImage,
-        category: product.category,
+        category: product.category || "other",
         description: product.description || "",
       }
 

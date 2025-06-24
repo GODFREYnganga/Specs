@@ -270,9 +270,10 @@ export default function InventoryManagement() {
       default: return <Package className="h-4 w-4 text-gray-600" />
     }
   }
-
   return (
     <div className="p-8 space-y-6 max-w-7xl mx-auto">
+      <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -283,13 +284,6 @@ export default function InventoryManagement() {
           <p className="text-gray-600 mt-1">Monitor and manage product inventory</p>
         </div>
           <div className="flex items-center gap-3">
-          <Link href="/admin">
-            <Button variant="outline" size="sm">
-              <Package className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Clock className="h-4 w-4" />
             {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Not updated'}

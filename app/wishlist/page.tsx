@@ -9,26 +9,22 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { useWishlist } from "@/hooks/use-wishlist"
-import { useCart } from "@/hooks/use-cart"
+import { useWishlist } from "@/hooks/use-modern-wishlist"
+import { useCart } from "@/hooks/use-modern-cart"
 import { useToast } from "@/hooks/use-toast"
 
-export default function WishlistPage() {	const { wishlist, removeFromWishlist, loading } = useWishlist()
-	const { addToCart } = useCart()
+export default function WishlistPage() {
+	const { items, removeItem, loading } = useWishlist()
+	const { addItem } = useCart()
 	const { toast } = useToast()
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 	const [sortBy, setSortBy] = useState("date-added")
 	const [filterBy, setFilterBy] = useState("all")
-
-	const handleRemoveFromWishlist = async (itemId: string, color?: string) => {
+	const handleRemoveFromWishlist = async (itemId: string) => {
 		setIsUpdating(true)
 		try {
-			await removeFromWishlist(itemId, color)
-			toast({
-				title: "Removed from wishlist",
-				description: "Item has been removed from your wishlist.",
-			})
+			await removeItem(itemId)
 		} catch (error) {
 			toast({
 				title: "Error",
@@ -36,25 +32,21 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 				variant: "destructive",
 			})
 		} finally {
-			setIsUpdating(false)
-		}
+			setIsUpdating(false)		}
 	}
-
+	
 	const handleAddToCart = async (item: any) => {
 		setIsUpdating(true)
 		try {
-			await addToCart({
-				id: item.id,
+			await addItem({
 				productId: item.productId || item.id,
 				name: item.name,
 				price: item.price,
 				color: item.color || 'Default',
 				quantity: 1,
-				image: item.image || "/placeholder.svg"
-			})
-			toast({
-				title: "Added to cart",
-				description: `${item.name} has been added to your cart.`,
+				image: item.image || "/placeholder.svg",
+				category: item.category || 'eyewear',
+				inStock: true
 			})
 		} catch (error) {
 			toast({
@@ -63,13 +55,86 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 				variant: "destructive",
 			})
 		} finally {
+			setIsUpdating(false)		}
+	}
+	
+	const handleMoveToCart = async (item: any) => {
+		setIsUpdating(true)
+		try {
+			await addItem({
+				productId: item.productId || item.id,
+				name: item.name,
+				price: item.price,
+				color: item.color || 'Default',
+				quantity: 1,
+				image: item.image || "/placeholder.svg",
+				category: item.category || 'eyewear',
+				inStock: true
+			})
+			await removeItem(item.id)
+			toast({
+				title: "Moved to cart",
+				description: `${item.name} has been moved to your cart.`,
+			})
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to move item. Please try again.",
+				variant: "destructive",
+			})
+		} finally {
 			setIsUpdating(false)
 		}
 	}
+	const handleAddAllToCart = async () => {
+		setIsUpdating(true)
+		const itemsToMove = [...filteredWishlist]
+		let successCount = 0
+		let movedItems: any[] = []
 
-	const handleMoveToCart = async (item: any) => {
-		await handleAddToCart(item)
-		await handleRemoveFromWishlist(item.id, item.color)
+		for (const item of itemsToMove) {
+			try {
+				await addItem({
+					productId: item.productId || item.id,
+					name: item.name,
+					price: item.price,
+					color: item.color || 'Default',
+					quantity: 1,
+					image: item.image || "/placeholder.svg",
+					category: item.category || 'eyewear',
+					inStock: true
+				})
+				successCount++
+				movedItems.push(item)
+			} catch (error) {
+				// Continue
+			}
+		}
+		
+		for (const item of movedItems) {
+			try {
+				await removeItem(item.id)
+			} catch (error) {
+				// If removal fails, the item is already in the cart, which is acceptable
+			}
+		}
+
+		if (successCount > 0) {
+			toast({
+				title: "Moved to cart",
+				description: `${successCount} item(s) have been moved to your cart.`,
+			})
+		}
+
+		if (successCount < itemsToMove.length) {
+			toast({
+				title: "Some items failed",
+				description: `${itemsToMove.length - successCount} item(s) could not be moved.`,
+				variant: "destructive",
+			})
+		}
+
+		setIsUpdating(false)
 	}
 
 	const shareWishlist = () => {
@@ -88,9 +153,8 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 			})
 		}
 	}
-
 	// Filter and sort wishlist
-	let filteredWishlist = [...wishlist]
+	let filteredWishlist = [...items]
 	
 	if (filterBy !== "all") {
 		filteredWishlist = filteredWishlist.filter(item => 
@@ -129,12 +193,11 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 				<ArrowLeft className="h-4 w-4" />
 				Continue Shopping
 			</Link>			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-3xl font-bold">My Wishlist</h1>
-				<div className="flex items-center gap-4">
-					{wishlist.length > 0 && (
+				<h1 className="text-3xl font-bold">My Wishlist</h1>				<div className="flex items-center gap-4">
+					{items.length > 0 && (
 						<>
 							<Badge variant="secondary" className="text-sm">
-								{wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
+								{items.length} {items.length === 1 ? 'item' : 'items'}
 							</Badge>
 							<Button variant="outline" size="sm" onClick={shareWishlist}>
 								<Share2 className="h-4 w-4 mr-2" />
@@ -145,7 +208,7 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 				</div>
 			</div>
 
-			{wishlist.length > 0 && (
+			{items.length > 0 && (
 				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
 					<div className="flex items-center gap-4">
 						<ToggleGroup 
@@ -198,13 +261,11 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 							<Button
 								variant="outline"
 								size="sm"
-								onClick={() => {
-									filteredWishlist.forEach(item => handleAddToCart(item))
-								}}
+								onClick={handleAddAllToCart}
 								disabled={isUpdating}
 							>
 								<ShoppingCart className="h-4 w-4 mr-2" />
-								Add All to Cart
+								Move All to Cart
 							</Button>
 						</div>
 					</div>
@@ -235,12 +296,11 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 													<Link href={`/products/${item.productId || item.id}`}>
 														<Eye className="h-4 w-4" />
 													</Link>
-												</Button>
-												<Button
+												</Button>												<Button
 													variant="secondary"
 													size="sm"
 													className="h-8 w-8 p-0 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-													onClick={() => handleRemoveFromWishlist(item.id, item.color)}
+													onClick={() => handleRemoveFromWishlist(item.id)}
 													disabled={isUpdating}
 												>
 													<Trash2 className="h-4 w-4" />
@@ -255,8 +315,7 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 											)}
 										</div>
 									</CardHeader>
-									<CardContent className="p-4">
-										<div className="space-y-2">
+									<CardContent className="p-4">										<div className="space-y-2">
 											<Link 
 												href={`/products/${item.productId || item.id}`}
 												className="font-medium hover:underline line-clamp-2"
@@ -268,9 +327,9 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 													KSh {(item.price / 100).toFixed(2)}
 												</span>
 											</div>
-											{item.description && (
+											{item.notes && (
 												<p className="text-sm text-muted-foreground line-clamp-2">
-													{item.description}
+													{item.notes}
 												</p>
 											)}
 										</div>
@@ -335,10 +394,9 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 													<span className="text-lg font-bold">
 														KSh {(item.price / 100).toFixed(2)}
 													</span>
-												</div>
-												{item.description && (
+												</div>												{item.notes && (
 													<p className="text-sm text-muted-foreground line-clamp-1">
-														{item.description}
+														{item.notes}
 													</p>
 												)}
 												<div className="flex gap-2 pt-2">
@@ -366,11 +424,10 @@ export default function WishlistPage() {	const { wishlist, removeFromWishlist, l
 														<Link href={`/products/${item.productId || item.id}`}>
 															<Eye className="h-4 w-4" />
 														</Link>
-													</Button>
-													<Button
+													</Button>													<Button
 														variant="outline"
 														size="sm"
-														onClick={() => handleRemoveFromWishlist(item.id, item.color)}
+														onClick={() => handleRemoveFromWishlist(item.id)}
 														disabled={isUpdating}
 													>
 														<Trash2 className="h-4 w-4" />

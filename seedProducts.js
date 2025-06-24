@@ -1,98 +1,121 @@
-// This file has been deprecated and is no longer needed. All product management is now handled via the admin dashboard and MongoDB.
+const { MongoClient } = require('mongodb')
 
-// Deprecated: Do not use. Product seeding is now managed via the admin dashboard UI.
-// You can safely delete this file if you wish.
+const sampleProducts = [
+  {
+    name: "Classic Black Frame",
+    description: "Timeless black frame glasses perfect for everyday wear",
+    price: 12999, // Price in cents (KSh 129.99)
+    category: "reading",
+    colors: ["Black", "Brown", "Navy"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "SpecVision",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: "Modern Silver Frame",
+    description: "Sleek silver frame with modern design",
+    price: 15999, // Price in cents (KSh 159.99)
+    category: "sunglasses",
+    colors: ["Silver", "Gold", "Rose Gold"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "SpecVision",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: "Blue Light Blocking",
+    description: "Computer glasses that block harmful blue light",
+    price: 9999, // Price in cents (KSh 99.99)
+    category: "computer",
+    colors: ["Clear", "Yellow Tint"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "SpecVision",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: "Vintage Round Frame",
+    description: "Classic vintage style round frame glasses",
+    price: 18999, // Price in cents (KSh 189.99)
+    category: "reading",
+    colors: ["Tortoise", "Black", "Clear"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "RetroSpec",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: "Sports Sunglasses",
+    description: "Durable sports sunglasses for active lifestyle",
+    price: 22999, // Price in cents (KSh 229.99)
+    category: "sunglasses",
+    colors: ["Black", "Blue", "Red"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "SportVision",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    name: "Elegant Designer Frame",
+    description: "Premium designer frame with luxury finish",
+    price: 35999, // Price in cents (KSh 359.99)
+    category: "designer",
+    colors: ["Gold", "Silver", "Rose Gold"],
+    images: ["/placeholder.svg"],
+    image: "/placeholder.svg",
+    inStock: true,
+    brand: "LuxeSpec",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+]
 
-// require("dotenv").config();
-// const mongoose = require("mongoose");
-// const Product = require("./models/Product");
+async function seedProducts() {
+  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/spectacles-ecommerce'
+  const client = new MongoClient(uri)
+  
+  try {
+    await client.connect()
+    console.log('Connected to MongoDB')
+    
+    const db = client.db()
+    const collection = db.collection('products')
+    
+    // Clear existing products
+    await collection.deleteMany({})
+    console.log('Cleared existing products')
+    
+    // Insert sample products
+    const result = await collection.insertMany(sampleProducts)
+    console.log(`Inserted ${result.insertedCount} products`)
+    
+    // Create indexes
+    await collection.createIndex({ name: 1 })
+    await collection.createIndex({ category: 1 })
+    await collection.createIndex({ price: 1 })
+    console.log('Created indexes')
+    
+  } catch (error) {
+    console.error('Error seeding products:', error)
+  } finally {
+    await client.close()
+    console.log('Disconnected from MongoDB')
+  }
+}
 
-// const products = [
-//   {
-//     name: "Urban Classic",
-//     price: 12999,
-//     category: "prescription",
-//     image: "/images/products/gold-round-frames.png",
-//     description: "Timeless design with modern comfort",
-//     features: [
-//       "Premium acetate material",
-//       "Spring hinges for comfort",
-//       "Anti-scratch coating",
-//       "UV protection",
-//       "Includes hard case and cleaning cloth",
-//     ],
-//     colors: ["Black", "Tortoise", "Crystal"],
-//     images: [
-//       "/images/products/gold-round-frames.png",
-//       "/images/products/blue-round-frames.png",
-//       "/images/products/black-round-frames.png",
-//     ],
-//     rating: 4.8,
-//     reviews: 124,
-//     inStock: true,
-//   },
-//   {
-//     name: "Sunset Aviator",
-//     price: 14999,
-//     category: "sunglasses",
-//     image: "/images/products/blue-round-frames.png",
-//     description: "UV protection with style",
-//     features: [
-//       "Polarized lenses",
-//       "100% UV protection",
-//       "Lightweight metal frame",
-//       "Adjustable nose pads",
-//       "Includes case and microfiber cloth",
-//     ],
-//     colors: ["Gold", "Silver", "Black"],
-//     images: [
-//       "/images/products/blue-round-frames.png",
-//       "/images/products/gold-round-frames.png",
-//       "/images/products/black-round-frames.png",
-//     ],
-//     rating: 4.6,
-//     reviews: 98,
-//     inStock: true,
-//   },
-//   {
-//     name: "Reading Pro",
-//     price: 10999,
-//     category: "reading",
-//     image: "/images/products/black-round-frames.png",
-//     description: "Comfortable frames for extended reading",
-//     features: [
-//       "Blue light filtering",
-//       "Anti-glare coating",
-//       "Lightweight frame",
-//       "Spring hinges",
-//       "Multiple magnification options",
-//     ],
-//     colors: ["Black", "Brown", "Blue"],
-//     images: [
-//       "/images/products/black-round-frames.png",
-//       "/images/products/blue-round-frames.png",
-//       "/images/products/gold-round-frames.png",
-//     ],
-//     rating: 4.5,
-//     reviews: 76,
-//     inStock: true,
-//   },
-// ];
+if (require.main === module) {
+  seedProducts()
+}
 
-// async function seed() {
-//   try {
-//     await mongoose.connect(process.env.MONGO_URI, {
-//       useNewUrlParser: true,
-//       useUnifiedTopology: true,
-//     });
-//     await Product.deleteMany({});
-//     await Product.insertMany(products);
-//     console.log("Database seeded!");
-//     process.exit();
-//   } catch (err) {
-//     console.error(err);
-//     process.exit(1);
-//   }
-// }
-
-// seed();
+module.exports = { seedProducts, sampleProducts }

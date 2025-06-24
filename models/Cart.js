@@ -14,6 +14,9 @@ const CartItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  originalPrice: {
+    type: Number,
+  },
   quantity: {
     type: Number,
     required: true,
@@ -24,9 +27,30 @@ const CartItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  size: {
+    type: String,
+  },
   image: {
     type: String,
     required: true,
+  },
+  category: {
+    type: String,
+    required: true,
+  },
+  inStock: {
+    type: Boolean,
+    default: true,
+  },
+  maxQuantity: {
+    type: Number,
+  },
+  discount: {
+    type: Number,
+    default: 0,
+  },
+  variant: {
+    type: String,
   },
 })
 

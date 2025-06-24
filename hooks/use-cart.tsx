@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react"
+"use client"
+import { useState, useEffect, createContext, useContext } from "react"
 import { toast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -20,7 +21,20 @@ export type CartData = {
   total: number
 }
 
-export function useCart() {
+interface CartContextType {
+  cart: CartItem[]
+  cartData: CartData | null
+  loading: boolean
+  addToCart: (item: CartItem, options?: { silent?: boolean }) => Promise<void>
+  updateQuantity: (id: string | number, color: string | undefined, quantity: number) => Promise<void>
+  removeFromCart: (id: string | number, color: string | undefined) => Promise<void>
+  clearCart: () => void
+  loadCart: () => Promise<void>
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined)
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
   const [cartData, setCartData] = useState<CartData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -28,23 +42,24 @@ export function useCart() {
   
   // Use actual user ID or "guest" for non-authenticated users
   const userId = isAuthenticated && user ? user.id : "guest"
-  // Load cart from API or localStorage on mount
+    // Load cart from API or localStorage on mount and when user changes
   useEffect(() => {
     if (!loading) { // Only load if not already loading
       loadCart()
     }
-  }, [userId]) // Reload when user changes
+  }, [userId, isAuthenticated]) // Reload when user changes or auth state changes
+  
   // Save cart to localStorage for guest users
   useEffect(() => {
     if (userId === "guest" && typeof window !== "undefined") {
       localStorage.setItem(`cart_${userId}`, JSON.stringify(cart))
     }
   }, [cart, userId])
-
   async function loadCart() {
     try {
       setLoading(true)
-        if (userId === "guest") {
+      
+      if (userId === "guest") {
         // Load from localStorage for guest users
         const stored = typeof window !== "undefined" ? localStorage.getItem(`cart_${userId}`) : null
         if (stored) {
@@ -52,6 +67,9 @@ export function useCart() {
           setCart(guestCart)
           // Calculate totals for guest cart
           calculateGuestCartTotals(guestCart)
+        } else {
+          setCart([])
+          setCartData(null)
         }
       } else {
         // Load from API for logged-in users with authorization header
@@ -68,7 +86,8 @@ export function useCart() {
           setCart(data.items || [])
           setCartData(data)
         }
-      }} catch (error) {
+      }
+    } catch (error) {
       console.error("Failed to load cart:", error)
       toast({
         title: "Error",
@@ -94,8 +113,7 @@ export function useCart() {
       total
     })
   }
-
-  async function addToCart(item: CartItem) {
+  async function addToCart(item: CartItem, options: { silent?: boolean } = {}) {
     try {
       setLoading(true)
       
@@ -112,13 +130,17 @@ export function useCart() {
             )
           } else {
             newCart = [...prev, item]
-          }          calculateGuestCartTotals(newCart)
+          }
+          calculateGuestCartTotals(newCart)
           return newCart
         })
-        toast({
-          title: "Added to cart",
-          description: `${item.name} has been added to your cart`,
-        })      } else {
+        if (!options.silent) {
+          toast({
+            title: "Added to cart",
+            description: `${item.name} has been added to your cart`,
+          })
+        }
+      } else {
         // API call for logged-in users
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
         const headers: HeadersInit = { "Content-Type": "application/json" }
@@ -140,24 +162,30 @@ export function useCart() {
             userId
           })
         })
-          if (response.ok) {
+
+        if (response.ok) {
           const data = await response.json()
           setCart(data.items || [])
           setCartData(data)
-          toast({
-            title: "Added to cart",
-            description: `${item.name} has been added to your cart`,
-          })
+          if (!options.silent) {
+            toast({
+              title: "Added to cart",
+              description: `${item.name} has been added to your cart`,
+            })
+          }
         } else {
           throw new Error("Failed to add to cart")
         }
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Add to cart error:", error)
-      toast({
-        title: "Error",
-        description: "Failed to add to cart",
-        variant: "destructive",
-      })
+      if (!options.silent) {
+        toast({
+          title: "Error",
+          description: "Failed to add to cart",
+          variant: "destructive",
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -174,7 +202,8 @@ export function useCart() {
           )
           calculateGuestCartTotals(newCart)
           return newCart
-        })      } else {
+        })
+      } else {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
         const headers: HeadersInit = { "Content-Type": "application/json" }
         
@@ -200,7 +229,8 @@ export function useCart() {
         } else {
           throw new Error("Failed to update cart")
         }
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Update cart error:", error)
       toast({
         title: "Error",
@@ -215,7 +245,8 @@ export function useCart() {
   async function removeFromCart(id: string | number, color: string | undefined) {
     try {
       setLoading(true)
-        if (userId === "guest") {
+      
+      if (userId === "guest") {
         setCart((prev) => {
           const newCart = prev.filter((i) => !(i.id === id && i.color === color))
           calculateGuestCartTotals(newCart)
@@ -224,7 +255,8 @@ export function useCart() {
         toast({
           title: "Removed from cart",
           description: "Item has been removed from your cart",
-        })      } else {
+        })
+      } else {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
         const headers: HeadersInit = {}
         
@@ -236,7 +268,8 @@ export function useCart() {
           method: "DELETE",
           headers
         })
-          if (response.ok) {
+
+        if (response.ok) {
           const data = await response.json()
           setCart(data.items || [])
           setCartData(data)
@@ -247,7 +280,8 @@ export function useCart() {
         } else {
           throw new Error("Failed to remove from cart")
         }
-      }    } catch (error) {
+      }
+    } catch (error) {
       console.error("Remove from cart error:", error)
       toast({
         title: "Error",
@@ -265,14 +299,27 @@ export function useCart() {
       localStorage.removeItem(`cart_${userId}`)
     }
   }
-  return { 
-    cart, 
-    cartData,
-    loading,
-    addToCart, 
-    updateQuantity, 
-    removeFromCart, 
-    clearCart,
-    loadCart
+
+  return (
+    <CartContext.Provider value={{ 
+      cart, 
+      cartData,
+      loading,
+      addToCart, 
+      updateQuantity, 
+      removeFromCart, 
+      clearCart,
+      loadCart
+    }}>
+      {children}
+    </CartContext.Provider>
+  )
+}
+
+export function useCart() {
+  const context = useContext(CartContext)
+  if (context === undefined) {
+    throw new Error("useCart must be used within a CartProvider")
   }
+  return context
 }

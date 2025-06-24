@@ -38,17 +38,22 @@ export default function AdminProducts() {
       alert("Failed to delete product")
     }
   }
-
   return (
     <div>
+      <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Products</h2>
         <div className="text-gray-600 dark:text-gray-300 text-sm mr-4">
           Total: {products.length}
         </div>
-        <Link href="/admin/products/new">
-          <Button>Add Product</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/products/new">
+            <Button>Add Product</Button>
+          </Link>
+          <Link href="/admin/products/new#bulk-upload">
+            <Button variant="outline">Bulk Upload</Button>
+          </Link>
+        </div>
       </div>
       {isLoading ? (
         <div>Loading...</div>

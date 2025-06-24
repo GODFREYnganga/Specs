@@ -5,7 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ScrollToSection } from "@/components/scroll-to-section"
 import { FloatingConversionBar } from "@/components/floating-conversion-bar"
 import { AuthProvider } from "@/hooks/use-auth"
-import { WishlistProvider } from "@/hooks/use-wishlist"
+import { CartProvider } from "@/hooks/use-modern-cart"
+import { WishlistProvider } from "@/hooks/use-modern-wishlist"
 import { Toaster } from "@/components/ui/toaster"
 
 import "@/app/globals.css"
@@ -23,14 +24,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <AuthProvider>
-            <WishlistProvider>
-              <Header />
-              <ScrollToSection />
-              <FloatingConversionBar />
-              <div className="pt-[160px]">{children}</div>
-              <Footer />
-              <Toaster />
-            </WishlistProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <Header />
+                <ScrollToSection />
+                <FloatingConversionBar />
+                <div className="pt-[160px]">{children}</div>
+                <Footer />
+                <Toaster />
+              </WishlistProvider>
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

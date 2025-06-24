@@ -1,24 +1,24 @@
 "use client"
 
-import Link from "next/link"
-import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from "lucide-react"
-import { useState } from "react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useCart } from "@/hooks/use-cart"
-import { useToast } from "@/hooks/use-toast"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function CartPage() {
-	const { cart, updateQuantity, removeFromCart, clearCart, loading } = useCart()
-	const { toast } = useToast()
-	const [isUpdating, setIsUpdating] = useState(false)
+	const router = useRouter()
+	
+	useEffect(() => {
+		// Redirect to modern cart page
+		router.replace('/cart/modern')
+	}, [router])
 
-	const subtotal = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+	return (
+		<div className="container px-4 md:px-6 py-8">
+			<div className="flex items-center justify-center h-64">
+				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+			</div>
+		</div>
+	)
+}
 	const shipping = 0 // Free shipping
 	const tax = subtotal * 0.07 // 7% tax
 	const total = subtotal + shipping + tax

@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "@/hooks/use-toast"
 import { Truck, Package, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, Download, Plus, Edit, Trash2, MapPin } from 'lucide-react'
 import { Textarea } from "@/components/ui/textarea"
+import Link from "next/link"
 
 interface Shipping {
   _id: string
@@ -301,9 +302,9 @@ export default function ShippingPage() {
       </div>
     )
   }
-
   return (
     <div className="space-y-8">
+      <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -330,9 +331,7 @@ export default function ShippingPage() {
             </DialogTrigger>
           </Dialog>
         </div>
-      </div>
-
-      {/* Stats Cards */}
+      </div>      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

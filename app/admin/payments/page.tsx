@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -200,9 +201,10 @@ export default function PaymentsPage() {
         return <CreditCard className="h-4 w-4" />
     }
   }
-
   return (
     <div className="p-6 space-y-6">
+      <Link href="/admin" className="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">Back to Dashboard</Link>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
