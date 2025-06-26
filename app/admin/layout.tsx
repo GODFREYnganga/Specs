@@ -50,12 +50,11 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 	if (!isAdmin) {
 		// Only render children (which will be the login page) if not admin
 		return <div className="min-h-screen bg-background text-foreground flex items-center justify-center">{children}</div>;
-	}
-	// Only render the main dashboard content with optimized layout
+	}	// Only render the main dashboard content with clean layout (no navbar/footer)
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<div className="w-full h-full">
-				<main className="mt-16 px-4"> {/* Add margin-top to push content below nav */}
+				<main className="px-4 py-4">
 					{children}
 				</main>
 			</div>
