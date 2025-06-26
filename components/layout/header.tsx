@@ -26,12 +26,36 @@ export function Header() {
 
   // State to track the last scroll position for direction detection
   const [lastScrollY, setLastScrollY] = useState(0)
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Set scroll state for text color, etc.
+      setIsScrolled(currentScrollY > 50);
+
+      // Hide navbar on scroll down, show on scroll up
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsVisible(false); // scrolling down
+      } else {
+        setIsVisible(true); // scrolling up
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+
+
+
   // Get the current pathname for conditional styling
   const pathname = usePathname()
-  
+
   // Get auth state
   const { user, isAuthenticated, logout } = useAuth()
-  
+
   // Get cart and wishlist counts
   const { items } = useCart()
   const { items: wishlistItems } = useWishlist()
@@ -493,12 +517,9 @@ export function Header() {
   )
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || !isHomePage ? "bg-white shadow-md" : "bg-transparent"
-        } ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
-    >
+    <nav className="fixed top-0 left-0 w-full z-50">
       {/* Top Navbar - Contact information and links */}
-      <div className="bg-gray-100 py-2 border-b">
+      <div className="bg-gray-100 py-2 border-b z-50 relative">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center text-sm">
             <div className="flex space-x-4">
@@ -520,95 +541,104 @@ export function Header() {
       </div>
 
       {/* Middle Navbar - Logo, search, and user actions */}
-      <div className="bg-blue-950 py-4">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="/" className="flex items-center">
-              <Image
-                src={settings?.general?.storeLogo || "/images/hero/lens2cart-logo.png"}
-                alt="Lens2Cart Logo"
-                width={300}
-                height={100}
-                className="h-auto"
-                priority
-              />
-            </Link>
+      <div 
+    className={`
+    transition-transform duration-300 ease-in-out
+    ${isVisible ? 'translate-y-0' : '-translate-y-full'}
+    ${!isScrolled && pathname === "/" ? "bg-transparent" : "bg-white shadow"}
+  `}>
 
-            {/* Search bar */}
-            <div className="w-full flex justify-center">
-              <div className="w-full max-w-2xl px-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="What are you looking for?"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+        <div className="bg-blue-950 py-4">
+          <div className="container mx-auto px-4 md:px-8">
+            <div className="flex items-center justify-between">
+              {/* Logo */}
+              <Link href="/" className="flex items-center">
+                <Image
+                  src={settings?.general?.storeLogo || "/images/hero/lens2cart-logo.png"}
+                  alt="Lens2Cart Logo"
+                  width={300}
+                  height={100}
+                  className="h-auto"
+                  priority
+                />
+              </Link>
+
+              {/* Search bar */}
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-2xl px-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="What are you looking for?"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    />
+                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
                 </div>
-              </div>
-            </div>            {/* User actions */}
-            <div className="w-full flex justify-end">
-              <div className="flex items-center space-x-6">
-                {isAuthenticated && user ? (
-                  <>
-                    <div className="flex items-center cursor-pointer group">
+              </div>            {/* User actions */}
+              <div className="w-full flex justify-end">
+                <div className="flex items-center space-x-6">
+                  {isAuthenticated && user ? (
+                    <>
+                      <div className="flex items-center cursor-pointer group">
+                        <User className="w-5 h-5 text-white group-hover:text-gray-900" />
+                        <span className="ml-2 text-sm text-white group-hover:text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </span>
+                      </div>
+                      <Button
+                        onClick={logout}
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center text-white hover:text-gray-900 hover:bg-white/10"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <Link href="/login" className="flex items-center cursor-pointer group">
                       <User className="w-5 h-5 text-white group-hover:text-gray-900" />
-                      <span className="ml-2 text-sm text-white group-hover:text-gray-900">
-                        {user.firstName} {user.lastName}
-                      </span>
-                    </div>
-                    <Button
-                      onClick={logout}
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center text-white hover:text-gray-900 hover:bg-white/10"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Link href="/login" className="flex items-center cursor-pointer group">
-                    <User className="w-5 h-5 text-white group-hover:text-gray-900" />
-                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
+                      <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
+                    </Link>
+                  )}                <Link href="/wishlist/modern" className="flex items-center cursor-pointer group relative">
+                    <Heart className="w-5 h-5 text-white group-hover:text-gray-900" />
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Wishlist</span>
+                    {wishlistCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {wishlistCount}
+                      </Badge>
+                    )}
                   </Link>
-                )}                <Link href="/wishlist/modern" className="flex items-center cursor-pointer group relative">
-                  <Heart className="w-5 h-5 text-white group-hover:text-gray-900" />
-                  <span className="ml-2 text-sm text-white group-hover:text-gray-900">Wishlist</span>
-                  {wishlistCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      {wishlistCount}
-                    </Badge>
+                  <Link href="/cart/modern" className="flex items-center cursor-pointer group relative">
+                    <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Cart</span>
+                    {cartCount > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {cartCount}
+                      </Badge>
+                    )}
+                  </Link>                {user?.role === "admin" && (
+                    <Link href="/admin" className="flex items-center cursor-pointer group">
+                      <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold">Admin</span>
+                    </Link>
                   )}
-                </Link>
-                <Link href="/cart/modern" className="flex items-center cursor-pointer group relative">
-                  <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
-                  <span className="ml-2 text-sm text-white group-hover:text-gray-900">Cart</span>
-                  {cartCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      {cartCount}
-                    </Badge>
-                  )}
-                </Link>                {user?.role === "admin" && (
-                  <Link href="/admin" className="flex items-center cursor-pointer group">
-                    <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold">Admin</span>
-                  </Link>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Bottom Navbar - Main navigation with dropdowns */}
-      <div className="bg-[#FF6600] border-t border-gray-200">
+
+      <div className="sticky top-[40px] z-30bg-[#FF6600] border-t border-gray-200">
         <div className="container mx-auto px-4 md:px-8">
           <div className="flex justify-between items-center">
             <div className="flex space-x-8 py-4 text-sm font-medium flex-grow text-gray-800">

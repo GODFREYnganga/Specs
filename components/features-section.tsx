@@ -44,17 +44,6 @@ const features = [
 export function FeaturesSection() {
   return (
     <section className="py-10 by-blue-200">
-      {/* Background video */}
-      <video
-        className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
-        autoPlay
-        loop
-        muted
-        playsInline
-      >
-        <source src="/videos/Landingpage-background-video.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
       <div className="container mx-auto px-4">
 
         {/* Header */}

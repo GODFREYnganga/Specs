@@ -95,18 +95,7 @@ export function SocialProofSection() {
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
         {/* Stats Section */}
-        <div className=" ">
-            {/* Background video */}
-  <video
-    className="relative w-full h-full object-cover z-0"
-    autoPlay
-    loop
-    muted
-    playsInline
-  >
-    <source src="/videos/Royalty-Free Footage-iStock.mp4" type="video/mp4" />
-    Your browser does not support the video tag.
-  </video>
+        <div className="container">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Trusted by Thousands</h2>
           <p className="text-gray-600 mb-8">See why customers love shopping with us</p>

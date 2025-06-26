@@ -42,7 +42,7 @@ export function TrustIndicators() {
 
   {/* Content */}
   <div className="relative container mx-auto px-4 z-10">
-      {/* Background video */}
+      {/* Background video 
   <video
     className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
     autoPlay
@@ -50,9 +50,9 @@ export function TrustIndicators() {
     muted
     playsInline
   >
-    <source src="/videos/Landingpage-background-video.mp4" type="video/mp4" />
+    <source src="/videos/Landingpage-background-video..mp4" type="video/mp4" />
     Your browser does not support the video tag.
-  </video>
+  </video>*/}
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
       {trustIndicators.map((indicator, index) => {
         const IconComponent = indicator.icon;
