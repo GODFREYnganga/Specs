@@ -92,114 +92,119 @@ export function PerfectFitSection() {
   }, [])
 
   return (
-    <section className="py-12 bg-white text-gray-800">
-      <div className="container mx-auto px-4 md:px-8">
-        {/* Section header with decorative lines */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="h-px bg-white w-16 md:w-32"></div>
-            <h2 className="text-3xl font-bold text-black px-4">Find The Perfect Fit</h2>
-            <div className="h-px bg-white w-16 md:w-32"></div>
-          </div>
-        </div>
-
-        {/* Row 1 - First two sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Row 1, Column 1 - Blu Computer Glasses with image carousel */}
-          <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
-            {fitSections[0].images.map((image, imgIndex) => (
-              <div
-                key={imgIndex}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  imgIndex === currentIndices[0] ? (isTransitioning[0] ? "opacity-0" : "opacity-100") : "opacity-0"
-                }`}
-              >
-                <img
-                  src={image || "/placeholder.svg"}
-                  alt={`${fitSections[0].title} image ${imgIndex + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-            {/* Overlay with title and button */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-90">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">{fitSections[0].title}</h3>
-              <Link href={fitSections[0].link}>
-                <Button className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50">Shop Now</Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Row 1, Column 2 - Vision Testing (static image) */}
-          <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
-            <img
-              src="/images/people/boy-eye-test-equipment.png"
-              alt="Eye test equipment"
-              className="w-full h-full object-cover"
-            />
-            {/* Overlay with title and button */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
-              <h3 className="text-2xl font-bold text-white mb-4">Vision Testing</h3>
-              <Link href="/products?category=vision-testing">
-                <Button className="bg-teal-700 text-white hover:bg-teal-800">Learn More</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2 - Second two sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-          {/* Row 2, Column 1 - Magneto EyeGlasses with image carousel */}
-          <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
-            {fitSections[1].images.map((image, imgIndex) => (
-              <div
-                key={imgIndex}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  imgIndex === currentIndices[1] ? (isTransitioning[1] ? "opacity-0" : "opacity-100") : "opacity-0"
-                }`}
-              >
-                <img
-                  src={image || "/placeholder.svg"}
-                  alt={`${fitSections[1].title} image ${imgIndex + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-            {/* Overlay with title and button */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
-              <h3 className="text-2xl font-bold text-white mb-4">{fitSections[1].title}</h3>
-              <Link href={fitSections[1].link}>
-                <Button className="bg-teal-700 text-white hover:bg-teal-800">Shop Now</Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Row 2, Column 2 - Premium Sunglasses with image carousel */}
-          <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
-            {fitSections[2].images.map((image, imgIndex) => (
-              <div
-                key={imgIndex}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  imgIndex === currentIndices[2] ? (isTransitioning[2] ? "opacity-0" : "opacity-100") : "opacity-0"
-                }`}
-              >
-                <img
-                  src={image || "/placeholder.svg"}
-                  alt={`${fitSections[2].title} image ${imgIndex + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-            {/* Overlay with title and button */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
-              <h3 className="text-2xl font-bold text-white mb-4">{fitSections[2].title}</h3>
-              <Link href={fitSections[2].link}>
-                <Button className="bg-teal-700 text-white hover:bg-teal-800">Shop Now</Button>
-              </Link>
-            </div>
+    <>
+    <div className="w-full pt-16 pb-8 bg-white">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="relative flex items-center w-full">
+            <div className="flex-grow h-px bg-gray-300"></div>
+            <h2 className="text-3xl font-bold text-gray-800 px-6 whitespace-nowrap z-10 bg-white">
+              Find The Perfect Fit
+            </h2>
+            <div className="flex-grow h-px bg-gray-300"></div>
           </div>
         </div>
       </div>
-    </section>
+      
+      <section className="bg-white text-gray-800">
+        <div className="container mx-auto px-4 md:px-8">
+          {/* Section header with decorative lines */}
+
+
+          {/* Row 1 - First two sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Row 1, Column 1 - Blu Computer Glasses with image carousel */}
+            <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
+              {fitSections[0].images.map((image, imgIndex) => (
+                <div
+                  key={imgIndex}
+                  className={`absolute inset-0 transition-opacity duration-500 ${imgIndex === currentIndices[0] ? (isTransitioning[0] ? "opacity-0" : "opacity-100") : "opacity-0"
+                    }`}
+                >
+                  <img
+                    src={image || "/placeholder.svg"}
+                    alt={`${fitSections[0].title} image ${imgIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+              {/* Overlay with title and button */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50">
+                <h3 className="text-2xl font-bold text-white mb-4">{fitSections[0].title}</h3>
+                <Link href={fitSections[0].link}>
+                  <Button className="bg-[#FF6600] text-white hover:bg-blue-950">Shop now</Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Row 1, Column 2 - Vision Testing (static image) */}
+            <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
+              <img
+                src="/images/people/boy-eye-test-equipment.png"
+                alt="Eye test equipment"
+                className="w-full h-full object-cover"
+              />
+              {/* Overlay with title and button */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
+                <h3 className="text-2xl font-bold text-white mb-4">Vision Testing</h3>
+                <Link href="/products?category=vision-testing">
+                  <Button className="bg-[#FF6600] text-white hover:bg-blue-950">Shop now</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2 - Second two sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+            {/* Row 2, Column 1 - Magneto EyeGlasses with image carousel */}
+            <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
+              {fitSections[1].images.map((image, imgIndex) => (
+                <div
+                  key={imgIndex}
+                  className={`absolute inset-0 transition-opacity duration-500 ${imgIndex === currentIndices[1] ? (isTransitioning[1] ? "opacity-0" : "opacity-100") : "opacity-0"
+                    }`}
+                >
+                  <img
+                    src={image || "/placeholder.svg"}
+                    alt={`${fitSections[1].title} image ${imgIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+              {/* Overlay with title and button */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
+                <h3 className="text-2xl font-bold text-white mb-4">{fitSections[1].title}</h3>
+                <Link href={fitSections[1].link}>
+                  <Button className="bg-[#FF6600] text-white hover:bg-blue-950">Shop now</Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Row 2, Column 2 - Premium Sunglasses with image carousel */}
+            <div className="relative rounded-lg overflow-hidden shadow-md h-[400px]">
+              {fitSections[2].images.map((image, imgIndex) => (
+                <div
+                  key={imgIndex}
+                  className={`absolute inset-0 transition-opacity duration-500 ${imgIndex === currentIndices[2] ? (isTransitioning[2] ? "opacity-0" : "opacity-100") : "opacity-0"
+                    }`}
+                >
+                  <img
+                    src={image || "/placeholder.svg"}
+                    alt={`${fitSections[2].title} image ${imgIndex + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+              {/* Overlay with title and button */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40">
+                <h3 className="text-2xl font-bold text-white mb-4">{fitSections[2].title}</h3>
+                <Link href={fitSections[2].link}>
+                  <Button className="bg-[#FF6600] text-white hover:bg-blue-950">Shop now</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }

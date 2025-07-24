@@ -7,60 +7,66 @@ const features = [
     icon: Eye,
     title: "Virtual Try-On",
     description: "See how frames look on you using AR technology",
-    color: "text-blue-600"
+    color: "text-blue-600",
+    bgColor: "bg-sky-100"
   },
   {
     icon: Truck,
     title: "Free Home Try-On",
     description: "Try 5 frames at home for 7 days, free shipping both ways",
-    color: "text-green-600"
+    color: "text-green-600",
+    bgColor: "bg-emerald-100"
   },
   {
     icon: Shield,
     title: "FDA Approved Lenses",
     description: "All lenses meet highest safety and quality standards",
-    color: "text-purple-600"
+    color: "text-purple-600",
+    bgColor: "bg-violet-100"
+
   },
   {
     icon: Clock,
     title: "Fast Delivery",
     description: "Prescription glasses ready in 7-10 business days",
-    color: "text-orange-600"
+    color: "text-orange-600",
+    bgColor: "bg-amber-100"
   },
   {
     icon: Award,
     title: "Lifetime Warranty",
     description: "Free repairs and replacements on frame defects",
-    color: "text-red-600"
+    color: "text-red-600",
+    bgColor: "bg-rose-100"
   },
   {
     icon: Users,
     title: "Expert Support",
     description: "Licensed opticians available 7 days a week",
-    color: "text-indigo-600"
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100"
   }
 ]
 
 export function FeaturesSection() {
   return (
-    <section className="py-10 by-blue-200">
+    <>
+<div className="w-full pt-16 pb-8 bg-white">
+        <div className="container mx-auto px-4 md:px-8">
+          <div className="relative flex items-center w-full">
+            <div className="flex-grow h-px bg-gray-300"></div>
+            <h2 className="text-3xl font-bold text-gray-800 px-6 whitespace-nowrap z-10 bg-white">
+              Why Choose Spectacles?
+            </h2>
+            <div className="flex-grow h-px bg-gray-300"></div>
+          </div>
+        </div>
+      </div>
+    <section className="pb-10 bg-indigo-50">
       <div className="container mx-auto px-4">
 
         {/* Header */}
         <div className="text-center mb-16">
-          <video
-            className="absolute top-0 left-0 w-full h-full object-cover opacity-20 z-0"
-            autoPlay
-            loop
-            muted
-            playsInline
-          >
-            <source src="/videos/Royalty-Free Footage-iStock.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-          <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Why Choose Spectacles?
-          </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             We make buying glasses online simple, affordable, and risk-free with industry-leading features
           </p>
@@ -74,7 +80,7 @@ export function FeaturesSection() {
           {features.map((feature, index) => {
             const IconComponent = feature.icon
             return (
-              <div key={index} className="bg-white rounded-2xl p-8 text-center hover:shadow-lg transition-shadow">
+              <div key={index} className={`rounded-2xl p-8 text-center hover:shadow-lg transition-shadow ${feature.bgColor}`}>
                 <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-6 ${feature.color}`}>
                   <IconComponent className="h-8 w-8" />
                 </div>
@@ -107,5 +113,6 @@ export function FeaturesSection() {
 */}
       </div>
     </section>
+    </>
   )
 }

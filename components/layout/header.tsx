@@ -48,7 +48,8 @@ export function Header() {
   }, [lastScrollY]);
 
 
-
+  // 👇 Add this here, after useEffect
+  const bottomNavbarTop = isVisible ? 136 : 30;
 
   // Get the current pathname for conditional styling
   const pathname = usePathname()
@@ -517,61 +518,70 @@ export function Header() {
   )
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50">
+    <>
       {/* Top Navbar - Contact information and links */}
-      <div className="bg-gray-100 py-2 border-b z-50 relative">
-        <div className="container mx-auto px-4 md:px-8">
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex space-x-4">
-              <span className="text-black">Vision Redefined</span>
+      <div className="fixed top-0 left-0 w-full z-50 bg-gray-100 py-2 border-b">
+        <div className="w-full px-4 max-w-[1800px] mx-auto">
+          <div className="flex justify-between items-center text-sm text-black">
+
+            {/* Left side items */}
+            <div className="pl-50px flex items-center space-x-4">
+              <span>Vision Redefined</span>
               <span className="text-gray-600">|</span>
-              <Link href="/about" className="text-black hover:text-gray-900">
+              <Link href="/about" className="hover:text-gray-900">
                 Store Locator
               </Link>
               <span className="text-gray-400">|</span>
-              <Link href="/partner" className="text-black hover:text-gray-900">
+              <Link href="/partner" className="hover:text-gray-900">
                 Partner With Us
               </Link>
             </div>
-            <Link href="/contact" className="text-black hover:text-gray-900">
+
+            {/* Right side item */}
+            <Link href="/contact" className="hover:text-gray-900">
               Contact Us
             </Link>
+
           </div>
         </div>
       </div>
 
+      <div className="h-[0.5px]" />
+
       {/* Middle Navbar - Logo, search, and user actions */}
-      <div 
-    className={`
+      <div
+        className={`
+    h-50
+    sticky z-10
+    bg-blue-950 shadow
     transition-transform duration-300 ease-in-out
-    ${isVisible ? 'translate-y-0' : '-translate-y-full'}
-    ${!isScrolled && pathname === "/" ? "bg-transparent" : "bg-white shadow"}
-  `}>
-
-
-        <div className="bg-blue-950 py-4">
-          <div className="container mx-auto px-4 md:px-8">
-            <div className="flex items-center justify-between">
+    ${isVisible ? "top-[40px] h-40 opacity-100 translate-y-0" : "top-[40px] opacity-0 -translate-y-full"}
+  `}
+      >
+        <div className="bg-blue-950">
+          <div className="container w-full px-50 max-w-[1800px] mx-auto">
+            <div className="flex items-center justify-between py-8 ">
               {/* Logo */}
               <Link href="/" className="flex items-center">
-                <Image
-                  src={settings?.general?.storeLogo || "/images/hero/lens2cart-logo.png"}
-                  alt="Lens2Cart Logo"
-                  width={300}
-                  height={100}
-                  className="h-auto"
-                  priority
-                />
+                <div className="flex items-center justify-start">
+                  <Image
+                    src="/images/hero/logo.png"
+                    alt="Logo"
+                    width={400}
+                    height={300}
+                    priority
+                  />
+                </div>
               </Link>
 
               {/* Search bar */}
               <div className="w-full flex justify-center">
-                <div className="w-full max-w-2xl px-4">
+                <div className="w-full max-w-6xl px-4 pl-80">
                   <div className="relative">
                     <input
                       type="text"
                       placeholder="What are you looking for?"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+                      className="w-full px-4 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
                     />
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
@@ -636,10 +646,16 @@ export function Header() {
           </div>
         </div>
       </div>
+
+      <div className="h-[0.5px]" />
       {/* Bottom Navbar - Main navigation with dropdowns */}
 
-      <div className="sticky top-[40px] z-30bg-[#FF6600] border-t border-gray-200">
-        <div className="container mx-auto px-4 md:px-8">
+      <nav className="p-40px z-40 h-15 bg-[#FF6600] border-t border-gray-200 transition-all duration-300 ease-in-out"
+        style={{
+          position: "sticky",
+          top: `${bottomNavbarTop}px`
+        }}>
+        <div className="container mx-auto px-4 md:px-8 w-full">
           <div className="flex justify-between items-center">
             <div className="flex space-x-8 py-4 text-sm font-medium flex-grow text-gray-800">
               {/* EYE GLASSES Dropdown */}
@@ -705,7 +721,7 @@ export function Header() {
             </Link>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   )
 }

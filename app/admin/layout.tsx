@@ -1,13 +1,13 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Menu } from "lucide-react"
+import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/hooks/use-auth"
+import { Toaster } from "@/components/ui/toaster"
+import "@/app/globals.css"
 
-export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
 	const router = useRouter()
-	const [sidebarOpen, setSidebarOpen] = useState(false)
 	const [loading, setLoading] = useState(true)
 	const [isAdmin, setIsAdmin] = useState(false)
 
@@ -41,23 +41,61 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
 
 	if (loading) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<span className="text-lg font-semibold">Loading...</span>
-			</div>
+			<html lang="en" suppressHydrationWarning>
+				<head>
+					<title>Admin Dashboard - Loading</title>
+				</head>
+				<body>
+					<div className="flex items-center justify-center min-h-screen">
+						<span className="text-lg font-semibold">Loading...</span>
+					</div>
+				</body>
+			</html>
 		)
 	}
-	// Only render dashboard layout if authenticated as admin
+
 	if (!isAdmin) {
-		// Only render children (which will be the login page) if not admin
-		return <div className="min-h-screen bg-background text-foreground flex items-center justify-center">{children}</div>;
-	}	// Only render the main dashboard content with clean layout (no navbar/footer)
+		return (
+			<html lang="en" suppressHydrationWarning>
+				<head>
+					<title>Admin Login</title>
+				</head>
+				<body>
+					<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+						<AuthProvider>
+							<div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+								{children}
+							</div>
+							<Toaster />
+						</AuthProvider>
+					</ThemeProvider>
+				</body>
+			</html>
+		)
+	}
+
+	// Only render the main dashboard content with clean layout (no navbar/footer)
 	return (
-		<div className="min-h-screen bg-background text-foreground">
-			<div className="w-full h-full">
-				<main className="px-4 py-4">
-					{children}
-				</main>
-			</div>
-		</div>
+		<html lang="en" suppressHydrationWarning>
+			<head>
+				<title>Admin Dashboard - Spectacles Ecommerce</title>
+				<meta name="description" content="Admin Dashboard for Spectacles Ecommerce" />
+				<meta name="robots" content="noindex, nofollow" />
+			</head>
+			<body>
+				<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+					<AuthProvider>
+						<div className="min-h-screen bg-background text-foreground">
+							<div className="w-full h-full">
+								<main className="px-4 py-4">
+									{children}
+								</main>
+							</div>
+						</div>
+						<Toaster />
+					</AuthProvider>
+				</ThemeProvider>
+			</body>
+		</html>
 	)
 }

@@ -242,7 +242,7 @@ export default function ProductsPage() {
   const dbCategories = React.useMemo(() => getDbCategoriesFromNav(currentCategorySlug), [currentCategorySlug]);
 
   const hero = categoryContent[currentCategorySlug] || {
-    title: "All Products", 
+    title: "All Products",
     description: "Browse our full collection of eyewear and accessories.",
     banner: "/placeholder.jpg",
   };
@@ -304,18 +304,18 @@ export default function ProductsPage() {
   const filteredProducts = React.useMemo(() => {
     // Only run filtering on client side to avoid hydration mismatches
     if (!isClient || !allProducts.length) return []
-    
+
     // Apply filters to allProducts
     let filtered = [...allProducts]
 
     // Filter by navigation category - use array of database categories
     if (categoryParam && dbCategories.length > 0) {
       filtered = filtered.filter((product) => dbCategories.includes(product.category))
-      
+
       // Special handling for kids-glasses - also filter by age/gender
       if (currentCategorySlug === "kids-glasses") {
-        filtered = filtered.filter((product) => 
-          product.gender === "kids" || 
+        filtered = filtered.filter((product) =>
+          product.gender === "kids" ||
           product.frameWidth === "small" ||
           product.productType === "kids"
         )
@@ -437,8 +437,8 @@ export default function ProductsPage() {
 
     return filtered
   }, [
-    isClient, 
-    allProducts, 
+    isClient,
+    allProducts,
     filters.categories,
     filters.priceRange,
     filters.frameShape,
@@ -454,11 +454,11 @@ export default function ProductsPage() {
     filters.frameWidth,
     filters.productType,
     filters.size,
-    dbCategories, 
-    genderParam, 
-    frameTypeParam, 
-    brandParam, 
-    topPickParam, 
+    dbCategories,
+    genderParam,
+    frameTypeParam,
+    brandParam,
+    topPickParam,
     categoryParam,
     currentCategorySlug
   ])
@@ -480,19 +480,19 @@ export default function ProductsPage() {
   const handlePrescriptionChange = React.useCallback((checked: boolean) => {
     handleCategoryChange("prescription");
   }, [handleCategoryChange]);
-  
+
   const handleSunglassesChange = React.useCallback((checked: boolean) => {
     handleCategoryChange("sunglasses");
   }, [handleCategoryChange]);
-  
+
   const handleReadingChange = React.useCallback((checked: boolean) => {
     handleCategoryChange("reading");
   }, [handleCategoryChange]);
-  
+
   const handleBluelightChange = React.useCallback((checked: boolean) => {
     handleCategoryChange("blue-light");
   }, [handleCategoryChange]);
-  
+
   const handleFashionChange = React.useCallback((checked: boolean) => {
     handleCategoryChange("fashion");
   }, [handleCategoryChange]);
@@ -513,11 +513,11 @@ export default function ProductsPage() {
   const updatePriceRange = React.useCallback((newMinMax: [number, number]) => {
     setFilters((prevFilters) => {
       const [minVal, maxVal] = newMinMax;
-      
+
       // Simple validation without complex snapping
       const validMin = Math.max(SLIDER_MIN_PRICE, Math.min(minVal, SLIDER_MAX_PRICE));
       const validMax = Math.max(SLIDER_MIN_PRICE, Math.min(maxVal, SLIDER_MAX_PRICE));
-      
+
       // Ensure min <= max
       const finalMin = Math.min(validMin, validMax);
       const finalMax = Math.max(validMin, validMax);
@@ -549,24 +549,24 @@ export default function ProductsPage() {
   const handlePriceInputChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>, index: 0 | 1) => {
     const typedValue = event.target.value;
     const parsedValue = parseInt(typedValue, 10);
-    
+
     setFilters((prevFilters) => {
       const newRange = [...prevFilters.priceRange] as [number, number];
-      
+
       if (!isNaN(parsedValue)) {
         newRange[index] = parsedValue;
       } else if (typedValue === "") {
         newRange[index] = (index === 0) ? SLIDER_MIN_PRICE : SLIDER_MAX_PRICE;
       }
-      
+
       // Ensure min <= max
       const [min, max] = newRange;
       const validMin = Math.max(SLIDER_MIN_PRICE, Math.min(min, SLIDER_MAX_PRICE));
       const validMax = Math.max(SLIDER_MIN_PRICE, Math.min(max, SLIDER_MAX_PRICE));
-      
-      return { 
-        ...prevFilters, 
-        priceRange: [Math.min(validMin, validMax), Math.max(validMin, validMax)] 
+
+      return {
+        ...prevFilters,
+        priceRange: [Math.min(validMin, validMax), Math.max(validMin, validMax)]
       };
     });
   }, []);
@@ -628,18 +628,20 @@ export default function ProductsPage() {
           <p className="text-lg md:text-xl font-medium drop-shadow">{hero.description}</p>
         </div>
       </div>
-
-      <main className="flex-1">
-        <div className="container px-4 md:px-6 py-8">
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className={`md:w-1/4 space-y-6 ${mobileFiltersOpen ? "block" : "hidden md:block"}`}>
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Filters</h2>
-                <Button variant="ghost" size="sm" onClick={resetFilters}>
-                  Reset
-                </Button>
-              </div>
-
+      <main className="flex min-h-screen px-0 m-0">
+  {/* Filter Sidebar - Left */}
+  <aside
+    className={`w-[320px] p-4 bg-white border-r border-gray-200 space-y-6 ${
+      mobileFiltersOpen ? "block" : "hidden md:block"
+    }`}
+  >
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold">Filters</h2>
+      <Button variant="ghost" size="sm" onClick={resetFilters}>
+        Reset
+      </Button>
+    </div>
+              <Separator />
               {/* Price Range Filter */}
               <div className="filter-section">
                 <div
@@ -662,7 +664,7 @@ export default function ProductsPage() {
                         <div className="text-center text-sm text-muted-foreground">
                           Price Range: KSh {filters.priceRange[0].toLocaleString()} - KSh {filters.priceRange[1].toLocaleString()}
                         </div>
-                        
+
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Minimum Price</label>
                           <input
@@ -675,7 +677,7 @@ export default function ProductsPage() {
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                           />
                         </div>
-                        
+
                         <div className="space-y-2">
                           <label className="text-sm font-medium">Maximum Price</label>
                           <input
@@ -689,7 +691,7 @@ export default function ProductsPage() {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between gap-4 mt-4">
                         <div className="flex items-center left-value">
                           <span className="text-sm mr-2">KSh</span>
@@ -825,36 +827,39 @@ export default function ProductsPage() {
                   <Separator className="my-4" />
                 </div>
               ))}
-            </div>
 
-            <div className="md:w-3/4">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                <h1 className="text-3xl font-bold">All Frames</h1>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1 md:hidden"
-                      onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-                    >
+              </aside>
+            
+            {/* Product Section */}
+           {/* Product Listing - Right */}
+        <section className="flex-1 px-4 py-6">
+    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
+      <h1 className="text-3xl font-bold">All Frames</h1>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1 md:hidden"
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+          >
                       <Filter className="h-4 w-4" />
-                      <span>Filter</span>
-                    </Button>
-                    <div className="hidden md:block">
-                      <Input
-                        placeholder="Search frames..."
-                        className="w-[200px] h-8"
-                        value={filters.searchQuery}
-                        onChange={handleSearchChange}
-                      />
-                    </div>
-                  </div>
-                  <select
-                    className="h-8 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                    value={filters.sortBy}
-                    onChange={handleSortChange}
-                  >
+            <span>Filter</span>
+          </Button>
+          <div className="hidden md:block">
+            <Input
+              placeholder="Search frames..."
+              className="w-[500px] h-8"
+              value={filters.searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+        </div>
+        <select
+          className="h-8 rounded-md border border-input bg-background py-1 text-sm"
+          value={filters.sortBy}
+          onChange={handleSortChange}
+        >
                     <option value="featured">Featured</option>
                     <option value="price-low">Price: Low to High</option>
                     <option value="price-high">Price: High to Low</option>
@@ -885,9 +890,9 @@ export default function ProductsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                   {filteredProducts.map((product: Product) => (
-                    <ModernProductCard 
+                    <ModernProductCard
                       key={product._id}
                       product={{
                         _id: product._id,
@@ -911,10 +916,9 @@ export default function ProductsPage() {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+          
+         </section>
+        </main>
+      </div>
   )
 }

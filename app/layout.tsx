@@ -1,9 +1,6 @@
 import type React from "react"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { ConditionalLayout } from "@/components/layout/conditional-layout"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ScrollToSection } from "@/components/scroll-to-section"
-import { FloatingConversionBar } from "@/components/floating-conversion-bar"
 import { AuthProvider } from "@/hooks/use-auth"
 import { CartProvider } from "@/hooks/use-modern-cart"
 import { WishlistProvider } from "@/hooks/use-modern-wishlist"
@@ -26,11 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>
-                <Header />
-                <ScrollToSection />
-                <FloatingConversionBar />
-                <div className="pt-[160px]">{children}</div>
-                <Footer />
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
                 <Toaster />
               </WishlistProvider>
             </CartProvider>

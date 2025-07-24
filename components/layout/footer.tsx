@@ -29,11 +29,11 @@ export function Footer() {
           <div>
             <div className="mb-4">
               <Image
-                src={settings?.general?.storeLogo || "/images/logo/lens2cart-logo.png"}
+                src={"/images/hero/logo.png"}
                 alt="Lens2Cart Logo"
                 width={200}
                 height={67}
-                className="h-auto bg-white p-2 rounded"
+                className="h-auto bg-blue-950"
               />
             </div>
             <p className="text-yellow-400 mb-4">

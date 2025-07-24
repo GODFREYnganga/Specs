@@ -44,61 +44,72 @@ export function EyeTestSection() {
   }, [])
 
   return (
-    <section className="eye-test-section bg-white">
-      <div className="container mx-auto px-4 md:px-8">
-        {/* Section header with decorative lines */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="h-px bg-teal-600 w-16 md:w-32"></div>
-            <h2 className="text-3xl font-bold text-gray-800 px-4">Book Eye Test At Home</h2>
-            <div className="h-px bg-teal-600 w-16 md:w-32"></div>
-          </div>
-        </div>
+    <>
+    <div className="text-center pt-16 pb-8">
+        <div className="flex items-center justify-center mb-4">
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Left column with image carousel */}
-          <div className="test-card relative h-96 rounded-lg overflow-hidden">
-            {/* Render both images, but only show the current one */}
-            {eyeTestImages.map((image, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 transition-opacity duration-700 ${
-                  index === currentImageIndex ? (isTransitioning ? "opacity-0" : "opacity-100") : "opacity-0"
-                }`}
-              >
-                <Image
-                  src={image || "/placeholder.svg"}
-                  alt="Eye test at home"
-                  fill
-                  className="object-cover transition-opacity"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-                {/* Dark overlay for visual effect */}
-                <div className="absolute inset-0 bg-gray-800/30 transition-opacity duration-700" />
-              </div>
-            ))}
-          </div>
-
-          {/* Right column with descriptive text */}
-          <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-gray-800">Professional Eye Care in the Comfort of Your Home</h3>
-            <p className="text-gray-700">
-              Our certified optometrists bring state-of-the-art equipment directly to your doorstep, providing
-              comprehensive eye examinations without the hassle of visiting a clinic.
-            </p>
-            <p className="text-gray-700">
-              The service includes vision testing, prescription updates, and personalized eyewear recommendations
-              tailored to your lifestyle and preferences.
-            </p>
-            <p className="text-gray-700">
-              Perfect for busy professionals, families with young children, elderly individuals, or anyone who values
-              convenience without compromising on quality eye care.
-            </p>
-            {/* Coming soon button (disabled) */}
-            <Button className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 cursor-not-allowed">Coming Soon</Button>
-          </div>
+          <div className="flex-grow h-px bg-gray-300"></div>
+          <h2 className="text-4xl font-bold text-black px-4">Book Eye Test At Home</h2>
+          <div className="flex-grow h-px bg-gray-300"></div>
         </div>
       </div>
-    </section>
+     
+      <section className="bg-blue-950 py-16">
+  <div className="container mx-auto px-4 md:px-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      
+      {/* Image Carousel */}
+      <div className="relative h-96 w-full rounded-lg overflow-hidden">
+        {eyeTestImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-700 ${
+              index === currentImageIndex
+                ? isTransitioning
+                  ? "opacity-0"
+                  : "opacity-100"
+                : "opacity-0"
+            }`}
+          >
+            <Image
+              src={image}
+              alt="Eye test at home"
+              fill
+              className="object-cover transition-opacity"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            {/* Optional overlay, semi-transparent if needed */}
+            <div className="absolute inset-0 bg-blue-950/50" />
+          </div>
+        ))}
+      </div>
+
+      {/* Text Content */}
+      <div className="space-y-6 text-white">
+        <h3 className="text-3xl font-bold">
+          Professional Eye Care in the Comfort of Your Home
+        </h3>
+        <p>
+          Our certified optometrists bring state-of-the-art equipment directly to your doorstep,
+          providing comprehensive eye examinations without the hassle of visiting a clinic.
+        </p>
+        <p>
+          The service includes vision testing, prescription updates, and personalized eyewear
+          recommendations tailored to your lifestyle and preferences.
+        </p>
+        <p>
+          Perfect for busy professionals, families with young children, elderly individuals,
+          or anyone who values convenience without compromising on quality eye care.
+        </p>
+        <button className="mt-4 px-6 py-3 bg-[#FF6600] text-white font-semibold rounded-full hover:bg-orange-500 transition">
+          Coming Soon
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+    </>
   )
 }

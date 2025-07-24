@@ -3,9 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Heart, ShoppingCart, Eye, Star, ArrowRight } from "lucide-react"
+import { Heart, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { useCart } from "@/hooks/use-modern-cart"
 import { useWishlist } from "@/hooks/use-modern-wishlist"
@@ -13,13 +12,19 @@ import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
+interface ColorOption {
+  name: string
+  code: string
+  image: string
+}
+
 interface Product {
   _id: string
   name: string
   price: number
   image?: string
   images?: string[]
-  colors?: string[]
+  colors?: ColorOption[]
   category: "prescription" | "sunglasses" | "reading"
   inStock?: boolean
   description?: string
@@ -37,36 +42,31 @@ interface ModernProductCardProps {
   className?: string
 }
 
-export function ModernProductCard({ 
-  product, 
+export function ModernProductCard({
+  product,
   variant = "default",
   showQuickActions = true,
-  className 
+  className
 }: ModernProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "")
-  
+  const [currentImage, setCurrentImage] = useState(product.image || product.images?.[0] || "/placeholder.svg")
+  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.code || "")
+
   const { addItem, loading: cartLoading } = useCart()
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
   const { toast } = useToast()
   const router = useRouter()
-  
+
   const inWishlist = isInWishlist(product._id)
-  
-  // Handle multiple images
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : product.image ? [product.image] : ["/placeholder.svg"]
-  
-  const currentImage = productImages[currentImageIndex] || "/placeholder.svg"
-  
-  // Calculate discounted price
+
   const originalPrice = product.price
-  const discountedPrice = product.discount 
-    ? originalPrice * (1 - product.discount / 100)
+  const discountedPrice = product.discount
+    ? Math.round(originalPrice * (1 - product.discount / 100))
     : originalPrice
-  
+
+  const handleMouseEnter = (image: string) => setCurrentImage(image)
+  const handleMouseLeave = () => setCurrentImage(product.image || product.images?.[0] || "/placeholder.svg")
+
   const handleQuickAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -119,295 +119,157 @@ export function ModernProductCard({
       })
     }
   }
-  
   const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
     try {
       if (inWishlist) {
         await removeFromWishlist(product._id)
         toast({
           title: "Removed from wishlist",
-          description: `${product.name} has been removed from your wishlist.`,
-        })      } else {
-        console.log('💝 Adding to wishlist from product card:', {
-          productId: product._id,
-          name: product.name,
-          price: discountedPrice,
-          originalPrice: product.discount ? originalPrice : undefined,
-          color: selectedColor || (product.colors?.[0] || "Default"),
-          image: currentImage,
-          category: product.category || "other",
-          inStock: product.inStock ?? true,
-          discount: product.discount,
+          description: `${product.name} removed from wishlist.`
         })
-        
+      } else {
         await addToWishlist({
           productId: product._id,
           name: product.name,
           price: discountedPrice,
-          color: selectedColor || (product.colors?.[0] || "Default"),
+          color: selectedColor,
           image: currentImage,
-          category: product.category || "other",
+          category: product.category,
           inStock: product.inStock ?? true,
-          size: undefined,
-          originalPrice: product.discount ? originalPrice : undefined,
           discount: product.discount,
-          variant: undefined,
-          priority: 'medium' as const,
-          notes: undefined
+          originalPrice: product.discount ? originalPrice : undefined
         })
         toast({
-          title: "Added to wishlist!",
-          description: `${product.name} has been added to your wishlist.`,
+          title: "Added to wishlist",
+          description: `${product.name} added to wishlist.`
         })
-        // Uncomment the next line if you want to redirect to wishlist after add
-        // router.push("/wishlist")
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update wishlist",
-        variant: "destructive",
-      })
+    } catch (err) {
+      toast({ title: "Error", description: "Wishlist update failed", variant: "destructive" })
     }
   }
-  
-  if (variant === "compact") {
-    return (
-      <Link href={`/products/${product._id}`}>
-        <Card className={cn("group overflow-hidden transition-all duration-300 hover:shadow-lg", className)}>
-          <div className="relative aspect-square">
-            <Image
-              src={currentImage}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            {product.discount && (
-              <Badge className="absolute top-2 left-2 bg-red-500">
-                -{product.discount}%
-              </Badge>
-            )}
-          </div>
-          <div className="p-3">
-            <h3 className="font-medium text-sm truncate">{product.name}</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="font-semibold text-lg">
-                KSh {discountedPrice.toLocaleString()}
-              </span>
-              {product.discount && (
-                <span className="text-sm text-gray-500 line-through">
-                  KSh {originalPrice.toLocaleString()}
-                </span>
-              )}
-            </div>
-          </div>
-        </Card>
-      </Link>
-    )
+
+  const getColorHex = (name: string): string => {
+    const map: Record<string, string> = {
+      RED: "#FF0000",
+      BROWN: "#8B4513",
+      BLUE: "#0000FF",
+      "BLACK-SILVER": "#555",
+      "RED-GOLD": "#B22222",
+      "BROWN-GOLD": "#A0522D",
+      "AQUA BLUE": "#00FFFF",
+      BLACK: "#000000",
+      PURPLE: "#800080",
+      "LIGHT-PINK": "#FFB6C1",
+      "DARK BLUE-PURPLE-GOLD": "#4B0082"
+    }
+    return map[name.toUpperCase()] || "#CCC"
   }
-  
+
   return (
-    <div 
-      className={cn(
-        "group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
-        variant === "featured" && "lg:col-span-2",
-        className
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-        {product.isNew && (
-          <Badge className="bg-blue-500 text-white">New</Badge>
-        )}
-        {product.isBestseller && (
-          <Badge className="bg-orange-500 text-white">Bestseller</Badge>
-        )}
-        {product.discount && (
-          <Badge className="bg-red-500 text-white">-{product.discount}%</Badge>
-        )}
-        {!product.inStock && (
-          <Badge variant="secondary">Out of Stock</Badge>
-        )}
+    <Card className={cn("group relative h-[100px] p-5 w-full max-w-xl border rounded-2xl hover:shadow-lg transition", className)}>
+      <div className="absolute top-3 right-3 z-10">
+        <Button
+          onClick={handleWishlistToggle}
+          size="icon"
+          className="rounded-full bg-white shadow w-9 h-9"
+          disabled={wishlistLoading}
+        >
+          <Heart className={cn("w-5 h-5", inWishlist ? "fill-red-500 text-red-500" : "text-gray-600")} />
+        </Button>
       </div>
-      
-      {/* Quick Actions */}
-      {showQuickActions && (
-        <div className={cn(
-          "absolute top-3 right-3 z-10 flex flex-col gap-2 transition-all duration-300",
-          isHovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
-        )}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 w-9 p-0 bg-white/90 hover:bg-white"
-            onClick={handleWishlistToggle}
-            disabled={wishlistLoading}
-          >
-            <Heart 
-              className={cn(
-                "h-4 w-4 transition-colors",
-                inWishlist ? "fill-red-500 text-red-500" : "text-gray-600"
-              )} 
-            />
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 w-9 p-0 bg-white/90 hover:bg-white"
-            asChild
-          >
-            <Link href={`/products/${product._id}`}>
-              <Eye className="h-4 w-4 text-gray-600" />
-            </Link>
-          </Button>
-        </div>
-      )}
-      
-      {/* Product Image */}
-      <Link href={`/products/${product._id}`} className="block">
-        <div className="relative aspect-square bg-gray-50 overflow-hidden">
-          <Image
-            src={currentImage}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-          
-          {/* Image Navigation Dots */}
-          {productImages.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1">
-              {productImages.map((_, index) => (
-                <button
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    index === currentImageIndex 
-                      ? "bg-white" 
-                      : "bg-white/50 hover:bg-white/75"
-                  )}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setCurrentImageIndex(index)
-                  }}
-                />
-              ))}
-            </div>
-          )}
+
+      <Link href={`/eyewear-products/${product._id}`} className="block">
+        <div className="relative aspect-[4/2] mb-3">
+          <Image src={currentImage} alt={product.name} fill className="object-cover rounded-xl" />
         </div>
       </Link>
-      
-      {/* Product Info */}
-      <div className="p-5">
-        <div className="mb-2">
-          <Badge variant="secondary" className="text-xs mb-2">
-            {product.category}
-          </Badge>
-          <Link href={`/products/${product._id}`}>
-            <h3 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2">
-              {product.name}
-            </h3>
-          </Link>
-        </div>
-        
-        {/* Rating */}
-        {product.rating && (
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    "h-4 w-4",
-                    i < Math.floor(product.rating!) 
-                      ? "fill-yellow-400 text-yellow-400" 
-                      : "text-gray-300"
-                  )}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600">
-              {product.rating} {product.reviews && `(${product.reviews})`}
-            </span>
-          </div>
-        )}
-        
-        {/* Price */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl font-bold text-gray-900">
-            KSh {discountedPrice.toLocaleString()}
-          </span>
-          {product.discount && (
-            <span className="text-lg text-gray-500 line-through">
-              KSh {originalPrice.toLocaleString()}
-            </span>
-          )}
-        </div>
-        
-        {/* Colors */}
-        {product.colors && product.colors.length > 0 && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-2">Colors:</p>
-            <div className="flex gap-2">
-              {product.colors.slice(0, 4).map((color) => (
-                <button
-                  key={color}
-                  className={cn(
-                    "w-6 h-6 rounded-full border-2 transition-all",
-                    selectedColor === color 
-                      ? "border-blue-500 scale-110" 
-                      : "border-gray-300 hover:border-gray-400"
-                  )}
-                  style={{ 
-                    backgroundColor: color.toLowerCase() === 'clear' ? 'transparent' : color.toLowerCase()
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setSelectedColor(color)
-                  }}
-                  title={color}
-                />
-              ))}
-              {product.colors.length > 4 && (
-                <span className="text-xs text-gray-500 self-center">
-                  +{product.colors.length - 4} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {/* Action Buttons */}
-        <div className="space-y-2">
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 transition-colors"
-            onClick={handleQuickAddToCart}
-            disabled={!product.inStock || cartLoading}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {cartLoading ? "Adding..." : "Add to Cart"}
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="w-full"
-            asChild
-          >
-            <Link href={`/products/${product._id}`}>
-              View Details
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
-        </div>
+
+      <div className="flex items-center justify-between mb-2">
+        <Link href={`/eyewear-products/${product._id}`}>
+          <h3 className="font-semibold text-base text-gray-900 line-clamp-1 hover:text-blue-600 uppercase">{product.name}</h3>
+        </Link>
+
       </div>
-    </div>
+
+      <div className="flex gap-2 items-baseline text-xl text-gray-900">
+        <span className="font-bold text-lg pointer-events-none">KSh {discountedPrice.toLocaleString()}</span>
+        {product.discount ? (
+          <>
+            <span className="line-through text-gray-500 pointer-events-none">KSh {originalPrice.toLocaleString()}</span>
+            <span className="text-red-500 font-medium pointer-events-none">-{product.discount}%</span>
+          </>
+        ) : (
+          <span className="text-gray-500 pointer-events-none">-0%</span>
+        )}
+      </div>
+      {(product.rating || (product.colors && product.colors.length > 0)) && (
+  <div className="flex items-center justify-between mt-2">
+    {product.rating && (
+      <div className="flex items-center gap-1 bg-purple-100 px-2 py-1 rounded-full text-xs">
+        
+        <span>{product.rating.toFixed(1)}</span>
+        <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+        {product.reviews && (
+          <span className="text-gray-500">({product.reviews})</span>
+        )}
+      </div>
+    )}
+
+    {product.colors && product.colors.length > 0 && (
+      <div className="flex gap-1">
+        {product.colors.map((color) => (
+          <div
+            key={color.code}
+            onMouseEnter={() => handleMouseEnter(color.image)}
+            onMouseLeave={handleMouseLeave}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setSelectedColor(color.code)
+            }}
+            title={color.name}
+            className={cn(
+              "w-4 h-4 rounded-full border cursor-pointer",
+              selectedColor === color.code ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-300"
+            )}
+            style={{ backgroundColor: getColorHex(color.name) }}
+          />
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+
+      <div className="mt-2 animate-pulse bg-orange-100 px-3 py-2 text-sm rounded-md text-center text-gray-800">
+        25% Additional OFF With Membership Plan @500sh
+      </div>
+
+      {product.colors && product.colors.length > 0 && (
+        <div className="mt-3 flex gap-1">
+          {product.colors.map((color) => (
+            <div
+              key={color.code}
+              onMouseEnter={() => handleMouseEnter(color.image)}
+              onMouseLeave={handleMouseLeave}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedColor(color.code)
+              }}
+              title={color.name}
+              className={cn(
+                "w-5 h-5 rounded-full border cursor-pointer",
+                selectedColor === color.code ? "border-blue-500 ring-2 ring-blue-300" : "border-gray-300"
+              )}
+              style={{ backgroundColor: getColorHex(color.name) }}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
   )
 }

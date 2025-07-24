@@ -13,20 +13,20 @@ const heroContent = {
 export function HeroSection() {
  
   return (
-    <section className="pt-20 relative min-h-[80vh] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+    <section className="relative min-h-[60vh] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
       {/* Background video */}
-      <section className="w-full py-12 bg-black flex justify-center items-center">
+      <div className="w-full bg-black flex justify-center items-center">
       <div className="w-full max-w-4xl aspect-video overflow-hidden rounded-lg shadow-lg">
         <video
-          className="absolute top-5 left-0 w-full h-full object-cover opacity-100 z-0"
-          src="/videos/Landingpage-background-video.mp4" // Change this to your actual video path
+          className="absolute left-0 w-full h-full object-cover opacity-100 z-0"
+          src="/videos/Landingpage-background-video.mp4"
           autoPlay
           loop
           muted
           playsInline
         />
       </div>
-    </section>
+    </div>
 
       {/* 
       <div className="absolute inset-0 opacity-5">

@@ -40,12 +40,12 @@ export function Newsletter() {
   }
 
   return (
-    <section className="py-12 bg-white border-t">
+    <section className="py-12 bg-[#FF6600] border-t">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="max-w-2xl mx-auto text-center text-gray-800">
+        <div className="max-w-2xl mx-auto text-center text-bue-950">
           {/* Section header */}
-          <h2 className="text-3xl font-bold mb-3">Join Our Style Community</h2>
-          <p className="text-gray-300 mb-8">
+          <h2 className="text-4xl font-extrabold mb-3">Join Our Style Community</h2>
+          <p className="text-white text-xl mb-8">
             Subscribe to our newsletter and be the first to know about new collections, exclusive offers, and eyewear
             trends.
           </p>
@@ -79,7 +79,7 @@ export function Newsletter() {
           )}
 
           {/* Privacy notice */}
-          <p className="mt-6 text-sm text-gray-400">
+          <p className="mt-6 text-sm text-white text-lg">
             By subscribing, you agree to our Privacy Policy and consent to receive updates from our company.
           </p>
         </div>
