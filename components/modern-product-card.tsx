@@ -181,14 +181,14 @@ export function ModernProductCard({
         </Button>
       </div>
 
-      <Link href={`/eyewear-products/${product._id}`} className="block">
+      <Link href={`/products/${product._id}}`} className="block">
         <div className="relative aspect-[4/2] mb-3">
           <Image src={currentImage} alt={product.name} fill className="object-cover rounded-xl" />
         </div>
       </Link>
 
       <div className="flex items-center justify-between mb-2">
-        <Link href={`/eyewear-products/${product._id}`}>
+        <Link href={`/products/${product._id}`}>
           <h3 className="font-semibold text-base text-gray-900 line-clamp-1 hover:text-blue-600 uppercase">{product.name}</h3>
         </Link>
 

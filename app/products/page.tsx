@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Filter, ChevronDown, ChevronUp, Heart, Eye } from "lucide-react"
 import Link from "next/link"
 import useSWR from "swr"
-
+import Image from 'next/image';
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -21,6 +21,7 @@ import { useWishlist } from "@/hooks/use-modern-wishlist"
 import { ModernProductCard } from "@/components/modern-product-card"
 
 // Product type for type safety
+
 interface Product {
   _id: string
   name: string
@@ -56,108 +57,74 @@ const filterSections: Category[] = [
     options: [], // This is handled separately with the slider
   },
   {
-    id: "size",
-    title: "SIZE",
+    id: "category",
+    title: "CATEGORY",
     options: [
-      { value: "small", label: "Small" },
-      { value: "medium", label: "Medium" },
-      { value: "large", label: "Large" },
-    ],
+      { value: "eyeglasses", label: "Eyeglasses" },
+      { value: "sunglasses", label: "Sunglasses" }
+    ]
   },
   {
     id: "color",
     title: "COLOR",
     options: [
-      { value: "black", label: "Black" },
-      { value: "gold", label: "Gold" },
-      { value: "silver", label: "Silver" },
-      { value: "blue", label: "Blue" },
-      { value: "clear", label: "Clear" },
-      { value: "rose-gold", label: "Rose Gold" },
-      { value: "white", label: "White" },
-      { value: "multi", label: "Multi-color" },
-    ],
+      { value: "red", label: "RED", colorCode: "C1" },
+      { value: "brown", label: "BROWN", colorCode: "C2" },
+      { value: "blue", label: "BLUE", colorCode: "C3" },
+      { value: "black-silver", label: "BLACK-SILVER", colorCode: "C4" },
+      { value: "red-gold", label: "RED-GOLD", colorCode: "C5" },
+      { value: "brown-gold", label: "BROWN-GOLD", colorCode: "C6" },
+      { value: "aqua-blue", label: "AQUA BLUE", colorCode: "C7" },
+      { value: "black", label: "BLACK", colorCode: "C8" },
+      { value: "purple", label: "PURPLE", colorCode: "C9" },
+      { value: "light-pink", label: "LIGHT-PINK", colorCode: "C10" },
+      { value: "dark-blue-purple-gold", label: "DARK BLUE-PURPLE-GOLD" }
+    ]
   },
   {
-    id: "frameType",
-    title: "FRAME TYPE",
+    id: "size",
+    title: "SIZE",
     options: [
-      { value: "full-rim", label: "Full Rim" },
-      { value: "semi-rimless", label: "Semi-Rimless" },
-      { value: "rimless", label: "Rimless" },
-    ],
-  },
-  {
-    id: "frameShape",
-    title: "FRAME SHAPE",
-    options: [
-      { value: "round", label: "Round" },
-      { value: "square", label: "Square" },
-      { value: "cat-eye", label: "Cat Eye" },
-      { value: "aviator", label: "Aviator" },
-      { value: "rectangle", label: "Rectangle" },
-      { value: "geometric", label: "Geometric" },
-    ],
-  },
-  {
-    id: "brand",
-    title: "BRANDS",
-    options: [
-      { value: "Fashionista", label: "Fashionista" },
-      { value: "SunPro", label: "SunPro" },
-      { value: "EyeRest", label: "EyeRest" },
-      { value: "BlueGuard", label: "BlueGuard" },
-      { value: "StyleIcon", label: "StyleIcon" },
-      { value: "Vintage", label: "Vintage" },
-    ],
-  },
-  {
-    id: "gender",
-    title: "GENDER",
-    options: [
-      { value: "men", label: "Men" },
-      { value: "women", label: "Women" },
-      { value: "unisex", label: "Unisex" },
-    ],
+      { value: "small", label: "Small" },
+      { value: "medium", label: "Medium" },
+      { value: "large", label: "Large" }
+    ]
   },
   {
     id: "material",
     title: "MATERIAL",
     options: [
+      { value: "stainless-steel", label: "Stainless Steel" },
       { value: "acetate", label: "Acetate" },
-      { value: "metal", label: "Metal" },
-      { value: "plastic", label: "Plastic" },
-      { value: "titanium", label: "Titanium" },
-    ],
+      { value: "acetate-stainless-steel", label: "Acetate-Stainless Steel" },
+      { value: "ultem", label: "Ultem" },
+      { value: "stainless-steel-acetate", label: "Stainless Steel & Acetate" },
+      { value: "tr90", label: "TR90" },
+      { value: "polycarbonate", label: "Polycarbonate" }
+    ]
   },
   {
-    id: "weight",
-    title: "WEIGHT GROUP",
+    id: "shape",
+    title: "SHAPE",
     options: [
-      { value: "light", label: "Light" },
-      { value: "medium", label: "Medium" },
-      { value: "heavy", label: "Heavy" },
-    ],
+      { value: "aviator", label: "Aviator" },
+      { value: "rectangle", label: "Rectangle" },
+      { value: "square", label: "Square" },
+      { value: "round", label: "Round" },
+      { value: "geometric", label: "Geometric" },
+      { value: "cat-eye", label: "Cat-Eye" },
+      { value: "wayfarer", label: "Wayfarer" },
+      { value: "oval", label: "Oval" }
+    ]
   },
   {
     id: "prescriptionType",
     title: "PRESCRIPTION TYPE",
     options: [
       { value: "single-vision", label: "Single Vision" },
-      { value: "progressive", label: "Progressive" },
-      { value: "reading", label: "Reading" },
-      { value: "non-prescription", label: "Non-Prescription" },
-      { value: "blue-light", label: "Blue Light" },
-    ],
-  },
-  {
-    id: "frameWidth",
-    title: "FRAME WIDTH",
-    options: [
-      { value: "narrow", label: "Narrow" },
-      { value: "medium", label: "Medium" },
-      { value: "wide", label: "Wide" },
-    ],
+      { value: "bifocal", label: "Bifocal" },
+      { value: "progressive", label: "Progressive" }
+    ]
   },
   {
     id: "productType",
@@ -165,11 +132,86 @@ const filterSections: Category[] = [
     options: [
       { value: "eyeglasses", label: "Eyeglasses" },
       { value: "sunglasses", label: "Sunglasses" },
+      { value: "contact-lens", label: "Contact Lens" },
       { value: "reading-glasses", label: "Reading Glasses" },
-      { value: "blue-light", label: "Blue Light Glasses" },
-    ],
+      { value: "accessories", label: "Accessories" },
+      { value: "powered-sunglasses", label: "Powered Sunglasses" },
+      { value: "zero-power", label: "Zero Power Glasses/Screen glasses" }
+    ]
   },
-]
+  {
+    id: "frameType",
+    title: "FRAME TYPE",
+    options: [
+      { value: "full-rim", label: "Full Rim" },
+      { value: "rimless", label: "Rimless" },
+      { value: "half-rim", label: "Half Rim" }
+    ]
+  },
+  {
+    id: "brands",
+    title: "BRANDS",
+    options: [
+      { value: "fashionista-classic", label: "Fashionista Classic" },
+      { value: "magneto-classic", label: "Magneto Classic" },
+      { value: "magneto-premium", label: "Magneto Premium" },
+      { value: "fashionista-premium", label: "Fashionista Premium" }
+    ]
+  },
+  {
+    id: "gender",
+    title: "GENDER",
+    options: [
+      { value: "women", label: "Women" },
+      { value: "men", label: "Men" },
+      { value: "unisex", label: "Unisex" }
+    ]
+  },
+  {
+    id: "ageGroup",
+    title: "AGE GROUP",
+    options: [
+      { value: "adult", label: "Adult" },
+      { value: "kids", label: "Kids" }
+    ]
+  },
+  {
+    id: "weightGroup",
+    title: "WEIGHT GROUP",
+    options: [
+      { value: "light", label: "Light" },
+      { value: "average", label: "Average" }
+    ]
+  },
+  {
+    id: "eyeglassesCollection",
+    title: "EYEGLASSES COLLECTION",
+    options: [
+      { value: "executive-edit", label: "Executive Edit" },
+      { value: "everyday-comfort", label: "Everyday Comfort" },
+      { value: "modern-minimal", label: "Modern Minimal" },
+      { value: "bold-patterns", label: "Bold Patterns" },
+      { value: "youth-trends", label: "Youth Trends" },
+      { value: "acetate-classics", label: "Acetate Classics" },
+      { value: "urban-steel", label: "Urban Steel" },
+      { value: "matte-classics", label: "Matte Classics" }
+    ]
+  },
+  {
+    id: "sunglassesCollection",
+    title: "SUNGLASSES COLLECTION",
+    options: [
+      { value: "blue-sky-edit", label: "Blue Sky Edit" },
+      { value: "retro-vibes", label: "Retro Vibes" },
+      { value: "coastal-breeze", label: "Coastal Breeze" },
+      { value: "safari-explorer", label: "Safari Explorer" },
+      { value: "bold-frames", label: "Bold Frames" },
+      { value: "wedding-luxe", label: "Wedding Luxe" },
+      { value: "matte-glow", label: "Matte Glow" }
+    ]
+  }
+];
+
 
 // Updated mapping from navbar slugs to DB category values
 // Maps our 5 navigation categories to arrays of database categories
@@ -186,10 +228,12 @@ const getDbCategoriesFromNav = (navCategory: string): string[] => {
   return NAVBAR_CATEGORY_MAP[navCategory] || [navCategory]
 }
 
-interface FilterSection {
-  id: string
-  title: string
-  options: { value: string; label: string }[]
+interface FiltersState {
+  categories: string[];
+  priceRange: [number, number];
+  searchQuery: string;
+  sortBy: string;
+  [key: string]: string[] | [number, number] | string; // Index signature
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -200,6 +244,8 @@ const SLIDER_MAX_PRICE = 100000;
 const SLIDER_STEP = 100;
 
 export default function ProductsPage() {
+const [bannerError, setBannerError] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   // Get category and other filter params from searchParams
@@ -214,7 +260,7 @@ export default function ProductsPage() {
     eyeglasses: {
       title: "Discover Stylish Eye Glasses",
       description: "Shop our curated collection of premium eyeglasses. Lightweight, durable, and designed for comfort and style.",
-      banner: "/images/Eye Glasses/clem-onojeghuo-TI-mxzGbsmk-unsplash.jpg",
+      banner: "/images/Eye-Glasses/clem-onojeghuo-TI-mxzGbsmk-unsplash.jpg",
     },
     sunglasses: {
       title: "Sun Glasses for Every Adventure",
@@ -258,42 +304,35 @@ export default function ProductsPage() {
   )
 
   const [isClient, setIsClient] = useState(false)
-  const [filters, setFilters] = useState({
+ const [filters, setFilters] = useState(() => {
+  // Initialize with all filter sections as empty arrays
+  const initialFilters: Record<string, string[] | [number, number]> = {
     categories: categoryParam ? [categoryParam] : [],
-    priceRange: [0, 100000], // Start from 0
-    frameShape: "all",
+    priceRange: [0, 100000],
     searchQuery: "",
     sortBy: "featured",
-    gender: genderParam || "all",
-    frameType: frameTypeParam || "all",
-    color: "all",
-    brand: brandParam || "all",
-    material: "all",
-    weight: "all",
-    prescriptionType: "all",
-    frameWidth: "all",
-    productType: "all",
-    size: "all",
-  })
+  };
+
+  // Add all filter sections from filterSections
+  filterSections.forEach(section => {
+    if (section.id !== "price-range") { // Skip price-range as it's already handled
+      initialFilters[section.id] = [];
+    }
+  });
+
+  return initialFilters;
+});
   // Defensive: always use a memoized value for Slider
   // const sliderValue = React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], [filters.priceRange[0], filters.priceRange[1]])
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    priceRange: true,
-    category: true,
-    size: true,
-    color: true,
-    frameType: true,
-    frameShape: true,
-    brands: true,
-    gender: true,
-    material: true,
-    weight: true,
-    prescriptionType: true,
-    frameWidth: true,
-    productType: true,
-  })
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
+  filterSections.reduce((acc, section) => {
+    acc[section.id] = false; // Start all closed by default
+    return acc;
+  }, {} as Record<string, boolean>)
+);
+
 
   // Client-side hydration flag
   useEffect(() => {
@@ -302,166 +341,52 @@ export default function ProductsPage() {
 
   // Use useMemo for filtering instead of useEffect to prevent infinite loops
   const filteredProducts = React.useMemo(() => {
-    // Only run filtering on client side to avoid hydration mismatches
-    if (!isClient || !allProducts.length) return []
+  if (!isClient || !allProducts.length) return [];
 
-    // Apply filters to allProducts
-    let filtered = [...allProducts]
+  return allProducts.filter(product => {
+    // Price range filter
+    if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
+      return false;
+    }
 
-    // Filter by navigation category - use array of database categories
-    if (categoryParam && dbCategories.length > 0) {
-      filtered = filtered.filter((product) => dbCategories.includes(product.category))
+    // Search query filter
+    if (filters.searchQuery && 
+        !product.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
+        !(product.description?.toLowerCase().includes(filters.searchQuery.toLowerCase()))) {
+      return false;
+    }
 
-      // Special handling for kids-glasses - also filter by age/gender
-      if (currentCategorySlug === "kids-glasses") {
-        filtered = filtered.filter((product) =>
-          product.gender === "kids" ||
-          product.frameWidth === "small" ||
-          product.productType === "kids"
-        )
+    // Check all other filters
+    return Object.entries(filters).every(([key, filterValues]) => {
+      // Skip non-array filters
+      if (key === 'priceRange' || key === 'searchQuery' || key === 'sortBy') {
+        return true;
       }
-    }
 
-    if (genderParam) {
-      filtered = filtered.filter(
-        (product) => product.gender === genderParam.toLowerCase() || product.gender === "unisex",
-      )
-    }
+      // Ensure filterValues is an array
+      const filterValuesArray = Array.isArray(filterValues) ? filterValues : [];
+      
+      // If no filters selected for this category, include the product
+      if (filterValuesArray.length === 0) {
+        return true;
+      }
 
-    if (frameTypeParam) {
-      filtered = filtered.filter(
-        (product) => product.frameType === frameTypeParam.toLowerCase().replace("-", "-"),
-      )
-    }
-
-    if (brandParam) {
-      filtered = filtered.filter((product) => product.brand?.toLowerCase() === brandParam.toLowerCase())
-    }
-
-    if (topPickParam) {
-      filtered = filtered.filter((product) => product.category === topPickParam)
-    }
-
-    // Filter by specific category selection (sidebar filters)
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter((product) => filters.categories.includes(product.category))
-    }
-
-    // Filter by price range
-    filtered = filtered.filter(
-      (product) => product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1],
-    )
-
-    // Filter by frame shape
-    if (filters.frameShape !== "all") {
-      filtered = filtered.filter((product) => product.frameShape === filters.frameShape)
-    }
-
-    // Filter by gender
-    if (filters.gender !== "all") {
-      filtered = filtered.filter(
-        (product) => product.gender === filters.gender || product.gender === "unisex",
-      )
-    }
-
-    // Filter by frame type
-    if (filters.frameType !== "all") {
-      filtered = filtered.filter((product) => product.frameType === filters.frameType)
-    }
-
-    // Filter by color
-    if (filters.color !== "all") {
-      filtered = filtered.filter((product) => product.color === filters.color)
-    }
-
-    // Filter by brand
-    if (filters.brand !== "all") {
-      filtered = filtered.filter((product) => product.brand === filters.brand)
-    }
-
-    // Filter by material
-    if (filters.material !== "all") {
-      filtered = filtered.filter((product) => product.material === filters.material)
-    }
-
-    // Filter by weight
-    if (filters.weight !== "all") {
-      filtered = filtered.filter((product) => product.weight === filters.weight)
-    }
-
-    // Filter by prescription type
-    if (filters.prescriptionType !== "all") {
-      filtered = filtered.filter((product) => product.prescriptionType === filters.prescriptionType)
-    }
-
-    // Filter by frame width
-    if (filters.frameWidth !== "all") {
-      filtered = filtered.filter((product) => product.frameWidth === filters.frameWidth)
-    }
-
-    // Filter by product type
-    if (filters.productType !== "all") {
-      filtered = filtered.filter((product) => product.productType === filters.productType)
-    }
-
-    // Filter by size
-    if (filters.size !== "all") {
-      filtered = filtered.filter((product) => product.size === filters.size)
-    }
-
-    // Filter by search query
-    if (filters.searchQuery) {
-      const query = filters.searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (product) => product.name.toLowerCase().includes(query) || (product.description?.toLowerCase() ?? "").includes(query),
-      )
-    }
-
-    // Sort products
-    switch (filters.sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price)
-        break
-      case "newest":
-        // In a real app, you would sort by date
-        // Here we'll just reverse the array as a placeholder
-        filtered.reverse()
-        break
-      default:
-        // Featured - keep default order
-        break
-    }
-
-    return filtered
-  }, [
-    isClient,
-    allProducts,
-    filters.categories,
-    filters.priceRange,
-    filters.frameShape,
-    filters.searchQuery,
-    filters.sortBy,
-    filters.gender,
-    filters.frameType,
-    filters.color,
-    filters.brand,
-    filters.material,
-    filters.weight,
-    filters.prescriptionType,
-    filters.frameWidth,
-    filters.productType,
-    filters.size,
-    dbCategories,
-    genderParam,
-    frameTypeParam,
-    brandParam,
-    topPickParam,
-    categoryParam,
-    currentCategorySlug
-  ])
+      const productValue = product[key as keyof Product];
+      
+      // Handle undefined/null product values
+      if (productValue === undefined || productValue === null) {
+        return false;
+      }
+      
+      // Convert product value to comparable format
+      const productValueStr = productValue.toString().toLowerCase();
+      
+      return filterValuesArray.some(filterValue => 
+        filterValue.toString().toLowerCase() === productValueStr
+      );
+    });
+  });
+}, [isClient, allProducts, filters]);
 
   const handleCategoryChange = React.useCallback((category: string) => {
     setFilters((prev) => {
@@ -472,9 +397,25 @@ export default function ProductsPage() {
     })
   }, []);
 
-  const handleFilterChange = React.useCallback((filterType: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [filterType]: value }));
-  }, []);
+ // const handleFilterChange = React.useCallback((filterType: string, value: string) => {
+   // setFilters((prev) => ({ ...prev, [filterType]: value }));
+ // }, []);
+ const handleCheckboxChange = React.useCallback((filterKey: string, value: string) => {
+  setFilters(prev => {
+    // Special case for "All" checkbox
+    if (value === "all") {
+      return { ...prev, [filterKey]: [] };
+    }
+
+    const currentValues = prev[filterKey] as string[];
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value) // Remove if already selected
+      : [...currentValues, value]; // Add if not selected
+
+    return { ...prev, [filterKey]: newValues };
+  });
+}, []);
+
 
   // Create stable callback functions for each category to prevent infinite loops
   const handlePrescriptionChange = React.useCallback((checked: boolean) => {
@@ -498,17 +439,17 @@ export default function ProductsPage() {
   }, [handleCategoryChange]);
 
   // Create stable callbacks for RadioGroup filters to prevent infinite loops
-  const createFilterHandler = React.useCallback((sectionId: string) => {
-    return (value: string) => handleFilterChange(sectionId, value);
-  }, [handleFilterChange]);
+ // const createFilterHandler = React.useCallback((sectionId: string) => {
+  //  return (value: string) => handleFilterChange(sectionId, value);
+ // }, [handleFilterChange]);
 
   // Memoize filter handlers for each section
-  const filterHandlers = React.useMemo(() => {
-    return filterSections.reduce((acc, section) => {
-      acc[section.id] = createFilterHandler(section.id);
-      return acc;
-    }, {} as Record<string, (value: string) => void>);
-  }, [createFilterHandler]);
+ // const filterHandlers = React.useMemo(() => {
+ //   return filterSections.reduce((acc, section) => {
+ //     acc[section.id] = createFilterHandler(section.id);
+ //     return acc;
+//    }, {} as Record<string, (value: string) => void>);
+ // }, [createFilterHandler]);
 
   const updatePriceRange = React.useCallback((newMinMax: [number, number]) => {
     setFilters((prevFilters) => {
@@ -590,25 +531,22 @@ export default function ProductsPage() {
     }))
   }, []);
 
-  const resetFilters = React.useCallback(() => {
-    setFilters({
-      categories: [],
-      priceRange: [0, 100000], // Start from 0
-      frameShape: "all",
-      searchQuery: "",
-      sortBy: "featured",
-      gender: "all",
-      frameType: "all",
-      color: "all",
-      brand: "all",
-      material: "all",
-      weight: "all",
-      prescriptionType: "all",
-      frameWidth: "all",
-      productType: "all",
-      size: "all",
-    })
-  }, []);
+ const resetFilters = React.useCallback(() => {
+  const resetState: Record<string, string[] | [number, number]> = {
+    categories: [],
+    priceRange: [0, 100000],
+    searchQuery: "",
+    sortBy: "featured",
+  };
+
+  filterSections.forEach(section => {
+    if (section.id !== "price-range") {
+      resetState[section.id] = [];
+    }
+  });
+
+  setFilters(resetState);
+}, []);
 
   // Update the filter section rendering to match the requested layout
   // Replace the existing filter sections rendering with this enhanced version
@@ -618,16 +556,25 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Banner */}
       <div className="relative w-full h-64 md:h-80 flex items-center justify-center overflow-hidden mb-8">
-        <img
-          src={hero.banner}
-          alt={hero.title}
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
-        />
-        <div className="relative z-10 text-center text-white bg-black/40 p-6 rounded-xl max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">{hero.title}</h1>
-          <p className="text-lg md:text-xl font-medium drop-shadow">{hero.description}</p>
-        </div>
-      </div>
+  {!bannerError && hero.banner !== '/placeholder.jpg' ? (
+    <Image
+      src={hero.banner}
+      alt={hero.title}
+      fill
+      className="object-cover object-center"
+      priority
+      onError={() => setBannerError(true)}
+    />
+  ) : (
+    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+      <span className="text-white text-xl">Featured Collection</span>
+    </div>
+  )}
+  <div className="relative z-10 text-center text-white bg-black/40 p-6 rounded-xl max-w-2xl mx-auto">
+    <h1 className="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">{hero.title}</h1>
+    <p className="text-lg md:text-xl font-medium drop-shadow">{hero.description}</p>
+  </div>
+</div>
       <main className="flex min-h-screen px-0 m-0">
   {/* Filter Sidebar - Left */}
   <aside
@@ -740,93 +687,92 @@ export default function ProductsPage() {
                   )}
                 </div>
 
-                {expandedSections.category && (
-                  <div className="filter-options space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="prescription"
-                        checked={filters.categories.includes("prescription")}
-                        onCheckedChange={handlePrescriptionChange}
-                      />
-                      <Label htmlFor="prescription">Prescription Glasses</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="sunglasses"
-                        checked={filters.categories.includes("sunglasses")}
-                        onCheckedChange={handleSunglassesChange}
-                      />
-                      <Label htmlFor="sunglasses">Sunglasses</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="reading"
-                        checked={filters.categories.includes("reading")}
-                        onCheckedChange={handleReadingChange}
-                      />
-                      <Label htmlFor="reading">Reading Glasses</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="blue-light"
-                        checked={filters.categories.includes("blue-light")}
-                        onCheckedChange={handleBluelightChange}
-                      />
-                      <Label htmlFor="blue-light">Blue Light Glasses</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="fashion"
-                        checked={filters.categories.includes("fashion")}
-                        onCheckedChange={handleFashionChange}
-                      />
-                      <Label htmlFor="fashion">Fashion Frames</Label>
-                    </div>
-                  </div>
-                )}
+               {expandedSections.category && (
+  <div className="filter-options space-y-2">
+    {[
+      { id: "prescription", label: "Prescription Glasses" },
+      { id: "sunglasses", label: "Sunglasses" },
+      { id: "reading", label: "Reading Glasses" },
+      { id: "blue-light", label: "Blue Light Glasses" },
+      { id: "fashion", label: "Fashion Frames" }
+    ].map((item) => (
+      <div key={item.id} className="flex items-center space-x-2">
+        <Checkbox
+          id={item.id}
+          checked={filters.categories.includes(item.id)}
+          onCheckedChange={() => handleCheckboxChange("categories", item.id)}
+        />
+        <Label htmlFor={item.id}>{item.label}</Label>
+      </div>
+    ))}
+  </div>
+)}
               </div>
 
               <Separator />
 
               {/* Dynamic Filter Sections */}
-              {filterSections.map((section) => (
-                <div key={section.id} className="filter-section">
-                  <div
-                    className="filter-heading flex justify-between items-center cursor-pointer mb-4"
-                    onClick={() => toggleSection(section.id)}
-                  >
-                    <h3 className="font-medium">{section.title}</h3>
-                    {expandedSections[section.id] ? (
-                      <ChevronUp className="h-4 w-4 option-icon" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 option-icon" />
-                    )}
-                  </div>
+ {filterSections.map((section) => (
+  <div key={section.id} className="filter-section">
+    <div
+      className="filter-heading flex justify-between items-center cursor-pointer mb-4"
+      onClick={() => toggleSection(section.id)}
+    >
+      <h3 className="font-medium">{section.title}</h3>
+      {expandedSections[section.id] ? (
+        <ChevronUp className="h-4 w-4" />
+      ) : (
+        <ChevronDown className="h-4 w-4" />
+      )}
+    </div>
 
-                  {expandedSections[section.id] && (
-                    <div className="filter-options space-y-2">
-                      <RadioGroup
-                        value={filters[section.id as keyof typeof filters] as string}
-                        onValueChange={filterHandlers[section.id]}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="all" id={`${section.id}-all`} />
-                          <Label htmlFor={`${section.id}-all`}>All</Label>
-                        </div>
+    {expandedSections[section.id] && (
+      <div className="filter-options space-y-2">
+        {section.id === "price-range" ? (
+          // Price range slider (keep your existing implementation)
+          <div className="space-y-4">
+            {/* Your price range slider UI */}
+          </div>
+        ) : (
+          <>
+            {/* "All" checkbox */}
+            <div className="flex items-center space-x-2">
+  <Checkbox
+    id={`${section.id}-all`}
+    checked={(filters[section.id] || []).length === 0}
+    onCheckedChange={() => handleCheckboxChange(section.id, "all")}
+  />
+  <Label htmlFor={`${section.id}-all`}>All</Label>
+</div>
 
-                        {section.options.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option.value} id={`${section.id}-${option.value}`} />
-                            <Label htmlFor={`${section.id}-${option.value}`}>{option.label}</Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </div>
-                  )}
-
-                  <Separator className="my-4" />
-                </div>
-              ))}
+            {/* Filter options */}
+           {section.options.map((option) => (
+  <div key={option.value} className="flex items-center space-x-2">
+    <Checkbox
+      id={`${section.id}-${option.value}`}
+      checked={(filters[section.id] || []).includes(option.value)}
+      onCheckedChange={() => handleCheckboxChange(section.id, option.value)}
+    />
+    <Label htmlFor={`${section.id}-${option.value}`} className="flex items-center">
+      {option.label}
+      {option.colorCode && (
+        <span
+          className="ml-2 w-3 h-3 rounded-full inline-block border"
+          style={{ backgroundColor: option.colorCode.startsWith('#') 
+            ? option.colorCode 
+            : `#${option.colorCode}` }}
+        />
+      )}
+    </Label>
+  </div>
+))}
+          </>
+        )}
+      </div>
+    )}
+    <Separator className="my-4" />
+  </div>
+))}
 
               </aside>
             

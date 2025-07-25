@@ -5,14 +5,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 const items = [
-  { name: "Aviator", image: "/images/shapes/aviator.png", link: "/products/round" },
-  { name: "Rectangle", image: "/images/shapes/rectangle.jpeg", link: "/products/round" },
-  { name: "Square", image: "/images/shapes/square.jpeg", link: "/products/round" },
+  { name: "Aviator", image: "/images/shapes/aviator.png", link: "/products/aviator" },
+  { name: "Rectangle", image: "/images/shapes/rectangle.jpeg", link: "/products/rectangle" },
+  { name: "Square", image: "/images/shapes/square.jpeg", link: "/products/square" },
   { name: "Round", image: "/images/shapes/round.png", link: "/products/round" },
-  { name: "Geometric", image: "/images/shapes/geometric.jpeg", link: "/products/round" },
-  { name: "Cat-eye", image: "/images/shapes/cateeye.png", link: "/products/round" },
-  { name: "Wayfarer", image: "/images/shapes/wayfarer.jpeg", link: "/products/round" },
-  { name: "Oval", image: "/images/shapes/oval.jpeg", link: "/products/round" },
+  { name: "Geometric", image: "/images/shapes/geometric.jpeg", link: "/products/geometric" },
+  { name: "Cat-eye", image: "/images/shapes/cateeye.png", link: "/products/cateeye" },
+  { name: "Wayfarer", image: "/images/shapes/wayfarer.jpeg", link: "/products/wayfarer" },
+  { name: "Oval", image: "/images/shapes/oval.jpeg", link: "/products/oval" },
 ];
 
 export default function TrendSlider() {
@@ -32,26 +32,26 @@ export default function TrendSlider() {
   };
 
   useEffect(() => {
-  const interval = setInterval(() => {
-    if (direction === "right") {
-      if (startIndex + visibleCount >= items.length) {
-        setDirection("left");
-        setStartIndex((prev) => Math.max(prev - visibleCount, 0));
+    const interval = setInterval(() => {
+      if (direction === "right") {
+        if (startIndex + visibleCount >= items.length) {
+          setDirection("left");
+          setStartIndex((prev) => Math.max(prev - visibleCount, 0));
+        } else {
+          setStartIndex((prev) => prev + visibleCount);
+        }
       } else {
-        setStartIndex((prev) => prev + visibleCount);
+        if (startIndex <= 0) {
+          setDirection("right");
+          setStartIndex((prev) => Math.min(prev + visibleCount, items.length - visibleCount));
+        } else {
+          setStartIndex((prev) => prev - visibleCount);
+        }
       }
-    } else {
-      if (startIndex <= 0) {
-        setDirection("right");
-        setStartIndex((prev) => Math.min(prev + visibleCount, items.length - visibleCount));
-      } else {
-        setStartIndex((prev) => prev - visibleCount);
-      }
-    }
-  }, 2000); // every 2 seconds
+    }, 2000); // every 2 seconds
 
-  return () => clearInterval(interval);
-}, [startIndex, direction]);
+    return () => clearInterval(interval);
+  }, [startIndex, direction]);
 
   return (
     <div
@@ -108,7 +108,7 @@ export default function TrendSlider() {
               justifyContent: "space-between",
             }}
           >
-           
+
             {visibleItems.map((item, index) => (
               <div
                 key={index}
@@ -138,25 +138,25 @@ export default function TrendSlider() {
                 <p style={{ fontWeight: "500", textAlign: "center" }}>{item.name}</p>
                 <div style={{ marginTop: "12px" }}>
                   <a
-  href={item.link}
-  style={{
-    backgroundColor: "#0891b2",
-    color: "#fff",
-    padding: "8px 16px",
-    borderRadius: "6px",
-    fontSize: "14px",
-    border: "none",
-    cursor: "pointer",
-    textDecoration: "none", // ensures it looks like a button
-    display: "inline-block",
-    marginTop: "12px"
-  }}
->
-  Explore
-</a>
+                    href={item.link}
+                    style={{
+                      backgroundColor: "#0891b2",
+                      color: "#fff",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      border: "none",
+                      cursor: "pointer",
+                      textDecoration: "none", // ensures it looks like a button
+                      display: "inline-block",
+                      marginTop: "12px"
+                    }}
+                  >
+                    Explore
+                  </a>
                 </div>
               </div>
-            
+
             ))}
           </div>
 
