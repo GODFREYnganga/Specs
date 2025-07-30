@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Search, Heart, ShoppingCart, User, LogOut } from "lucide-react"
+import { Search, Heart, ShoppingCart, User, LogOut, Menu, X } from "lucide-react" // Added Menu and X icons
 import { useAuth } from "@/hooks/use-auth"
 import { useCart } from "@/hooks/use-modern-cart"
 import { useWishlist } from "@/hooks/use-modern-wishlist"
@@ -26,30 +26,33 @@ export function Header() {
 
   // State to track the last scroll position for direction detection
   const [lastScrollY, setLastScrollY] = useState(0)
+
+  // State for mobile menu open/close
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = window.scrollY
 
       // Set scroll state for text color, etc.
-      setIsScrolled(currentScrollY > 50);
+      setIsScrolled(currentScrollY > 50)
 
       // Hide navbar on scroll down, show on scroll up
       if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false); // scrolling down
+        setIsVisible(false) // scrolling down
       } else {
-        setIsVisible(true); // scrolling up
+        setIsVisible(true) // scrolling up
       }
 
-      setLastScrollY(currentScrollY);
-    };
+      setLastScrollY(currentScrollY)
+    }
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
-
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [lastScrollY])
 
   // 👇 Add this here, after useEffect
-  const bottomNavbarTop = isVisible ? 136 : 30;
+  const bottomNavbarTop = isVisible ? 136 : 30
 
   // Get the current pathname for conditional styling
   const pathname = usePathname()
@@ -65,9 +68,9 @@ export function Header() {
   const cartCount = items && items.length > 0 ? items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0) : 0
   const wishlistCount = wishlistItems && wishlistItems.length > 0 ? wishlistItems.length : 0
 
-  // Debug logging
-  console.log("🎯 Header - Cart:", items)
-  console.log("🔢 Header - Cart count:", cartCount)
+  // Debug logging - consider removing in production
+  // console.log("🎯 Header - Cart:", items)
+  // console.log("🔢 Header - Cart count:", cartCount)
 
   // State to store settings fetched from the API
   const [settings, setSettings] = useState<any>(null)
@@ -92,39 +95,44 @@ export function Header() {
   const isHomePage = pathname === "/"
 
   // Determine text color based on scroll position and current page
+  // This is used for the previous text-white/text-gray-800 logic,
+  // but for responsive purposes, we'll override for mobile
   const textColor = !isScrolled && isHomePage ? "text-white" : "text-gray-800"
+
+  // Function to close mobile menu
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   /**
    * Content for the eyewear dropdown menu
    * Contains categorized links for eyeglasses
    */
   const eyewearDropdownContent = (
-    <div className="p-6 grid grid-cols-4 gap-8">
+    <div className="p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
       {/* Gender Categories with Images */}
       <div>
-        <h3 className="font-medium mb-4">Shop By Gender</h3>
-        <div className="grid gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+        <h3 className="font-medium mb-2 md:mb-4">Shop By Gender</h3>
+        <div className="grid gap-2 md:gap-4">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/man-glasses.png" alt="Men" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=eye-glasses&gender=men" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&gender=men" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Men
             </Link>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/woman-glasses.png" alt="Women" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=eye-glasses&gender=women" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&gender=women" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Women
             </Link>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/kid-glasses.png" alt="Kids" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=kids-glasses" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=kids-glasses" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Kids
             </Link>
           </div>
@@ -133,15 +141,15 @@ export function Header() {
 
       {/* Our Top Picks */}
       <div>
-        <h3 className="font-medium mb-4">Our Top Picks</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="/products?category=eye-glasses&topPick=new-arrivals" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Our Top Picks</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="/products?category=eye-glasses&topPick=new-arrivals" className="hover:text-gray-900" onClick={closeMobileMenu}>
             New Arrivals
           </Link>
-          <Link href="/products?category=eye-glasses&topPick=best-sellers" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&topPick=best-sellers" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Best Sellers
           </Link>
-          <Link href="/products?category=eye-glasses&topPick=progressive-eyeglasses" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&topPick=progressive-eyeglasses" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Progressive Eyeglasses
           </Link>
         </div>
@@ -149,79 +157,79 @@ export function Header() {
 
       {/* Frame Types */}
       <div>
-        <h3 className="font-medium mb-4">Frame Type</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="/products?category=eye-glasses&frameType=rectangle-frames" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Frame Type</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="/products?category=eye-glasses&frameType=rectangle-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Rectangle Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=square-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=square-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Square Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=round-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=round-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Round Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=cat-eye-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=cat-eye-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Cat Eye Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=wayfarer-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=wayfarer-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Wayfarer Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=geometric-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=geometric-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Geometric Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=aviator-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=aviator-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Aviator Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=halfrim-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=halfrim-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Halfrim Frames
           </Link>
-          <Link href="/products?category=eye-glasses&frameType=rimless-frames" className="hover:text-gray-900">
+          <Link href="/products?category=eye-glasses&frameType=rimless-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Rimless Frames
           </Link>
         </div>
       </div>
 
       {/* Collections & Brands */}
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <div>
-          <h3 className="font-medium mb-4">Collection</h3>
-          <div className="grid gap-2 text-sm">
-            <Link href="/products?category=eye-glasses&style=matte-classics" className="hover:text-gray-900">
+          <h3 className="font-medium mb-2 md:mb-4">Collection</h3>
+          <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+            <Link href="/products?category=eye-glasses&style=matte-classics" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Matte Classics
             </Link>
-            <Link href="/products?category=eye-glasses&style=urban-steel" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=urban-steel" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Urban Steel
             </Link>
-            <Link href="/products?category=eye-glasses&style=acetate-classics" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=acetate-classics" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Acetate Classics
             </Link>
-            <Link href="/products?category=eye-glasses&style=youth-trends" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=youth-trends" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Youth Trends
             </Link>
-            <Link href="/products?category=eye-glasses&style=bold-patterns" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=bold-patterns" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Bold Patterns
             </Link>
-            <Link href="/products?category=eye-glasses&style=modern-minimal" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=modern-minimal" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Modern Minimal
             </Link>
-            <Link href="/products?category=eye-glasses&style=everyday-comfort" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=everyday-comfort" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Everyday Comfort
             </Link>
-            <Link href="/products?category=eye-glasses&style=executive-edit" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&style=executive-edit" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Executive Edit
             </Link>
           </div>
         </div>
         <div>
-          <h3 className="font-medium mb-4">Brands</h3>
-          <div className="grid gap-2 text-sm">
-            <Link href="/products?category=eye-glasses&brand=fashionista-classic" className="hover:text-gray-900">
+          <h3 className="font-medium mb-2 md:mb-4">Brands</h3>
+          <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+            <Link href="/products?category=eye-glasses&brand=fashionista-classic" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Fashionista Classic
             </Link>
-            <Link href="/products?category=eye-glasses&brand=magneto-kids-classic" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&brand=magneto-kids-classic" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Magneto Kids Classic
             </Link>
-            <Link href="/products?category=eye-glasses&brand=magneto-kids-premium" className="hover:text-gray-900">
+            <Link href="/products?category=eye-glasses&brand=magneto-kids-premium" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Magneto Kids Premium
             </Link>
           </div>
@@ -235,27 +243,27 @@ export function Header() {
    * Contains categorized links for contact lenses
    */
   const contactLensesDropdownContent = (
-    <div className="p-6 grid grid-cols-5 gap-8">
+    <div className="p-4 md:p-6 grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-8">
       {/* Brands */}
       <div>
-        <h3 className="font-medium mb-4">Brands</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="#" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Brands</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Aqualens
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Bausch Lamb
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Softlens
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Acuvue
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Iconnect
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Alcon
           </Link>
         </div>
@@ -263,21 +271,21 @@ export function Header() {
 
       {/* Disposability */}
       <div>
-        <h3 className="font-medium mb-4">Explore By Disposability</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="#" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Explore By Disposability</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Monthly
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Day & Night
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Daily
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Yearly
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Bi-Weekly
           </Link>
         </div>
@@ -285,18 +293,18 @@ export function Header() {
 
       {/* Power */}
       <div>
-        <h3 className="font-medium mb-4">Explore By Power</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="#" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Explore By Power</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Spherical - (CYL&lt;0.5)
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Spherical + (CYL&lt;0.5)
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Cylindrical Power (&gt;0.75)
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Toric Power
           </Link>
         </div>
@@ -304,21 +312,21 @@ export function Header() {
 
       {/* Colors */}
       <div>
-        <h3 className="font-medium mb-4">Explore By Color</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="#" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Explore By Color</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Green
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Blue
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Brown
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Turquoise
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             View all Colors
           </Link>
         </div>
@@ -326,15 +334,15 @@ export function Header() {
 
       {/* Solution */}
       <div>
-        <h3 className="font-medium mb-4">Solution</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="#" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Solution</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Small
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Large
           </Link>
-          <Link href="#" className="hover:text-gray-900">
+          <Link href="#" className="hover:text-gray-900" onClick={closeMobileMenu}>
             View all Solutions
           </Link>
         </div>
@@ -347,18 +355,18 @@ export function Header() {
    * Contains information about physical store locations
    */
   const storeLocatorDropdownContent = (
-    <div className="p-8 text-center">
-      <h3 className="text-2xl font-bold mb-2">Your One Stop Shop</h3>
-      <p className="text-lg mb-1">For Eye wear Perfection</p>
-      <p className="text-gray-600 mb-4">
+    <div className="p-4 md:p-8 text-center">
+      <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">Your One Stop Shop</h3>
+      <p className="text-base md:text-lg mb-1">For Eye wear Perfection</p>
+      <p className="text-gray-600 text-sm md:text-base mb-2 md:mb-4">
         Experience eyewear in a whole new way: Visit your
         <br />
         nearest store
         <br />
         and treat yourself to 5000+ eyewear styles
       </p>
-      <Link href="/about">
-        <button className="px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition">
+      <Link href="/about" onClick={closeMobileMenu}>
+        <button className="px-4 py-2 md:px-6 md:py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition text-sm md:text-base">
           Learn More About Us
         </button>
       </Link>
@@ -370,25 +378,25 @@ export function Header() {
    * Contains information about at-home eye testing services
    */
   const homeEyeTestDropdownContent = (
-    <div className="p-6 grid grid-cols-2 gap-8">
-      <div className="bg-gray-100 rounded-lg overflow-hidden">
+    <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+      <div className="bg-gray-100 rounded-lg overflow-hidden hidden md:block"> {/* Hide image on small screens */}
         <img src="/images/people/eye-exam.png" alt="Eye Test" className="w-full h-full object-cover" />
       </div>
-      <div className="flex flex-col justify-center">
-        <p className="text-xl mb-1">
+      <div className="flex flex-col justify-center text-center md:text-left">
+        <p className="text-lg md:text-xl mb-1">
           Get your eyes checked at
           <br />
           home
         </p>
-        <div className="my-6">
-          <p className="text-gray-600">
+        <div className="my-3 md:my-6">
+          <p className="text-gray-600 text-sm md:text-base">
             A certified refractionist will visit
             <br />
             you with latest eye testing machines &<br />
             100 trial frames
           </p>
         </div>
-        <button className="px-6 py-3 bg-gray-300 text-gray-700 rounded-md cursor-not-allowed">Coming Soon</button>
+        <button className="px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-gray-700 rounded-md cursor-not-allowed text-sm md:text-base">Coming Soon</button>
       </div>
     </div>
   )
@@ -398,32 +406,32 @@ export function Header() {
    * Contains categorized links for sunglasses
    */
   const sunglassesDropdownContent = (
-    <div className="p-6 grid grid-cols-4 gap-8">
+    <div className="p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
       {/* Gender Categories with Images */}
       <div>
-        <h3 className="font-medium mb-4">Shop By Gender</h3>
-        <div className="grid gap-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+        <h3 className="font-medium mb-2 md:mb-4">Shop By Gender</h3>
+        <div className="grid gap-2 md:gap-4">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/man-glasses.png" alt="Men" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=sunglasses&gender=men" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=sunglasses&gender=men" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Men
             </Link>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/woman-glasses.png" alt="Women" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=sunglasses&gender=women" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=sunglasses&gender=women" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Women
             </Link>
           </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden">
               <img src="/images/people/kid-glasses.png" alt="Kids" className="w-full h-full object-cover" />
             </div>
-            <Link href="/products?category=sunglasses&gender=kids" className="text-sm hover:text-gray-900">
+            <Link href="/products?category=sunglasses&gender=kids" className="text-xs md:text-sm hover:text-gray-900" onClick={closeMobileMenu}>
               Kids
             </Link>
           </div>
@@ -432,15 +440,15 @@ export function Header() {
 
       {/* Our Top Picks */}
       <div>
-        <h3 className="font-medium mb-4">Our Top Picks</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="/products?category=sunglasses&topPick=polarized" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Our Top Picks</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="/products?category=sunglasses&topPick=polarized" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Polarized
           </Link>
-          <Link href="/products?category=sunglasses&topPick=mirrored" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&topPick=mirrored" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Mirrored
           </Link>
-          <Link href="/products?category=sunglasses&topPick=oversized" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&topPick=oversized" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Oversized
           </Link>
         </div>
@@ -448,67 +456,67 @@ export function Header() {
 
       {/* Frame Types */}
       <div>
-        <h3 className="font-medium mb-4">Frame Type</h3>
-        <div className="grid gap-2 text-sm">
-          <Link href="/products?category=sunglasses&frameType=rectangle-frames" className="hover:text-gray-900">
+        <h3 className="font-medium mb-2 md:mb-4">Frame Type</h3>
+        <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+          <Link href="/products?category=sunglasses&frameType=rectangle-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Rectangle Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=square-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=square-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Square Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=round-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=round-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Round Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=cat-eye-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=cat-eye-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Cat Eye Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=wayfarer-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=wayfarer-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Wayfarer Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=geometric-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=geometric-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Geometric Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=aviator-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=aviator-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Aviator Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=halfrim-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=halfrim-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Halfrim Frames
           </Link>
-          <Link href="/products?category=sunglasses&frameType=rimless-frames" className="hover:text-gray-900">
+          <Link href="/products?category=sunglasses&frameType=rimless-frames" className="hover:text-gray-900" onClick={closeMobileMenu}>
             Rimless Frames
           </Link>
         </div>
       </div>
 
       {/* Collections & Brands */}
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <div>
-          <h3 className="font-medium mb-4">Collection</h3>
-          <div className="grid gap-2 text-sm">
-            <Link href="/products?category=sunglasses&style=beach-collection" className="hover:text-gray-900">
+          <h3 className="font-medium mb-2 md:mb-4">Collection</h3>
+          <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+            <Link href="/products?category=sunglasses&style=beach-collection" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Beach Collection
             </Link>
-            <Link href="/products?category=sunglasses&style=urban-explorer" className="hover:text-gray-900">
+            <Link href="/products?category=sunglasses&style=urban-explorer" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Urban Explorer
             </Link>
-            <Link href="/products?category=sunglasses&style=driving-series" className="hover:text-gray-900">
+            <Link href="/products?category=sunglasses&style=driving-series" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Driving Series
             </Link>
-            <Link href="/products?category=sunglasses&style=luxury-line" className="hover:text-gray-900">
+            <Link href="/products?category=sunglasses&style=luxury-line" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Luxury Line
             </Link>
           </div>
         </div>
         <div>
-          <h3 className="font-medium mb-4">Brands</h3>
-          <div className="grid gap-2 text-sm">
-            <Link href="/products?category=sunglasses&brand=sunpro" className="hover:text-gray-900">
+          <h3 className="font-medium mb-2 md:mb-4">Brands</h3>
+          <div className="grid gap-1 md:gap-2 text-xs md:text-sm">
+            <Link href="/products?category=sunglasses&brand=sunpro" className="hover:text-gray-900" onClick={closeMobileMenu}>
               SunPro
             </Link>
-            <Link href="/products?category=sunglasses&brand=raystyle" className="hover:text-gray-900">
+            <Link href="/products?category=sunglasses&brand=raystyle" className="hover:text-gray-900" onClick={closeMobileMenu}>
               RayStyle
             </Link>
-            <Link href="/products?category=sunglasses&brand=coastal" className="hover:text-gray-900">
+            <Link href="/products?category=sunglasses&brand=coastal" className="hover:text-gray-900" onClick={closeMobileMenu}>
               Coastal
             </Link>
           </div>
@@ -520,18 +528,17 @@ export function Header() {
   return (
     <>
       {/* Top Navbar - Contact information and links */}
-      <div className="fixed top-0 left-0 w-full z-50 bg-gray-100 py-2 border-b">
+      <div className="fixed top-0 left-0 w-full z-50 bg-gray-100 py-1 md:py-2 border-b">
         <div className="w-full px-4 max-w-[1800px] mx-auto">
-          <div className="flex justify-between items-center text-sm text-black">
-
+          <div className="flex justify-between items-center text-xs md:text-sm text-black">
             {/* Left side items */}
-            <div className="pl-50px flex items-center space-x-4">
-              <span>Vision Redefined</span>
-              <span className="text-gray-600">|</span>
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <span className="hidden sm:inline">Vision Redefined</span> {/* Hidden on smaller screens */}
+              <span className="text-gray-600 hidden sm:inline">|</span> {/* Hidden on smaller screens */}
               <Link href="/about" className="hover:text-gray-900">
                 Store Locator
               </Link>
-              <span className="text-gray-400">|</span>
+              <span className="text-gray-400 hidden sm:inline">|</span> {/* Hidden on smaller screens */}
               <Link href="/partner" className="hover:text-gray-900">
                 Partner With Us
               </Link>
@@ -541,7 +548,6 @@ export function Header() {
             <Link href="/contact" className="hover:text-gray-900">
               Contact Us
             </Link>
-
           </div>
         </div>
       </div>
@@ -551,32 +557,33 @@ export function Header() {
       {/* Middle Navbar - Logo, search, and user actions */}
       <div
         className={`
-    h-50
-    sticky z-10
-    bg-blue-950 shadow
-    transition-transform duration-300 ease-in-out
-    ${isVisible ? "top-[40px] h-40 opacity-100 translate-y-0" : "top-[40px] opacity-0 -translate-y-full"}
-  `}
+          h-50
+          sticky z-10
+          bg-blue-950 shadow
+          transition-transform duration-300 ease-in-out
+          ${isVisible ? "top-[40px] md:top-[40px] h-auto opacity-100 translate-y-0" : "top-[40px] opacity-0 -translate-y-full"}
+        `}
       >
         <div className="bg-blue-950">
-          <div className="container w-full px-50 max-w-[1800px] mx-auto">
-            <div className="flex items-center justify-between py-8 ">
+          <div className="container w-full px-4 md:px-8 lg:px-50 max-w-[1800px] mx-auto">
+            <div className="flex items-center justify-between py-4 md:py-8 ">
               {/* Logo */}
               <Link href="/" className="flex items-center">
                 <div className="flex items-center justify-start">
                   <Image
                     src="/images/hero/logo.png"
                     alt="Logo"
-                    width={400}
-                    height={300}
+                    width={150} // Smaller on mobile
+                    height={100} // Smaller on mobile
+                    className="md:w-[400px] md:h-[100px]" // Larger on desktop
                     priority
                   />
                 </div>
               </Link>
 
-              {/* Search bar */}
-              <div className="w-full flex justify-center">
-                <div className="w-full max-w-6xl px-4 pl-80">
+              {/* Search bar - Hidden on mobile, shown on medium screens and up */}
+              <div className="hidden md:flex w-full justify-center">
+                <div className="w-full max-w-6xl px-4 lg:pl-80">
                   <div className="relative">
                     <input
                       type="text"
@@ -586,61 +593,75 @@ export function Header() {
                     <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
                 </div>
-              </div>            {/* User actions */}
-              <div className="w-full flex justify-end">
-                <div className="flex items-center space-x-6">
-                  {isAuthenticated && user ? (
-                    <>
-                      <div className="flex items-center cursor-pointer group">
-                        <User className="w-5 h-5 text-white group-hover:text-gray-900" />
-                        <span className="ml-2 text-sm text-white group-hover:text-gray-900">
-                          {user.firstName} {user.lastName}
-                        </span>
-                      </div>
-                      <Button
-                        onClick={logout}
-                        variant="ghost"
-                        size="sm"
-                        className="flex items-center text-white hover:text-gray-900 hover:bg-white/10"
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <Link href="/login" className="flex items-center cursor-pointer group">
+              </div>
+
+              {/* User actions / Mobile Menu Toggle */}
+              <div className="flex items-center space-x-4 md:space-x-6">
+                {/* Mobile Search Icon */}
+                <Search className="w-5 h-5 text-white md:hidden" />
+
+                {isAuthenticated && user ? (
+                  <>
+                    <div className="hidden md:flex items-center cursor-pointer group">
                       <User className="w-5 h-5 text-white group-hover:text-gray-900" />
-                      <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
-                    </Link>
-                  )}                <Link href="/wishlist/modern" className="flex items-center cursor-pointer group relative">
-                    <Heart className="w-5 h-5 text-white group-hover:text-gray-900" />
-                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Wishlist</span>
-                    {wishlistCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                      >
-                        {wishlistCount}
-                      </Badge>
-                    )}
+                      <span className="ml-2 text-sm text-white group-hover:text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={logout}
+                      variant="ghost"
+                      size="sm"
+                      className="hidden md:flex items-center text-white hover:text-gray-900 hover:bg-white/10"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Link href="/login" className="hidden md:flex items-center cursor-pointer group">
+                    <User className="w-5 h-5 text-white group-hover:text-gray-900" />
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Sign In & Sign Up</span>
                   </Link>
-                  <Link href="/cart/modern" className="flex items-center cursor-pointer group relative">
-                    <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
-                    <span className="ml-2 text-sm text-white group-hover:text-gray-900">Cart</span>
-                    {cartCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                      >
-                        {cartCount}
-                      </Badge>
-                    )}
-                  </Link>                {user?.role === "admin" && (
-                    <Link href="/admin" className="flex items-center cursor-pointer group">
-                      <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold">Admin</span>
-                    </Link>
+                )}
+                <Link href="/wishlist/modern" className="flex items-center cursor-pointer group relative">
+                  <Heart className="w-5 h-5 text-white group-hover:text-gray-900" />
+                  <span className="ml-2 text-sm text-white group-hover:text-gray-900 hidden md:inline">Wishlist</span> {/* Hide text on mobile */}
+                  {wishlistCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {wishlistCount}
+                    </Badge>
                   )}
-                </div>
+                </Link>
+                <Link href="/cart/modern" className="flex items-center cursor-pointer group relative">
+                  <ShoppingCart className="w-5 h-5 text-white group-hover:text-gray-900" />
+                  <span className="ml-2 text-sm text-white group-hover:text-gray-900 hidden md:inline">Cart</span> {/* Hide text on mobile */}
+                  {cartCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                    >
+                      {cartCount}
+                    </Badge>
+                  )}
+                </Link>
+                {user?.role === "admin" && (
+                  <Link href="/admin" className="flex items-center cursor-pointer group">
+                    <span className="ml-2 text-sm text-white group-hover:text-gray-900 font-semibold hidden md:inline">Admin</span> {/* Hide text on mobile */}
+                  </Link>
+                )}
+
+                {/* Mobile Menu Toggle Button */}
+                <button
+                  className="md:hidden text-white"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label="Toggle mobile menu"
+                >
+                  {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
               </div>
             </div>
           </div>
@@ -648,9 +669,10 @@ export function Header() {
       </div>
 
       <div className="h-[0.5px]" />
-      {/* Bottom Navbar - Main navigation with dropdowns */}
 
-      <nav className="p-40px z-40 h-15 bg-[#FF6600] border-t border-gray-200 transition-all duration-300 ease-in-out"
+      {/* Bottom Navbar - Main navigation with dropdowns (Desktop) */}
+      <nav
+        className="hidden md:block p-40px z-40 h-15 bg-[#FF6600] border-t border-gray-200 transition-all duration-300 ease-in-out"
         style={{
           position: "sticky",
           top: `${bottomNavbarTop}px`
@@ -722,6 +744,82 @@ export function Header() {
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-70 z-50 transform ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out md:hidden`}
+      >
+        <div className="w-64 bg-white h-full shadow-lg p-6 overflow-y-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">Menu</h2>
+            <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close mobile menu">
+              <X size={24} />
+            </button>
+          </div>
+          <nav className="flex flex-col space-y-4">
+            {/* Mobile User/Auth Links */}
+            {isAuthenticated && user ? (
+              <>
+                <Link href="/profile" className="flex items-center text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+                  <User className="w-5 h-5 mr-2" />
+                  <span>{user.firstName} {user.lastName}</span>
+                </Link>
+                <Button
+                  onClick={() => { logout(); closeMobileMenu(); }}
+                  variant="ghost"
+                  className="flex items-center justify-start text-gray-800 hover:text-blue-950 px-0"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Link href="/login" className="flex items-center text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+                <User className="w-5 h-5 mr-2" />
+                Sign In & Sign Up
+              </Link>
+            )}
+
+            <Link href="/products?category=eye-glasses" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              EYE GLASSES
+            </Link>
+            <Link href="/products?category=blue-light-glasses" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              SCREEN GLASSES
+            </Link>
+            <Link href="/products?category=kids-glasses" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              KIDS GLASSES
+            </Link>
+            <Link href="/products?category=services" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              CONTACT LENSES
+            </Link>
+            <Link href="/products?category=sunglasses" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              SUNGLASSES
+            </Link>
+            <Link href="/eye-test" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              HOME EYE-TEST
+            </Link>
+            <Link href="/about" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              STORE LOCATOR
+            </Link>
+            <Link href="/gold-membership" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              GOLD MEMBERSHIP
+            </Link>
+            {user?.role === "admin" && (
+              <Link href="/admin" className="text-gray-800 hover:text-blue-950 font-semibold" onClick={closeMobileMenu}>
+                Admin Dashboard
+              </Link>
+            )}
+            <Link href="/contact" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              Contact Us
+            </Link>
+            <Link href="/partner" className="text-gray-800 hover:text-blue-950" onClick={closeMobileMenu}>
+              Partner With Us
+            </Link>
+          </nav>
+        </div>
+      </div>
     </>
   )
 }

@@ -24,7 +24,7 @@ import Link from "next/link"
 
 interface Order {
   _id: string;
-  user: string | { _id: string; name?: string; email?: string };
+  user: string | { _id: string; firstName?: string; lastName?: string; email?: string };
   items: Array<{
     productId: string;
     name: string;
@@ -134,14 +134,13 @@ export default function AdminOrders() {
   useEffect(() => {
     filterOrders()
   }, [orders, searchTerm, statusFilter])
-
   function filterOrders() {
     let filtered = orders
 
     if (searchTerm) {
       filtered = filtered.filter(order => {
         const userInfo = typeof order.user === 'object' ? order.user : null
-        const userName = userInfo?.name || ""
+        const userName = userInfo ? `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() : ""
         const userEmail = userInfo?.email || ""
         
         return (
@@ -422,12 +421,13 @@ export default function AdminOrders() {
                     <TableRow key={order._id}>
                       <TableCell className="font-mono text-sm">
                         {order._id.slice(-8)}
-                      </TableCell>
-                      <TableCell>
-                        {typeof order.user === 'object' ? (
+                      </TableCell>                      <TableCell>
+                        {order.user && typeof order.user === 'object' ? (
                           <div>
-                            <div className="font-medium">{order.user.name || 'Unknown'}</div>
-                            <div className="text-sm text-gray-500">{order.user.email || ''}</div>
+                            <div className="font-medium">
+                              {order.user.firstName} {order.user.lastName}
+                            </div>
+                            <div className="text-sm text-gray-500">{order.user.email}</div>
                           </div>
                         ) : (
                           <span className="text-gray-500">Guest User</span>

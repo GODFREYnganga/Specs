@@ -101,7 +101,7 @@ export function FeaturedProducts() {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/products')
+        const response = await fetch('/api/eyewear-products?featured=true&limit=8')
         if (!response.ok) {
           throw new Error('Failed to fetch products')
         }

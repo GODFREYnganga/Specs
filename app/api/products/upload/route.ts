@@ -9,13 +9,12 @@ export async function POST(request: Request) {
   const file = formData.get("file") as File
   if (!file) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 })
-  }
-  const buffer = Buffer.from(await file.arrayBuffer())
+  }  const buffer = Buffer.from(await file.arrayBuffer())
   const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "-")}`
-  const uploadDir = path.join(process.cwd(), "public", "images", "products")
+  const uploadDir = path.join(process.cwd(), "public", "images", "eyewear-products")
   await fs.mkdir(uploadDir, { recursive: true })
   const filePath = path.join(uploadDir, filename)
   await fs.writeFile(filePath, buffer)
-  const url = `/images/products/${filename}`
+  const url = `/images/eyewear-products/${filename}`
   return NextResponse.json({ url })
 }

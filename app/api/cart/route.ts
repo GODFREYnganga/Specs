@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Cart from "@/models/Cart"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 import Settings from "@/models/Settings"
 import jwt from "jsonwebtoken"
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from JWT token, fallback to body
     const userId = getUserIdFromRequest(request) || bodyUserId
     console.log("🛒 Cart POST - User ID:", userId)
-    console.log("📦 Cart POST - Item:", { productId, name, price, quantity, color })
+    console.log("📦 Cart POST - Item:", { productId, name, price, quantity, color, image })
     
     if (!productId || !name || !price || !quantity || !color || !image) {
       console.log("❌ Missing required fields:", { productId, name, price, quantity, color, image })
@@ -86,10 +86,8 @@ export async function POST(request: NextRequest) {
         success: true,
         item: { productId, name, price, quantity, color, image }
       })
-    }
-
-    // Verify product exists
-    const product = await Product.findById(productId)
+    }    // Verify product exists
+    const product = await EyewearProduct.findById(productId)
     if (!product) {
       console.log("❌ Product not found:", productId)
       return NextResponse.json({ error: "Product not found" }, { status: 404 })

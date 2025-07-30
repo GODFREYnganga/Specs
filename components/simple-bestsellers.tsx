@@ -68,7 +68,7 @@ export function SimpleBestsellers() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products?limit=4&featured=true')
+        const response = await fetch('/api/eyewear-products?limit=4&featured=true')
         if (response.ok) {
           const data = await response.json()
           setProducts(data.products || fallbackProducts)

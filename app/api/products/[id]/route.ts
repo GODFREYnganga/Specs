@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb";
-const Product = require("@/models/Product");
+const Product = require("@/models/EyewearProduct");
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {

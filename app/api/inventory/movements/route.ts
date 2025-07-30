@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 
 // Get stock movements
 export async function GET() {

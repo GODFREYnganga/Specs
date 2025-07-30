@@ -51,6 +51,14 @@ export default function AdminEditProduct() {
   }
 
   const handleImageInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    
+    // If the value doesn't start with http or /, and doesn't already include the subfolder path,
+    // prepend the eyewear-products folder path
+    if (!value.startsWith('http') && !value.startsWith('/') && !value.includes('/eyewear-products/')) {
+      e.target.value = `/images/eyewear-products/${value}`
+    }
+    
     handleChange(e)
     setImagePreview(e.target.value)
   }

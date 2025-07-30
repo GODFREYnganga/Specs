@@ -1,9 +1,12 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose"
 
 const CartItemSchema = new mongoose.Schema({
+  id: {
+    type: String,
+  },
   productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
+    ref: "EyewearProduct",
     required: true,
   },
   name: {
@@ -99,4 +102,5 @@ CartSchema.pre('save', function(next) {
   next()
 })
 
-module.exports = mongoose.models.Cart || mongoose.model("Cart", CartSchema)
+const Cart = mongoose.models.Cart || mongoose.model("Cart", CartSchema)
+export default Cart

@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCart } from '@/hooks/use-modern-cart'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 
 interface ShippingOption {
   id: string
@@ -46,6 +47,7 @@ interface StoreSettings {
 export default function ModernCheckoutPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { user, isAuthenticated, loading: authLoading } = useAuth()
   
   const { 
     items, 
@@ -78,13 +80,13 @@ export default function ModernCheckoutPage() {
     
     // Shipping Method
     shippingMethod: '',
-    
-    // Payment Information
+      // Payment Information
     paymentMethod: 'card',
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardName: '',
+    mpesaPhone: '', // Add M-Pesa phone number field
     
     // Billing Address
     billingAddressSameAsShipping: true,
@@ -103,13 +105,37 @@ export default function ModernCheckoutPage() {
     subscribeNewsletter: false,
     specialInstructions: ''
   })
-
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to continue with checkout.',
+        variant: 'destructive'
+      })
+      router.push('/login?redirect=/checkout/modern')
+      return
+    }
+    
+    // Pre-fill form with user data if available
+    if (user && isAuthenticated) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || ''
+      }))
+    }
+  }, [authLoading, isAuthenticated, user, router, toast])
 
   // Load store settings and shipping options
   useEffect(() => {
-    loadInitialData()
-  }, [])
+    if (isAuthenticated) {
+      loadInitialData()
+    }
+  }, [isAuthenticated])
 
   // Recalculate totals when shipping method changes
   useEffect(() => {    if (formData.shippingMethod) {
@@ -178,14 +204,18 @@ export default function ModernCheckoutPage() {
       if (storeSettings?.requirePhoneNumber && !formData.phone) {
         newErrors.phone = 'Phone number is required'
       }
-    }
-
-    if (currentStep === 'payment') {
+    }    if (currentStep === 'payment') {
       if (formData.paymentMethod === 'card') {
         if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required'
         if (!formData.expiryDate) newErrors.expiryDate = 'Expiry date is required'
         if (!formData.cvv) newErrors.cvv = 'CVV is required'
         if (!formData.cardName) newErrors.cardName = 'Cardholder name is required'
+      } else if (formData.paymentMethod === 'mpesa') {
+        if (!formData.mpesaPhone) {
+          newErrors.mpesaPhone = 'M-Pesa phone number is required'
+        } else if (!/^254\d{9}$/.test(formData.mpesaPhone.replace(/\s/g, ''))) {
+          newErrors.mpesaPhone = 'Please enter a valid Kenyan phone number (e.g., 254712345678)'
+        }
       }
     }
 
@@ -235,7 +265,6 @@ export default function ModernCheckoutPage() {
     }
     return v
   }
-
   const handlePlaceOrder = async () => {
     if (!validateStep('payment')) return
 
@@ -283,26 +312,65 @@ export default function ModernCheckoutPage() {
             expiryDate: formData.expiryDate,
             cvv: formData.cvv,
             cardName: formData.cardName
+          }),
+          ...(formData.paymentMethod === 'mpesa' && {
+            phoneNumber: formData.mpesaPhone
           })
         },
         totals: totals,
         appliedCoupon: appliedCoupon,
         specialInstructions: formData.specialInstructions,
         subscribeNewsletter: formData.subscribeNewsletter
-      }
-
+      }      // Create the order first
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify(orderData)
       })
 
-      if (response.ok) {
-        const order = await response.json()
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to create order')
+      }
+
+      const order = await response.json()
+      
+      // If payment method is M-Pesa, initiate STK Push
+      if (formData.paymentMethod === 'mpesa') {
+        const mpesaResponse = await fetch('/api/mpesa/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phoneNumber: formData.mpesaPhone,
+            amount: totals.total,
+            orderId: order._id
+          })
+        })
+
+        const mpesaResult = await mpesaResponse.json()
         
-        // Clear cart after successful order
+        if (mpesaResponse.ok && mpesaResult.success) {
+          toast({
+            title: 'M-Pesa payment initiated',
+            description: 'Please check your phone and enter your M-Pesa PIN to complete the payment.'
+          })
+          
+          // Clear cart after initiating M-Pesa payment
+          await clearCart()
+          
+          // Redirect to payment status page
+          router.push(`/orders/${order._id}/payment-status?checkoutRequestId=${mpesaResult.data.CheckoutRequestID}`)
+        } else {
+          throw new Error(mpesaResult.message || 'Failed to initiate M-Pesa payment')
+        }
+      } else {
+        // For other payment methods, proceed normally
         await clearCart()
         
         toast({
@@ -310,11 +378,7 @@ export default function ModernCheckoutPage() {
           description: `Your order #${order.orderNumber} has been confirmed.`
         })
 
-        // Redirect to order confirmation
-        router.push(`/orders/${order.id}/confirmation`)
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to place order')
+        router.push(`/orders/${order._id}/confirmation`)
       }
     } catch (error) {
       console.error('Error placing order:', error)
@@ -682,9 +746,7 @@ export default function ModernCheckoutPage() {
                         </div>
                       ))}
                     </RadioGroup>
-                  </div>
-
-                  {/* Card Details */}
+                  </div>                  {/* Card Details */}
                   {formData.paymentMethod === 'card' && (
                     <div className="space-y-4">
                       <div>
@@ -738,6 +800,47 @@ export default function ModernCheckoutPage() {
                           className={errors.cardName ? 'border-red-500' : ''}
                         />
                         {errors.cardName && <p className="text-sm text-red-500 mt-1">{errors.cardName}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* M-Pesa Details */}
+                  {formData.paymentMethod === 'mpesa' && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-700 mb-2">
+                          <Phone className="h-4 w-4" />
+                          <span className="font-medium">M-Pesa Payment</span>
+                        </div>
+                        <p className="text-sm text-green-600">
+                          You will receive an STK push notification on your phone to complete the payment.
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="mpesaPhone">M-Pesa Phone Number *</Label>
+                        <Input
+                          id="mpesaPhone"
+                          value={formData.mpesaPhone}
+                          onChange={(e) => {
+                            // Format phone number as user types
+                            let value = e.target.value.replace(/\D/g, '')
+                            if (value.length <= 12) {
+                              if (value.startsWith('0')) {
+                                value = '254' + value.slice(1)
+                              } else if (!value.startsWith('254')) {
+                                value = '254' + value
+                              }
+                              handleInputChange('mpesaPhone', value)
+                            }
+                          }}
+                          placeholder="254712345678"
+                          className={errors.mpesaPhone ? 'border-red-500' : ''}
+                        />
+                        {errors.mpesaPhone && <p className="text-sm text-red-500 mt-1">{errors.mpesaPhone}</p>}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Enter your phone number in format: 254712345678
+                        </p>
                       </div>
                     </div>
                   )}

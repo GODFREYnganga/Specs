@@ -327,9 +327,17 @@ export default function AdminOrderDetail() {
                 <User className="h-5 w-5" />
                 Customer
               </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="font-medium">{order.user}</p>
+            </CardHeader>            <CardContent>
+              {order.user && typeof order.user === 'object' ? (
+                <div className="space-y-2">
+                  <p className="font-medium">
+                    {order.user.firstName} {order.user.lastName}
+                  </p>
+                  <p className="text-sm text-gray-600">{order.user.email}</p>
+                </div>
+              ) : (
+                <p className="text-gray-500">Guest User</p>
+              )}
             </CardContent>
           </Card>
 

@@ -175,97 +175,106 @@ export default function WishlistPage() {
 				return 0 // date-added (maintain original order)
 		}
 	})
-
 	if (loading) {
 		return (
-			<div className="container px-4 md:px-6 py-8">
-				<div className="flex items-center justify-center h-64">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+			<div className="container px-3 sm:px-4 md:px-6 py-4 sm:py-6 lg:py-8">
+				<div className="flex items-center justify-center h-32 sm:h-64">
+					<div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-gray-900"></div>
 				</div>
 			</div>
 		)
 	}
-
 	return (
-		<div className="container px-4 md:px-6 py-8">
+		<div className="container px-3 sm:px-4 md:px-6 py-4 sm:py-6 lg:py-8">
 			{/* Breadcrumb */}
-			<Link href="/products" className="flex items-center gap-2 text-sm mb-6 hover:underline">
+			<Link href="/products" className="flex items-center gap-2 text-sm mb-4 sm:mb-6 hover:underline">
 				<ArrowLeft className="h-4 w-4" />
 				Continue Shopping
-			</Link>			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-3xl font-bold">My Wishlist</h1>				<div className="flex items-center gap-4">
+			</Link>
+
+			<div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+				<h1 className="text-2xl sm:text-3xl font-bold">My Wishlist</h1>
+
+				<div className="flex items-center gap-2 sm:gap-4">
 					{items.length > 0 && (
 						<>
-							<Badge variant="secondary" className="text-sm">
+							<Badge variant="secondary" className="text-xs sm:text-sm">
 								{items.length} {items.length === 1 ? 'item' : 'items'}
 							</Badge>
 							<Button variant="outline" size="sm" onClick={shareWishlist}>
 								<Share2 className="h-4 w-4 mr-2" />
-								Share
+								<span className="hidden sm:inline">Share</span>
+								<span className="sm:hidden">Share</span>
 							</Button>
 						</>
 					)}
 				</div>
-			</div>
-
-			{items.length > 0 && (
-				<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-					<div className="flex items-center gap-4">
+			</div>			{items.length > 0 && (
+				<div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4 sm:mb-6">
+					<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full lg:w-auto">
 						<ToggleGroup 
 							type="single" 
 							value={viewMode} 
 							onValueChange={(value) => value && setViewMode(value as "grid" | "list")}
+							className="grid grid-cols-2 w-full sm:w-auto"
 						>
-							<ToggleGroupItem value="grid" aria-label="Grid view">
-								<Grid className="h-4 w-4" />
+							<ToggleGroupItem value="grid" aria-label="Grid view" className="text-xs sm:text-sm">
+								<Grid className="h-4 w-4 mr-1 sm:mr-0" />
+								<span className="sm:hidden">Grid</span>
 							</ToggleGroupItem>
-							<ToggleGroupItem value="list" aria-label="List view">
-								<List className="h-4 w-4" />
+							<ToggleGroupItem value="list" aria-label="List view" className="text-xs sm:text-sm">
+								<List className="h-4 w-4 mr-1 sm:mr-0" />
+								<span className="sm:hidden">List</span>
 							</ToggleGroupItem>
 						</ToggleGroup>
 
-						<Select value={sortBy} onValueChange={setSortBy}>
-							<SelectTrigger className="w-40">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="date-added">Date Added</SelectItem>
-								<SelectItem value="name">Name A-Z</SelectItem>
-								<SelectItem value="price-low">Price: Low to High</SelectItem>
-								<SelectItem value="price-high">Price: High to Low</SelectItem>
-							</SelectContent>
-						</Select>
+						<div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+							<Select value={sortBy} onValueChange={setSortBy}>
+								<SelectTrigger className="w-full sm:w-40 text-sm">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="date-added">Date Added</SelectItem>
+									<SelectItem value="name">Name A-Z</SelectItem>
+									<SelectItem value="price-low">Price: Low to High</SelectItem>
+									<SelectItem value="price-high">Price: High to Low</SelectItem>
+								</SelectContent>
+							</Select>
 
-						<Select value={filterBy} onValueChange={setFilterBy}>
-							<SelectTrigger className="w-32">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All Items</SelectItem>
-								<SelectItem value="sunglasses">Sunglasses</SelectItem>
-								<SelectItem value="reading">Reading</SelectItem>
-								<SelectItem value="computer">Computer</SelectItem>
-							</SelectContent>
-						</Select>
+							<Select value={filterBy} onValueChange={setFilterBy}>
+								<SelectTrigger className="w-full sm:w-32 text-sm">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All Items</SelectItem>
+									<SelectItem value="sunglasses">Sunglasses</SelectItem>
+									<SelectItem value="reading">Reading</SelectItem>
+									<SelectItem value="computer">Computer</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
-					
-					<p className="text-sm text-muted-foreground">
-						Save items you love for later or move them to your cart
-					</p>
+
+					<div className="w-full lg:w-auto">
+						<p className="text-xs sm:text-sm text-muted-foreground text-center lg:text-right">
+							Save items you love for later or move them to your cart
+						</p>
+					</div>
 				</div>
-			)}			{filteredWishlist.length > 0 ? (
-				<div className="space-y-6">
+			)}{filteredWishlist.length > 0 ? (				<div className="space-y-4 sm:space-y-6">
 					{/* Wishlist Actions */}
-					<div className="flex justify-between items-center">
+					<div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
 						<div className="flex gap-2">
 							<Button
 								variant="outline"
 								size="sm"
 								onClick={handleAddAllToCart}
 								disabled={isUpdating}
+								className="text-sm"
 							>
 								<ShoppingCart className="h-4 w-4 mr-2" />
-								Move All to Cart
+								<span className="hidden sm:inline">Move All to Cart</span>
+								<span className="sm:hidden">Move All</span>
 							</Button>
 						</div>
 					</div>
@@ -273,11 +282,10 @@ export default function WishlistPage() {
 					{/* Wishlist Grid/List */}
 					<div className={
 						viewMode === "grid" 
-							? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-							: "space-y-4"
+							? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6"
+							: "space-y-3 sm:space-y-4"
 					}>
-						{filteredWishlist.map((item) => (
-							viewMode === "grid" ? (
+						{filteredWishlist.map((item) => (							viewMode === "grid" ? (
 								<Card key={`${item.id}-${item.color || 'default'}`} className="group hover:shadow-lg transition-shadow">
 									<CardHeader className="p-0">
 										<div className="relative aspect-square overflow-hidden rounded-t-lg">
@@ -286,28 +294,30 @@ export default function WishlistPage() {
 												alt={item.name}
 												className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 											/>
-											<div className="absolute top-2 right-2 space-y-2">
+											<div className="absolute top-1 sm:top-2 right-1 sm:right-2 space-y-1 sm:space-y-2">
 												<Button
 													variant="secondary"
 													size="sm"
-													className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+													className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
 													asChild
 												>
 													<Link href={`/products/${item.productId || item.id}`}>
-														<Eye className="h-4 w-4" />
+														<Eye className="h-3 w-3 sm:h-4 sm:w-4" />
 													</Link>
-												</Button>												<Button
+												</Button>
+
+												<Button
 													variant="secondary"
 													size="sm"
-													className="h-8 w-8 p-0 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+													className="h-6 w-6 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
 													onClick={() => handleRemoveFromWishlist(item.id)}
 													disabled={isUpdating}
 												>
-													<Trash2 className="h-4 w-4" />
+													<Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
 												</Button>
 											</div>
 											{item.color && (
-												<div className="absolute bottom-2 left-2">
+												<div className="absolute bottom-1 sm:bottom-2 left-1 sm:left-2">
 													<Badge variant="secondary" className="text-xs">
 														{item.color}
 													</Badge>
@@ -315,38 +325,41 @@ export default function WishlistPage() {
 											)}
 										</div>
 									</CardHeader>
-									<CardContent className="p-4">										<div className="space-y-2">
+									<CardContent className="p-3 sm:p-4">
+										<div className="space-y-2">
 											<Link 
 												href={`/products/${item.productId || item.id}`}
-												className="font-medium hover:underline line-clamp-2"
+												className="font-medium hover:underline line-clamp-2 text-sm sm:text-base"
 											>
 												{item.name}
 											</Link>
 											<div className="flex items-center justify-between">
-												<span className="text-lg font-bold">
+												<span className="text-base sm:text-lg font-bold">
 													KSh {(item.price / 100).toFixed(2)}
 												</span>
 											</div>
 											{item.notes && (
-												<p className="text-sm text-muted-foreground line-clamp-2">
+												<p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
 													{item.notes}
 												</p>
 											)}
 										</div>
 									</CardContent>
-									<CardFooter className="p-4 pt-0 space-y-2">
+									<CardFooter className="p-3 sm:p-4 pt-0 space-y-2">
 										<Button
-											className="w-full"
+											className="w-full text-sm"
+											size="sm"
 											onClick={() => handleMoveToCart(item)}
 											disabled={isUpdating}
 										>
-											<ShoppingCart className="h-4 w-4 mr-2" />
+											<ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
 											Move to Cart
 										</Button>
-										<div className="flex gap-2 w-full">
+										<div className="flex gap-1 sm:gap-2 w-full">
 											<Button
 												variant="outline"
-												className="flex-1"
+												className="flex-1 text-xs sm:text-sm"
+												size="sm"
 												onClick={() => handleAddToCart(item)}
 												disabled={isUpdating}
 											>
@@ -355,82 +368,91 @@ export default function WishlistPage() {
 											<Button
 												variant="outline"
 												size="sm"
-												className="px-3"
+												className="px-2 sm:px-3"
 												asChild
 											>
 												<Link href={`/products/${item.productId || item.id}`}>
-													<Eye className="h-4 w-4" />
+													<Eye className="h-3 w-3 sm:h-4 sm:w-4" />
 												</Link>
 											</Button>
 										</div>
 									</CardFooter>
-								</Card>
-							) : (
+								</Card>							) : (
 								<Card key={`${item.id}-${item.color || 'default'}`}>
-									<CardContent className="p-4">
-										<div className="flex gap-4">
-											<div className="w-24 h-24 relative overflow-hidden rounded-lg border">
+									<CardContent className="p-3 sm:p-4">
+										<div className="flex gap-3 sm:gap-4">
+											<div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 relative overflow-hidden rounded-lg border flex-shrink-0">
 												<img
 													src={item.image || "/placeholder.svg"}
 													alt={item.name}
 													className="w-full h-full object-cover"
 												/>
 											</div>
-											<div className="flex-1 space-y-2">
-												<div className="flex justify-between items-start">
-													<div>
+											<div className="flex-1 space-y-2 min-w-0">
+												<div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2">
+													<div className="flex-1 min-w-0">
 														<Link 
 															href={`/products/${item.productId || item.id}`}
-															className="font-medium hover:underline"
+															className="font-medium hover:underline text-sm sm:text-base block line-clamp-2"
 														>
 															{item.name}
 														</Link>
 														{item.color && (
-															<Badge variant="outline" className="ml-2 text-xs">
+															<Badge variant="outline" className="mt-1 text-xs">
 																{item.color}
 															</Badge>
 														)}
 													</div>
-													<span className="text-lg font-bold">
+													<span className="text-base sm:text-lg font-bold flex-shrink-0">
 														KSh {(item.price / 100).toFixed(2)}
 													</span>
-												</div>												{item.notes && (
-													<p className="text-sm text-muted-foreground line-clamp-1">
+												</div>
+
+												{item.notes && (
+													<p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
 														{item.notes}
 													</p>
 												)}
-												<div className="flex gap-2 pt-2">
+												<div className="flex flex-wrap gap-1 sm:gap-2 pt-1 sm:pt-2">
 													<Button
 														size="sm"
 														onClick={() => handleMoveToCart(item)}
 														disabled={isUpdating}
+														className="text-xs sm:text-sm"
 													>
-														<ShoppingCart className="h-4 w-4 mr-2" />
-														Move to Cart
+														<ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+														<span className="hidden sm:inline">Move to Cart</span>
+														<span className="sm:hidden">Move</span>
 													</Button>
 													<Button
 														variant="outline"
 														size="sm"
 														onClick={() => handleAddToCart(item)}
 														disabled={isUpdating}
+														className="text-xs sm:text-sm"
 													>
-														Add to Cart
+														<span className="hidden sm:inline">Add to Cart</span>
+														<span className="sm:hidden">Add</span>
 													</Button>
 													<Button
 														variant="outline"
 														size="sm"
 														asChild
+														className="px-2 sm:px-3"
 													>
 														<Link href={`/products/${item.productId || item.id}`}>
-															<Eye className="h-4 w-4" />
+															<Eye className="h-3 w-3 sm:h-4 sm:w-4" />
 														</Link>
-													</Button>													<Button
+													</Button>
+
+													<Button
 														variant="outline"
 														size="sm"
 														onClick={() => handleRemoveFromWishlist(item.id)}
 														disabled={isUpdating}
+														className="px-2 sm:px-3 text-red-600 hover:text-red-700"
 													>
-														<Trash2 className="h-4 w-4" />
+														<Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
 													</Button>
 												</div>
 											</div>
@@ -439,20 +461,18 @@ export default function WishlistPage() {
 								</Card>
 							)
 						))}
-					</div>
-
-					{/* Related Products or Recommendations */}
-					<div className="mt-12">
+					</div>					{/* Related Products or Recommendations */}
+					<div className="mt-8 sm:mt-12">
 						<Card>
 							<CardHeader>
-								<CardTitle>You might also like</CardTitle>
+								<CardTitle className="text-base sm:text-lg">You might also like</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<div className="text-center py-8">
-									<p className="text-muted-foreground mb-4">
+								<div className="text-center py-6 sm:py-8">
+									<p className="text-muted-foreground mb-4 text-sm sm:text-base px-4">
 										Discover more products similar to your wishlist items
 									</p>
-									<Button asChild variant="outline">
+									<Button asChild variant="outline" size="sm">
 										<Link href="/products">
 											Browse All Products
 										</Link>
@@ -463,11 +483,11 @@ export default function WishlistPage() {
 					</div>
 				</div>
 			) : (
-				<Card className="text-center py-12">
+				<Card className="text-center py-8 sm:py-12">
 					<CardContent>
-						<Heart className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-						<h2 className="text-2xl font-bold mb-2">Your wishlist is empty</h2>
-						<p className="text-muted-foreground mb-6">
+						<Heart className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+						<h2 className="text-xl sm:text-2xl font-bold mb-2">Your wishlist is empty</h2>
+						<p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base px-4">
 							Save your favorite items by clicking the heart icon on any product.
 						</p>
 						<Button asChild size="lg">

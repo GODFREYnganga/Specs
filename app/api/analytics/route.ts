@@ -3,7 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { Analytics, Metrics } = require("../../../models/Analytics")
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const Product = require("../../../models/Product")
+const Product = require("../../../models/EyewearProduct")
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Order = require("../../../models/Order")
 

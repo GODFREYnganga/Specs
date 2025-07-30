@@ -40,11 +40,10 @@ export default function AdminLogin() {
       setLoading(false)
     }
   }
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Card className="max-w-md w-full p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+      <Card className="max-w-md w-full p-6 sm:p-8">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center">Admin Login</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             name="email"
@@ -53,6 +52,7 @@ export default function AdminLogin() {
             value={form.email}
             onChange={handleChange}
             required
+            className="text-sm sm:text-base"
           />
           <Input
             name="password"
@@ -61,9 +61,10 @@ export default function AdminLogin() {
             value={form.password}
             onChange={handleChange}
             required
+            className="text-sm sm:text-base"
           />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          {error && <div className="text-red-500 text-xs sm:text-sm">{error}</div>}
+          <Button type="submit" className="w-full text-sm sm:text-base" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>

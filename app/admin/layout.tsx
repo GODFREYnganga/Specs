@@ -40,54 +40,57 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 	}, [router])
 
 	if (loading) {
-		return (
-			<html lang="en" suppressHydrationWarning>
-				<head>
-					<title>Admin Dashboard - Loading</title>
-				</head>
-				<body>
-					<div className="flex items-center justify-center min-h-screen">
-						<span className="text-lg font-semibold">Loading...</span>
+		return (		<html lang="en" suppressHydrationWarning>
+			<head>
+				<title>Admin Dashboard - Loading</title>
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+			</head>
+			<body>
+				<div className="flex items-center justify-center min-h-screen p-4">
+					<div className="text-center">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+						<span className="text-sm sm:text-lg font-semibold">Loading...</span>
 					</div>
-				</body>
-			</html>
+				</div>
+			</body>
+		</html>
 		)
 	}
 
 	if (!isAdmin) {
-		return (
-			<html lang="en" suppressHydrationWarning>
-				<head>
-					<title>Admin Login</title>
-				</head>
-				<body>
-					<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-						<AuthProvider>
-							<div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-								{children}
-							</div>
-							<Toaster />
-						</AuthProvider>
-					</ThemeProvider>
-				</body>
-			</html>
+		return (		<html lang="en" suppressHydrationWarning>
+			<head>
+				<title>Admin Login</title>
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+			</head>
+			<body>
+				<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+					<AuthProvider>
+						<div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+							{children}
+						</div>
+						<Toaster />
+					</AuthProvider>
+				</ThemeProvider>
+			</body>
+		</html>
 		)
 	}
 
 	// Only render the main dashboard content with clean layout (no navbar/footer)
-	return (
-		<html lang="en" suppressHydrationWarning>
+	return (		<html lang="en" suppressHydrationWarning>
 			<head>
 				<title>Admin Dashboard - Spectacles Ecommerce</title>
 				<meta name="description" content="Admin Dashboard for Spectacles Ecommerce" />
 				<meta name="robots" content="noindex, nofollow" />
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
 			</head>
 			<body>
 				<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
 					<AuthProvider>
 						<div className="min-h-screen bg-background text-foreground">
 							<div className="w-full h-full">
-								<main className="px-4 py-4">
+								<main className="px-2 py-2 sm:px-4 sm:py-4">
 									{children}
 								</main>
 							</div>

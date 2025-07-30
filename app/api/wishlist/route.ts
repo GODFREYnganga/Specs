@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Wishlist from "@/models/Wishlist"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 import jwt from "jsonwebtoken"
 
 interface WishlistItem {
@@ -84,10 +84,8 @@ export async function POST(request: NextRequest) {
         success: true,
         item: { productId, name, price, color, image }
       })
-    }
-
-    // Verify product exists
-    const product = await Product.findById(productId)
+    }    // Verify product exists
+    const product = await EyewearProduct.findById(productId)
     if (!product) {
       console.log("❌ Product not found:", productId)
       return NextResponse.json({ error: "Product not found" }, { status: 404 })

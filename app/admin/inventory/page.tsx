@@ -97,7 +97,7 @@ export default function InventoryManagement() {
       if (showLoading) setLoading(true)
       
       const [productsRes, movementsRes, suppliersRes] = await Promise.all([
-        fetch("/api/products"),
+        fetch("/api/eyewear-products"),
         fetch("/api/inventory/movements"),
         fetch("/api/inventory/suppliers")
       ])

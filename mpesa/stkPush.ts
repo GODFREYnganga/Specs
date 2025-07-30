@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const initiateStkPush = async (phone: string, amount: number) => {
+export const initiateStkPush = async (phone: string, amount: number, orderId?: string) => {
   const token = await getAccessToken();
   const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
   const password = Buffer.from(`${process.env.SHORTCODE}${process.env.PASSKEY}${timestamp}`).toString('base64');
@@ -18,9 +18,9 @@ export const initiateStkPush = async (phone: string, amount: number) => {
     PartyA: phone,
     PartyB: process.env.SHORTCODE!,
     PhoneNumber: phone,
-    CallBackURL: `${process.env.BASE_URL}/mpesa/callback`,
-    AccountReference: "Test123",
-    TransactionDesc: "Payment"
+    CallBackURL: `${process.env.BASE_URL}/api/mpesa/callback`,
+    AccountReference: orderId || `ORDER-${Date.now()}`,
+    TransactionDesc: `Payment for ${orderId || 'Order'}`
   };
 
   const response = await axios.post(

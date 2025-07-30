@@ -26,9 +26,15 @@ interface Product {
   _id: string
   name: string
   price: number
+  sale_price?: number
+  mrp?: number
   category: string
   image?: string
+  images?: string[] // Added missing images array field
   description?: string
+  product_description?: string // From bulk upload
+  short_technical_information?: string // From bulk upload
+  long_technical_information?: string // From bulk upload
   frameShape?: string
   frameType?: string
   gender?: string
@@ -40,16 +46,23 @@ interface Product {
   color?: string
   brand?: string
   size?: string
+  // Additional image fields from bulk upload
+  "IMAGE 1"?: string
+  "IMAGE 2"?: string
+  "IMAGE 3"?: string
+  "IMAGE 4"?: string
+  "IMAGE 5"?: string
 }
 
 // Update the interface for the Category type to match our enhanced structure
 interface Category {
   id: string
   title: string
-  options: { value: string; label: string }[]
+  options: { value: string; label: string; colorCode?: string }[]
 }
 
 // Update the filter sections to match the requested layout
+
 const filterSections: Category[] = [
   {
     id: "price-range",
@@ -233,7 +246,8 @@ interface FiltersState {
   priceRange: [number, number];
   searchQuery: string;
   sortBy: string;
-  [key: string]: string[] | [number, number] | string; // Index signature
+  frameShape?: string;
+  [key: string]: string[] | [number, number] | string | undefined; // Index signature
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -270,43 +284,34 @@ const [bannerError, setBannerError] = useState(false);
     screenglasses: {
       title: "Screen Glasses for Digital Life",
       description: "Reduce eye strain and look great with our blue-light filtering screen glasses.",
-      banner: "/images/Screen Glasses/2h-media-HifdOfMgSls-unsplash.jpg",
+      banner: "images/Screen Glasses/screenglasses-banner.jpg",
     },
     kidsglasses: {
       title: "Kids Glasses – Fun & Safe",
       description: "Flexible, impact-resistant, and colorful glasses designed just for kids.",
-      banner: "/images/Kids Glasses/frank-mckenna-LhOjrOlcLx4-unsplash.jpg",
+      banner: "images/Kids Glasses/frank-mckenna-LhOjrOlcLx4-unsplash.jpg",
     },
     contactlenses: {
-      title: "Contact Lenses – All-Day Comfort",
-      description: "Experience clear vision and comfort with our premium contact lenses.",
-      banner: "/images/Contact Lenses/IMG-20250604-WA0006.jpg",
+      title: "Sun Glasses for Every Adventure",
+      description: "Protect your eyes in style with our range of UV-protected sunglasses. Perfect for any occasion.",
+      banner: "/images/Sun Glasses/aviator-sunglasses.jpg",
     },
   };
 
   const currentCategorySlug = categoryParam.toLowerCase();
   const dbCategories = React.useMemo(() => getDbCategoriesFromNav(currentCategorySlug), [currentCategorySlug]);
-
   const hero = categoryContent[currentCategorySlug] || {
     title: "All Products",
     description: "Browse our full collection of eyewear and accessories.",
     banner: "/placeholder.jpg",
-  };
-
-  const { addToCart } = useCart()
+  };  const cart = useCart()
   const { toast } = useToast()
-  const { addToWishlist, isInWishlist, removeFromWishlist } = useWishlist()
-
-  const { data: allProducts = [], error, isLoading } = useSWR(
-    "/api/products",
-    fetcher,
-    { refreshInterval: 3000 }
-  )
-
+  const wishlist = useWishlist()
+  
   const [isClient, setIsClient] = useState(false)
- const [filters, setFilters] = useState(() => {
+  const [filters, setFilters] = useState<FiltersState>(() => {
   // Initialize with all filter sections as empty arrays
-  const initialFilters: Record<string, string[] | [number, number]> = {
+  const initialFilters: FiltersState = {
     categories: categoryParam ? [categoryParam] : [],
     priceRange: [0, 100000],
     searchQuery: "",
@@ -319,9 +324,61 @@ const [bannerError, setBannerError] = useState(false);
       initialFilters[section.id] = [];
     }
   });
-
   return initialFilters;
 });
+
+  // Build API URL with filter parameters
+  const apiUrl = React.useMemo(() => {
+    // Return null during server-side rendering to prevent window access
+    if (!isClient) return null;
+    
+    // Only create URL when running in client-side environment
+    const url = new URL("/api/eyewear-products", window.location.origin);
+    
+    // Add category filters
+    if (filters?.categories?.length) {
+      url.searchParams.append("category", filters.categories.join(","));
+    }
+    
+    // Add price range filters
+    if (filters?.priceRange) {
+      url.searchParams.append("priceMin", String(filters.priceRange[0]));
+      url.searchParams.append("priceMax", String(filters.priceRange[1]));
+    }
+    
+    // Add search query
+    if (filters?.searchQuery) {
+      url.searchParams.append("search", filters.searchQuery);
+    }
+    
+    // Add sort parameter
+    if (filters?.sortBy) {
+      url.searchParams.append("sort", filters.sortBy);
+    }
+    
+    // Add other dynamic filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (
+        key !== 'categories' && 
+        key !== 'priceRange' && 
+        key !== 'searchQuery' && 
+        key !== 'sortBy' &&
+        Array.isArray(value) && 
+        value.length > 0
+      ) {
+        url.searchParams.append(key, value.join(","));
+      }
+    });
+    
+    return url.toString();
+  }, [filters, isClient]);
+  
+  const { data: allProducts = [], error, isLoading } = useSWR(
+    apiUrl,
+    fetcher,
+    { refreshInterval: 3000 }
+  )
+  
   // Defensive: always use a memoized value for Slider
   // const sliderValue = React.useMemo(() => [filters.priceRange[0], filters.priceRange[1]], [filters.priceRange[0], filters.priceRange[1]])
 
@@ -338,55 +395,116 @@ const [bannerError, setBannerError] = useState(false);
   useEffect(() => {
     setIsClient(true)
   }, [])
-
-  // Use useMemo for filtering instead of useEffect to prevent infinite loops
+  // Use server-filtered products directly - the API handles all filtering now
   const filteredProducts = React.useMemo(() => {
-  if (!isClient || !allProducts.length) return [];
-
-  return allProducts.filter(product => {
-    // Price range filter
-    if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
-      return false;
+    if (!isClient || !allProducts.length) return [];
+      // Debug logging to check product data
+    console.log("🔍 Raw product data from API:", allProducts[0]);
+    console.log("🔍 Total products:", allProducts.length);
+    
+    // Check if products have image data
+    if (allProducts.length > 0) {
+      console.log("🔍 First product image data:", {
+        image: allProducts[0]?.image,
+        images: allProducts[0]?.images,
+        imageFields: {
+          'IMAGE 1': allProducts[0]?.['"IMAGE 1"'] || allProducts[0]?.['IMAGE 1'],
+          'IMAGE 2': allProducts[0]?.['"IMAGE 2"'] || allProducts[0]?.['IMAGE 2'],
+        }
+      });
     }
-
-    // Search query filter
-    if (filters.searchQuery && 
-        !product.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
-        !(product.description?.toLowerCase().includes(filters.searchQuery.toLowerCase()))) {
-      return false;
-    }
-
-    // Check all other filters
-    return Object.entries(filters).every(([key, filterValues]) => {
-      // Skip non-array filters
-      if (key === 'priceRange' || key === 'searchQuery' || key === 'sortBy') {
-        return true;
+    
+    // Transform and normalize product data for display
+    return allProducts.map((product: any) => {      // Extract and normalize image data
+      const extractImages = (product: any): string[] => {
+        const images: string[] = [];
+        
+        console.log(`🖼️ Extracting images for product: ${product.name}`, {
+          productId: product._id,
+          image: product.image,
+          images: product.images,
+          imageFieldsRaw: {
+            'IMAGE 1': product['IMAGE 1'],
+            'IMAGE 2': product['IMAGE 2'],
+            'IMAGE 3': product['IMAGE 3'],
+          }
+        });
+        
+        // Check for primary image field
+        if (product.image) {
+          images.push(product.image);
+          console.log(`✅ Found primary image: ${product.image}`);
+        }
+        
+        // Check for images array
+        if (product.images && Array.isArray(product.images)) {
+          images.push(...product.images);
+          console.log(`✅ Found images array:`, product.images);
+        }
+        
+        // Check for individual image fields (IMAGE 1, IMAGE 2, etc.)
+        for (let i = 1; i <= 5; i++) {
+          const imageField = product[`IMAGE ${i}`];
+          if (imageField && typeof imageField === 'string') {
+            images.push(imageField);
+          }
+        }
+        
+        // Check data object for additional images
+        if (product.data && typeof product.data === 'object') {
+          for (let i = 1; i <= 5; i++) {
+            const imageField = product.data[`IMAGE ${i}`];
+            if (imageField && typeof imageField === 'string') {
+              images.push(imageField);
+            }
+          }
+        }
+          // Remove duplicates and invalid images
+        const uniqueImages = [...new Set(images)]
+          .filter(img => img && img.trim() !== '')
+          .map(img => {
+            // Ensure image paths start with /
+            if (!img.startsWith('/')) {
+              return `/images/eyewear-products/${img}`;
+            }
+            return img;
+          });
+        
+        console.log(`🎯 Final processed images for ${product.name}:`, uniqueImages);
+        
+        return uniqueImages.length > 0 ? uniqueImages : ['/placeholder.svg'];
+      };
+      
+      const productImages = extractImages(product);
+      const primaryImage = productImages[0];
+        // Normalize price data - prioritize sale_price over regular price
+      const displayPrice = product.sale_price || product.price || 0;
+      const originalPrice = product.mrp || product.price || displayPrice;
+      
+      // Debug pricing data
+      if (product.sale_price || product.mrp) {
+        console.log(`💰 Pricing for ${product.name}:`, {
+          raw_price: product.price,
+          raw_sale_price: product.sale_price,
+          raw_mrp: product.mrp,
+          computed_displayPrice: displayPrice,
+          computed_originalPrice: originalPrice
+        });
       }
-
-      // Ensure filterValues is an array
-      const filterValuesArray = Array.isArray(filterValues) ? filterValues : [];
       
-      // If no filters selected for this category, include the product
-      if (filterValuesArray.length === 0) {
-        return true;
-      }
-
-      const productValue = product[key as keyof Product];
-      
-      // Handle undefined/null product values
-      if (productValue === undefined || productValue === null) {
-        return false;
-      }
-      
-      // Convert product value to comparable format
-      const productValueStr = productValue.toString().toLowerCase();
-      
-      return filterValuesArray.some(filterValue => 
-        filterValue.toString().toLowerCase() === productValueStr
-      );
+      return {
+        ...product,
+        image: primaryImage,
+        images: productImages,
+        price: displayPrice,
+        mrp: originalPrice,
+        sale_price: product.sale_price || displayPrice,
+        name: product.name || product.product_title || product.title || 'Unnamed Product',
+        description: product.description || product.product_description || '',
+        category: product.category || 'eyewear'
+      };
     });
-  });
-}, [isClient, allProducts, filters]);
+  }, [isClient, allProducts]);
 
   const handleCategoryChange = React.useCallback((category: string) => {
     setFilters((prev) => {
@@ -532,7 +650,7 @@ const [bannerError, setBannerError] = useState(false);
   }, []);
 
  const resetFilters = React.useCallback(() => {
-  const resetState: Record<string, string[] | [number, number]> = {
+  const resetState: FiltersState = {
     categories: [],
     priceRange: [0, 100000],
     searchQuery: "",
@@ -555,47 +673,49 @@ const [bannerError, setBannerError] = useState(false);
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Banner */}
-      <div className="relative w-full h-64 md:h-80 flex items-center justify-center overflow-hidden mb-8">
-  {!bannerError && hero.banner !== '/placeholder.jpg' ? (
-    <Image
-      src={hero.banner}
-      alt={hero.title}
-      fill
-      className="object-cover object-center"
-      priority
-      onError={() => setBannerError(true)}
-    />
-  ) : (
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-      <span className="text-white text-xl">Featured Collection</span>
-    </div>
-  )}
-  <div className="relative z-10 text-center text-white bg-black/40 p-6 rounded-xl max-w-2xl mx-auto">
-    <h1 className="text-3xl md:text-5xl font-bold mb-2 drop-shadow-lg">{hero.title}</h1>
-    <p className="text-lg md:text-xl font-medium drop-shadow">{hero.description}</p>
-  </div>
-</div>
-      <main className="flex min-h-screen px-0 m-0">
-  {/* Filter Sidebar - Left */}
-  <aside
-    className={`w-[320px] p-4 bg-white border-r border-gray-200 space-y-6 ${
-      mobileFiltersOpen ? "block" : "hidden md:block"
-    }`}
-  >
-    <div className="flex items-center justify-between">
-      <h2 className="text-xl font-semibold">Filters</h2>
-      <Button variant="ghost" size="sm" onClick={resetFilters}>
-        Reset
-      </Button>
-    </div>
-              <Separator />
-              {/* Price Range Filter */}
+      <main className="flex flex-col lg:flex-row min-h-screen px-2 sm:px-4 lg:px-0 m-0 -mt-[150px]">
+        {/* Mobile Filter Overlay */}
+        {mobileFiltersOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+        )}
+        
+        {/* Filter Sidebar - Left */}
+        <aside
+          className={`
+            fixed lg:static top-0 left-0 w-[280px] sm:w-[320px] h-full lg:h-auto
+            p-3 sm:p-4 bg-white border-r border-gray-200 space-y-4 sm:space-y-6 
+            overflow-y-auto z-50 transform transition-transform duration-300 ease-in-out
+            ${mobileFiltersOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+          `}
+        >
+          {/* Mobile Close Button */}
+          <div className="flex items-center justify-between lg:hidden mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold">Filters</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setMobileFiltersOpen(false)}
+              className="p-1"
+            >
+              ✕
+            </Button>
+          </div>          {/* Desktop Filter Header */}
+          <div className="hidden lg:flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Filters</h2>
+            <Button variant="ghost" size="sm" onClick={resetFilters}>
+              Reset
+            </Button>
+          </div>
+              <Separator />              {/* Price Range Filter */}
               <div className="filter-section">
                 <div
-                  className="filter-heading flex justify-between items-center cursor-pointer mb-4"
+                  className="filter-heading flex justify-between items-center cursor-pointer mb-3 sm:mb-4"
                   onClick={() => toggleSection("priceRange")}
                 >
-                  <h3 className="font-medium">PRICE RANGE</h3>
+                  <h3 className="font-medium text-sm sm:text-base">PRICE RANGE</h3>
                   {expandedSections.priceRange ? (
                     <ChevronUp className="h-4 w-4 option-icon" />
                   ) : (
@@ -604,16 +724,16 @@ const [bannerError, setBannerError] = useState(false);
                 </div>
 
                 {expandedSections.priceRange && (
-                  <div className="filter-options space-y-4">
+                  <div className="filter-options space-y-3 sm:space-y-4">
                     <div className="container6">
                       {/* Simple dual range input approach */}
-                      <div className="space-y-4">
-                        <div className="text-center text-sm text-muted-foreground">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="text-center text-xs sm:text-sm text-muted-foreground">
                           Price Range: KSh {filters.priceRange[0].toLocaleString()} - KSh {filters.priceRange[1].toLocaleString()}
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Minimum Price</label>
+                          <label className="text-xs sm:text-sm font-medium">Minimum Price</label>
                           <input
                             type="range"
                             min={SLIDER_MIN_PRICE}
@@ -626,7 +746,7 @@ const [bannerError, setBannerError] = useState(false);
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Maximum Price</label>
+                          <label className="text-xs sm:text-sm font-medium">Maximum Price</label>
                           <input
                             type="range"
                             min={SLIDER_MIN_PRICE}
@@ -639,12 +759,12 @@ const [bannerError, setBannerError] = useState(false);
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-4 mt-4">
+                      <div className="flex items-center justify-between gap-2 sm:gap-4 mt-3 sm:mt-4">
                         <div className="flex items-center left-value">
-                          <span className="text-sm mr-2">KSh</span>
+                          <span className="text-xs sm:text-sm mr-1 sm:mr-2">KSh</span>
                           <Input
                             type="number"
-                            className="w-20 h-8 thumb thumb--left"
+                            className="w-16 sm:w-20 h-7 sm:h-8 thumb thumb--left text-xs sm:text-sm"
                             value={filters.priceRange[0]} // Controlled by state
                             onChange={(e) => handlePriceInputChange(e, 0)}
                             min={SLIDER_MIN_PRICE}
@@ -652,12 +772,12 @@ const [bannerError, setBannerError] = useState(false);
                             step={SLIDER_STEP} // Add step to input for browser behavior
                           />
                         </div>
-                        <span className="text-sm">to</span>
+                        <span className="text-xs sm:text-sm">to</span>
                         <div className="flex items-center right-value">
-                          <span className="text-sm mr-2">KSh</span>
+                          <span className="text-xs sm:text-sm mr-1 sm:mr-2">KSh</span>
                           <Input
                             type="number"
-                            className="w-20 h-8 thumb thumb--right"
+                            className="w-16 sm:w-20 h-7 sm:h-8 thumb thumb--right text-xs sm:text-sm"
                             value={filters.priceRange[1]} // Controlled by state
                             onChange={(e) => handlePriceInputChange(e, 1)}
                             min={filters.priceRange[0]} // Min is dynamic based on other thumb
@@ -671,15 +791,13 @@ const [bannerError, setBannerError] = useState(false);
                 )}
               </div>
 
-              <Separator />
-
-              {/* Category Filter */}
+              <Separator />              {/* Category Filter */}
               <div className="filter-section">
                 <div
-                  className="filter-heading flex justify-between items-center cursor-pointer mb-4"
+                  className="filter-heading flex justify-between items-center cursor-pointer mb-3 sm:mb-4"
                   onClick={() => toggleSection("category")}
                 >
-                  <h3 className="font-medium">CATEGORY</h3>
+                  <h3 className="font-medium text-sm sm:text-base">CATEGORY</h3>
                   {expandedSections.category ? (
                     <ChevronUp className="h-4 w-4 option-icon" />
                   ) : (
@@ -702,23 +820,21 @@ const [bannerError, setBannerError] = useState(false);
           checked={filters.categories.includes(item.id)}
           onCheckedChange={() => handleCheckboxChange("categories", item.id)}
         />
-        <Label htmlFor={item.id}>{item.label}</Label>
+        <Label htmlFor={item.id} className="text-xs sm:text-sm">{item.label}</Label>
       </div>
     ))}
   </div>
 )}
               </div>
 
-              <Separator />
-
-              {/* Dynamic Filter Sections */}
+              <Separator />              {/* Dynamic Filter Sections */}
  {filterSections.map((section) => (
   <div key={section.id} className="filter-section">
     <div
-      className="filter-heading flex justify-between items-center cursor-pointer mb-4"
+      className="filter-heading flex justify-between items-center cursor-pointer mb-3 sm:mb-4"
       onClick={() => toggleSection(section.id)}
     >
-      <h3 className="font-medium">{section.title}</h3>
+      <h3 className="font-medium text-sm sm:text-base">{section.title}</h3>
       {expandedSections[section.id] ? (
         <ChevronUp className="h-4 w-4" />
       ) : (
@@ -737,23 +853,21 @@ const [bannerError, setBannerError] = useState(false);
           <>
             {/* "All" checkbox */}
             <div className="flex items-center space-x-2">
-  <Checkbox
-    id={`${section.id}-all`}
-    checked={(filters[section.id] || []).length === 0}
+  <Checkbox    id={`${section.id}-all`}
+    checked={((filters[section.id] as string[]) || []).length === 0}
     onCheckedChange={() => handleCheckboxChange(section.id, "all")}
   />
-  <Label htmlFor={`${section.id}-all`}>All</Label>
+  <Label htmlFor={`${section.id}-all`} className="text-xs sm:text-sm">All</Label>
 </div>
 
             {/* Filter options */}
            {section.options.map((option) => (
-  <div key={option.value} className="flex items-center space-x-2">
-    <Checkbox
+  <div key={option.value} className="flex items-center space-x-2">    <Checkbox
       id={`${section.id}-${option.value}`}
-      checked={(filters[section.id] || []).includes(option.value)}
+      checked={(filters[section.id] as string[] || []).includes(option.value)}
       onCheckedChange={() => handleCheckboxChange(section.id, option.value)}
     />
-    <Label htmlFor={`${section.id}-${option.value}`} className="flex items-center">
+    <Label htmlFor={`${section.id}-${option.value}`} className="flex items-center text-xs sm:text-sm">
       {option.label}
       {option.colorCode && (
         <span
@@ -770,41 +884,49 @@ const [bannerError, setBannerError] = useState(false);
         )}
       </div>
     )}
-    <Separator className="my-4" />
+    <Separator className="my-3 sm:my-4" />
   </div>
 ))}
 
-              </aside>
-            
-            {/* Product Section */}
+              </aside>              {/* Product Section */}
            {/* Product Listing - Right */}
-        <section className="flex-1 px-4 py-6">
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2">
-      <h1 className="text-3xl font-bold">All Frames</h1>
-      <div className="flex items-center gap-4">
+        <section className="flex-1 px-2 sm:px-4 py-3 sm:py-6 flex flex-col h-full lg:h-screen">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-4 flex-shrink-0">
+      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">All Frames</h1>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 gap-1 md:hidden"
+            className="h-8 gap-1 lg:hidden flex-1 sm:flex-none"
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
           >
                       <Filter className="h-4 w-4" />
-            <span>Filter</span>
+            <span className="text-xs sm:text-sm">Filter</span>
           </Button>
-          <div className="hidden md:block">
+          <div className="hidden sm:block flex-1 sm:flex-none">
             <Input
               placeholder="Search frames..."
-              className="w-[500px] h-8"
+              className="w-full sm:w-[300px] lg:w-[500px] h-8 text-sm"
               value={filters.searchQuery}
               onChange={handleSearchChange}
             />
           </div>
         </div>
+        
+        {/* Mobile Search - Full Width */}
+        <div className="block sm:hidden w-full">
+          <Input
+            placeholder="Search frames..."
+            className="w-full h-8 text-sm"
+            value={filters.searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+        
         <select
-          className="h-8 rounded-md border border-input bg-background py-1 text-sm"
-          value={filters.sortBy}
-          onChange={handleSortChange}
+          className="h-8 rounded-md border border-input bg-background py-1 px-2 text-xs sm:text-sm w-full sm:w-auto"
+          value={filters.sortBy}          onChange={handleSortChange}
         >
                     <option value="featured">Featured</option>
                     <option value="price-low">Price: Low to High</option>
@@ -812,59 +934,61 @@ const [bannerError, setBannerError] = useState(false);
                     <option value="newest">Newest</option>
                   </select>
                 </div>
-              </div>
-
-              {(filteredProducts.length === 0 || !isClient) ? (
-                <div className="text-center text-muted-foreground py-12">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Filter className="h-8 w-8 text-gray-400" />
+              </div>              
+              
+              {/* Scrollable Product Container */}
+              <div className="flex-1 overflow-y-auto">
+                {(filteredProducts.length === 0 || !isClient) ? (
+                  <div className="text-center text-muted-foreground py-8 sm:py-12">
+                    <div className="flex flex-col items-center space-y-3 sm:space-y-4 px-4">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                        <Filter className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-600">
+                          {!isClient ? "Loading..." : "No products found"}
+                        </h3>
+                        <p className="text-sm sm:text-base text-gray-500 max-w-xs sm:max-w-sm mx-auto">
+                          {!isClient ? "Please wait while we load the products" : "Try adjusting your filters or search terms"}
+                        </p>
+                      </div>
+                      {isClient && (
+                        <Button variant="outline" onClick={resetFilters} size="sm">
+                          Clear Filters
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-600">
-                        {!isClient ? "Loading..." : "No products found"}
-                      </h3>
-                      <p className="text-gray-500">
-                        {!isClient ? "Please wait while we load the products" : "Try adjusting your filters or search terms"}
-                      </p>
-                    </div>
-                    {isClient && (
-                      <Button variant="outline" onClick={resetFilters}>
-                        Clear Filters
-                      </Button>
-                    )}
                   </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-                  {filteredProducts.map((product: Product) => (
-                    <ModernProductCard
-                      key={product._id}
-                      product={{
-                        _id: product._id,
-                        name: product.name,
-                        price: product.price,
-                        category: product.category as "prescription" | "sunglasses" | "reading",
-                        image: product.image,
-                        images: product.image ? [product.image] : [],
-                        colors: product.color ? [product.color] : [],
-                        inStock: true,
-                        description: product.description,
-                        rating: 4 + Math.random(), // Random rating for demo
-                        reviews: Math.floor(Math.random() * 100) + 1,
-                        isNew: Math.random() > 0.8, // 20% chance of being new
-                        discount: Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 10 : 0 // 30% chance of discount
-                      }}
-                      variant="default"
-                      showQuickActions={true}
-                      className="h-full"
-                    />
-                  ))}
-                </div>
-              )}
+                ) : (                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-3 sm:gap-4 lg:gap- pb-4 sm:pb-6">
+                    {filteredProducts.map((product: Product) => (                      <ModernProductCard
+                        key={product._id}
+                        product={{
+                          _id: product._id,
+                          name: product.name,
+                          price: product.price,
+                          sale_price: product.sale_price,
+                          mrp: product.mrp,
+                          category: (product.category as "prescription" | "sunglasses" | "reading") || "prescription",
+                          image: product.image,
+                          images: product.images || [],
+                          colors: product.color ? [{name: product.color, code: product.color, image: product.image || ''}] : [],
+                          inStock: true,
+                          description: product.description || product.product_description || '',
+                          rating: 4 + Math.random(), // Random rating for demo
+                          reviews: Math.floor(Math.random() * 100) + 1,
+                          isNew: Math.random() > 0.8, // 20% chance of being new
+                          discount: product.sale_price && product.mrp ? Math.round(((product.mrp - product.sale_price) / product.mrp) * 100) : 0
+                        }}
+                        variant="default"
+                        showQuickActions={true}
+                        className="h-full"
+                      />
+                    ))}                  </div>
+                )}
+              </div>
           
          </section>
         </main>
       </div>
-  )
-}
+    )
+  }

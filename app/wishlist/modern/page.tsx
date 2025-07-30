@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { 
@@ -51,6 +51,41 @@ export default function ModernWishlistPage() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [editingNotes, setEditingNotes] = useState<string | null>(null)
   const [noteText, setNoteText] = useState('')
+  const [correctedImages, setCorrectedImages] = useState<{[key: string]: string}>({})
+
+  // Image loading function
+  const findCorrectImagePath = async (imagePath: string): Promise<string> => {
+    try {
+      const response = await fetch(`/api/images/find?path=${encodeURIComponent(imagePath)}`)
+      const data = await response.json()
+      return data.found ? data.correctedPath : "/placeholder.svg"
+    } catch (error) {
+      console.error('Error finding image path:', error)
+      return "/placeholder.svg"
+    }
+  }
+
+  // Load correct image paths for all items
+  useEffect(() => {
+    const loadImages = async () => {
+      const imageMap: {[key: string]: string} = {}
+      
+      for (const item of items) {
+        if (item.image && !correctedImages[item.id]) {
+          const correctedPath = await findCorrectImagePath(item.image)
+          imageMap[item.id] = correctedPath
+        }
+      }
+      
+      if (Object.keys(imageMap).length > 0) {
+        setCorrectedImages(prev => ({ ...prev, ...imageMap }))
+      }
+    }
+
+    if (items.length > 0) {
+      loadImages()
+    }
+  }, [items, correctedImages])
 
   const stats = getWishlistStats()
 
@@ -217,25 +252,24 @@ export default function ModernWishlistPage() {
   }
 
   const isEmpty = items.length === 0
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link 
             href="/products" 
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-3 sm:mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Continue Shopping
           </Link>
           
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Wishlist</h1>
               {!isEmpty && (
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">
                   {stats.totalItems} {stats.totalItems === 1 ? 'item' : 'items'} • 
                   Total value: KSh {(stats.totalValue / 100).toFixed(2)}
                 </p>
@@ -243,11 +277,12 @@ export default function ModernWishlistPage() {
             </div>
             
             {!isEmpty && (
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
                 <Button
                   variant="outline"
                   onClick={handleShareWishlist}
-                  className="text-blue-600 hover:text-blue-700"
+                  className="text-blue-600 hover:text-blue-700 text-sm"
+                  size="sm"
                 >
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
@@ -255,31 +290,33 @@ export default function ModernWishlistPage() {
                 <Button
                   variant="outline"
                   onClick={handleMoveAllToCart}
-                  className="text-green-600 hover:text-green-700"
+                  className="text-green-600 hover:text-green-700 text-sm"
+                  size="sm"
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add All to Cart
+                  <span className="hidden sm:inline">Add All to Cart</span>
+                  <span className="sm:hidden">Add All</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleClearWishlist}
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:text-red-700 text-sm"
+                  size="sm"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All
+                  <span className="hidden sm:inline">Clear All</span>
+                  <span className="sm:hidden">Clear</span>
                 </Button>
               </div>
             )}
           </div>
-        </div>
-
-        {isEmpty ? (
-          <div className="text-center py-16">
-            <div className="mx-auto h-24 w-24 text-gray-400 mb-6">
+        </div>        {isEmpty ? (
+          <div className="text-center py-12 sm:py-16">
+            <div className="mx-auto h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 text-gray-400 mb-4 sm:mb-6">
               <Heart className="h-full w-full" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your wishlist is empty</h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Your wishlist is empty</h2>
+            <p className="text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base px-4">
               Save items you love to buy them later. Just click the heart icon on any product.
             </p>
             <Button asChild size="lg">
@@ -288,33 +325,32 @@ export default function ModernWishlistPage() {
               </Link>
             </Button>
           </div>
-        ) : (
-          <div>
+        ) : (          <div>
             {/* Filters and Stats */}
-            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div className="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-sm">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                   <div className="text-center">
-                    <div className="font-semibold text-gray-900">{stats.totalItems}</div>
-                    <div className="text-gray-500">Total Items</div>
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">{stats.totalItems}</div>
+                    <div className="text-gray-500 text-xs sm:text-sm">Total Items</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-gray-900">{stats.inStockCount}</div>
-                    <div className="text-gray-500">In Stock</div>
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">{stats.inStockCount}</div>
+                    <div className="text-gray-500 text-xs sm:text-sm">In Stock</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-gray-900">{stats.outOfStockCount}</div>
-                    <div className="text-gray-500">Out of Stock</div>
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">{stats.outOfStockCount}</div>
+                    <div className="text-gray-500 text-xs sm:text-sm">Out of Stock</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-gray-900">KSh {(stats.averagePrice / 100).toFixed(0)}</div>
-                    <div className="text-gray-500">Avg. Price</div>
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">KSh {(stats.averagePrice / 100).toFixed(0)}</div>
+                    <div className="text-gray-500 text-xs sm:text-sm">Avg. Price</div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
                   <Select value={filterBy} onValueChange={setFilterBy}>
-                    <SelectTrigger className="w-[140px]">
+                    <SelectTrigger className="w-full sm:w-[140px] text-sm">
                       <Filter className="h-4 w-4 mr-2" />
                       <SelectValue />
                     </SelectTrigger>
@@ -328,7 +364,7 @@ export default function ModernWishlistPage() {
                   </Select>
 
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-[140px]">
+                    <SelectTrigger className="w-full sm:w-[140px] text-sm">
                       <SortAsc className="h-4 w-4 mr-2" />
                       <SelectValue />
                     </SelectTrigger>
@@ -345,59 +381,64 @@ export default function ModernWishlistPage() {
             </div>
 
             {/* Wishlist Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredAndSortedItems.map((item) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">              {filteredAndSortedItems.map((item) => (
                 <Card key={item.id} className="group hover:shadow-lg transition-shadow duration-300">
                   <CardHeader className="p-0">
                     <div className="relative aspect-square overflow-hidden rounded-t-lg">
                       <Image
-                        src={item.image}
+                        src={correctedImages[item.id] || item.image}
                         alt={item.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={() => {
+                          // Fallback to placeholder if image fails to load
+                          setCorrectedImages(prev => ({ ...prev, [item.id]: "/placeholder.svg" }))
+                        }}
                       />
                       
                       {/* Priority Badge */}
                       {item.priority && item.priority !== 'medium' && (
-                        <Badge className={`absolute top-2 left-2 ${getPriorityColor(item.priority)}`}>
+                        <Badge className={`absolute top-1 sm:top-2 left-1 sm:left-2 text-xs ${getPriorityColor(item.priority)}`}>
                           {item.priority}
                         </Badge>
                       )}
 
                       {/* Discount Badge */}
                       {item.discount && item.discount > 0 && (
-                        <Badge variant="destructive" className="absolute top-2 right-2">
+                        <Badge variant="destructive" className="absolute top-1 sm:top-2 right-1 sm:right-2 text-xs">
                           -{item.discount}%
                         </Badge>
                       )}
 
                       {/* Stock Status */}
-                      <div className="absolute bottom-2 left-2">
+                      <div className="absolute bottom-1 sm:bottom-2 left-1 sm:left-2">
                         {item.inStock ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            In Stock
+                          <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                            <CheckCircle className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                            <span className="hidden sm:inline">In Stock</span>
+                            <span className="sm:hidden">In</span>
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="bg-red-100 text-red-800">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Out of Stock
+                          <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                            <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                            <span className="hidden sm:inline">Out of Stock</span>
+                            <span className="sm:hidden">Out</span>
                           </Badge>
                         )}
                       </div>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-2 sm:space-y-3">
                       {/* Product Info */}
                       <div>
-                        <h3 className="font-medium text-gray-900 line-clamp-2">
+                        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm sm:text-base leading-tight">
                           <Link href={`/products/${item.productId}`} className="hover:underline">
                             {item.name}
                           </Link>
                         </h3>
-                        <div className="mt-1 text-sm text-gray-500">
+                        <div className="mt-1 text-xs sm:text-sm text-gray-500">
                           Color: {item.color}
                           {item.size && ` • Size: ${item.size}`}
                         </div>
@@ -405,11 +446,11 @@ export default function ModernWishlistPage() {
 
                       {/* Price */}
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg font-semibold text-gray-900">
+                        <span className="text-base sm:text-lg font-semibold text-gray-900">
                           KSh {(item.price / 100).toFixed(2)}
                         </span>
                         {item.originalPrice && item.originalPrice > item.price && (
-                          <span className="text-sm text-gray-500 line-through">
+                          <span className="text-xs sm:text-sm text-gray-500 line-through">
                             KSh {(item.originalPrice / 100).toFixed(2)}
                           </span>
                         )}
@@ -422,12 +463,12 @@ export default function ModernWishlistPage() {
                           value={item.priority || 'medium'} 
                           onValueChange={(value) => handleUpdatePriority(item.id, value as any)}
                         >
-                          <SelectTrigger className="h-6 text-xs w-20">
+                          <SelectTrigger className="h-6 text-xs w-16 sm:w-20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="medium">Med</SelectItem>
                             <SelectItem value="high">High</SelectItem>
                           </SelectContent>
                         </Select>
@@ -435,7 +476,7 @@ export default function ModernWishlistPage() {
 
                       {/* Notes */}
                       {item.notes && (
-                        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded line-clamp-2">
                           {item.notes}
                         </div>
                       )}
@@ -443,32 +484,35 @@ export default function ModernWishlistPage() {
                       {/* Actions */}
                       <div className="space-y-2">
                         <Button
-                          className="w-full"
+                          className="w-full text-sm"
+                          size="sm"
                           onClick={() => handleMoveToCart(item.id)}
                           disabled={!item.inStock}
                         >
-                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                           Add to Cart
                         </Button>
                         
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <div className="flex space-x-1 sm:space-x-2">
+                          <Button variant="outline" size="sm" className="flex-1 text-xs" asChild>
                             <Link href={`/products/${item.productId}`}>
                               <Eye className="h-3 w-3 mr-1" />
-                              View
+                              <span className="hidden sm:inline">View</span>
+                              <span className="sm:hidden">View</span>
                             </Link>
                           </Button>
                           
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" className="flex-1">
+                              <Button variant="outline" size="sm" className="flex-1 text-xs">
                                 <Tag className="h-3 w-3 mr-1" />
-                                Note
+                                <span className="hidden sm:inline">Note</span>
+                                <span className="sm:hidden">Note</span>
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="mx-4 sm:mx-0">
                               <DialogHeader>
-                                <DialogTitle>Add Note</DialogTitle>
+                                <DialogTitle className="text-base sm:text-lg">Add Note</DialogTitle>
                               </DialogHeader>
                               <div className="space-y-4">
                                 <Textarea
@@ -476,18 +520,25 @@ export default function ModernWishlistPage() {
                                   value={noteText}
                                   onChange={(e) => setNoteText(e.target.value)}
                                   defaultValue={item.notes || ''}
+                                  className="text-sm"
                                 />
-                                <div className="flex justify-end space-x-2">
+                                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2">
                                   <Button
                                     variant="outline"
+                                    size="sm"
                                     onClick={() => {
                                       setEditingNotes(null)
                                       setNoteText('')
                                     }}
+                                    className="text-sm"
                                   >
                                     Cancel
                                   </Button>
-                                  <Button onClick={() => handleUpdateNotes(item.id)}>
+                                  <Button 
+                                    onClick={() => handleUpdateNotes(item.id)}
+                                    size="sm"
+                                    className="text-sm"
+                                  >
                                     Save Note
                                   </Button>
                                 </div>
@@ -499,7 +550,7 @@ export default function ModernWishlistPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleRemoveItem(item.id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 px-2"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -514,14 +565,12 @@ export default function ModernWishlistPage() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-
-            {/* No items found after filtering */}
+            </div>            {/* No items found after filtering */}
             {filteredAndSortedItems.length === 0 && (
-              <div className="text-center py-12">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
-                <p className="text-gray-600">Try adjusting your filters to see more items.</p>
+              <div className="text-center py-8 sm:py-12">
+                <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No items found</h3>
+                <p className="text-gray-600 text-sm sm:text-base px-4">Try adjusting your filters to see more items.</p>
               </div>
             )}
           </div>

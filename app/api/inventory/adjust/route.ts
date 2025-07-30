@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 
 // Adjust stock
 export async function POST(request: NextRequest) {
@@ -12,9 +12,8 @@ export async function POST(request: NextRequest) {
     if (!productId || !adjustment || !reason) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
-    
-    // Find the product
-    const product = await Product.findById(productId)
+      // Find the product
+    const product = await EyewearProduct.findById(productId)
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }

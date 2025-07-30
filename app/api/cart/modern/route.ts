@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
 import Cart from "@/models/Cart"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 import Settings from "@/models/Settings"
 import jwt from "jsonwebtoken"
 
@@ -28,9 +28,8 @@ function getUserIdFromRequest(request: NextRequest): string {
     if (!authorization?.startsWith("Bearer ")) {
       return "guest"
     }
-    
-    const token = authorization.substring(7)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret") as any
+      const token = authorization.substring(7)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_super_secure_jwt_secret_key_for_spectacles_ecommerce_2024") as any
     return decoded.userId || decoded.id || "guest"
   } catch (error) {
     return "guest"
@@ -52,9 +51,7 @@ export async function GET(request: NextRequest) {
         totals: { subtotal: 0, shipping: 0, tax: 0, total: 0, itemCount: 0 },
         settings: {}
       })
-    }
-
-    // Get user's cart
+    }    // Get user's cart
     let cart = await Cart.findOne({ user: userId }).populate('items.productId')
     if (!cart) {
       cart = { items: [] }
@@ -116,10 +113,8 @@ export async function POST(request: NextRequest) {
         success: true,
         item: { productId, name, price, originalPrice, quantity, color, size, image, category, inStock, discount, variant }
       })
-    }
-
-    // Verify product exists and get latest data
-    const product = await Product.findById(productId)
+    }    // Verify product exists and get latest data
+    const product = await EyewearProduct.findById(productId)
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }

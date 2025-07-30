@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import * as XLSX from "xlsx"
 import { connectToDatabase } from "@/lib/mongodb"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 
 export async function POST(request: NextRequest) {
   try {

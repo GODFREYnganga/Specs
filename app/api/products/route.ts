@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-const Product = require("../../../models/Product");
-console.log("Product model loaded:", Product);
+import EyewearProduct from "@/models/EyewearProduct";
+console.log("EyewearProduct model loaded:", EyewearProduct);
 import fs from "fs/promises";
 import path from "path";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     query.category = category;
   }
 
-  const products = await Product.find(query);
+  const products = await EyewearProduct.find(query);
   return NextResponse.json(products);
 }
 
@@ -56,11 +56,11 @@ export async function POST(request: Request) {
     for (const imgFile of imageFiles) {
       const buffer = Buffer.from(await imgFile.arrayBuffer());
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${imgFile.name.split('.').pop()}`;
-      const uploadDir = path.join(process.cwd(), "public", "images", "products");
+      const uploadDir = path.join(process.cwd(), "public", "images", "eyewear-products");
       await fs.mkdir(uploadDir, { recursive: true });
       const filePath = path.join(uploadDir, filename);
       await fs.writeFile(filePath, buffer);
-      const relPath = `/images/products/${filename}`;
+      const relPath = `/images/eyewear-products/${filename}`;
       imagesArray.push(relPath);
     }
     // Prepare product data
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     console.log("Product data prepared:", data); // Log prepared data
 
     // Create product
-    const product = await Product.create(data);
+    const product = await EyewearProduct.create(data);
     console.log("Product added successfully:", product); // Log success
     return NextResponse.json(product, { status: 201 });
   } catch (err) {
@@ -99,7 +99,7 @@ export async function PUT(request: Request) {
     await connectToDatabase();
     const data = await request.json();
     if (!data._id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
-    const updated = await Product.findByIdAndUpdate(data._id, data, { new: true, runValidators: true });
+    const updated = await EyewearProduct.findByIdAndUpdate(data._id, data, { new: true, runValidators: true });
     if (!updated) return NextResponse.json({ error: "Product not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) {
@@ -112,7 +112,7 @@ export async function DELETE(request: Request) {
     await connectToDatabase();
     const { _id } = await request.json();
     if (!_id) return NextResponse.json({ error: "Missing product id" }, { status: 400 });
-    const deleted = await Product.findByIdAndDelete(_id);
+    const deleted = await EyewearProduct.findByIdAndDelete(_id);
     if (!deleted) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }

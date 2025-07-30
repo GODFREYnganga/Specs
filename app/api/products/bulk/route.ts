@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/mongodb"
-import Product from "@/models/Product"
+import EyewearProduct from "@/models/EyewearProduct"
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,9 +33,8 @@ export async function POST(request: NextRequest) {
       features: typeof p.features === 'string' ? p.features.split(',').map(f => f.trim()) : Array.isArray(p.features) ? p.features : [],
       colors: typeof p.colors === 'string' ? p.colors.split(',').map(c => c.trim()) : Array.isArray(p.colors) ? p.colors : [],
       images: p.images || '',
-    }))
-    // Insert all products
-    const result = await Product.insertMany(sanitized)
+    }))    // Insert all products
+    const result = await EyewearProduct.insertMany(sanitized)
     return NextResponse.json({ success: true, count: result.length })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
